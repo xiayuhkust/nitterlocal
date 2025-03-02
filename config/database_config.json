@@ -1,0 +1,17 @@
+{
+  "database": {
+    "path": "data/local_database.db",
+    "backup_path": "data/backups/",
+    "backup_frequency": "daily"
+  },
+  "twitter_client": {
+    "max_tweets_per_url": 50,
+    "batch_size": 10,
+    "sleep_between_urls": 2
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "data/logs/database.log",
+    "format": "%(asctime)s - %(levelname)s - %(message)s"
+  }
+}

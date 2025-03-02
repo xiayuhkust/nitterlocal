@@ -12,7 +12,7 @@ import argparse
 from datetime import datetime
 
 # Add the project root to the Python path
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
 # Import the database module
 from src.database.local_database import LocalDatabase
