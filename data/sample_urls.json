@@ -1,0 +1,19 @@
+{
+  "urls": [
+    {
+      "url": "https://twitter.com/0xPolygon",
+      "description": "Polygon - Ethereum scaling platform",
+      "type": "kol"
+    },
+    {
+      "url": "https://twitter.com/elonmusk",
+      "description": "Elon Musk - CEO of Tesla and SpaceX",
+      "type": "kol"
+    },
+    {
+      "url": "https://twitter.com/vitalikbuterin",
+      "description": "Vitalik Buterin - Ethereum co-founder",
+      "type": "kol"
+    }
+  ]
+}

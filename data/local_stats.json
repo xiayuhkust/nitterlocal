@@ -1,0 +1,11 @@
+{
+  "total_urls": 3,
+  "active_urls": 3,
+  "total_tweets": 15,
+  "url_tweet_counts": {
+    "https://twitter.com/vitalikbuterin": 5,
+    "https://twitter.com/elonmusk": 5,
+    "https://twitter.com/0xPolygon": 5
+  },
+  "generated_at": "2025-03-02T05:48:03.648861"
+}

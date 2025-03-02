@@ -1,0 +1,11 @@
+{
+  "name": "twitter-client",
+  "version": "1.0.0",
+  "description": "Twitter client for extracting tweets using agent-twitter-client",
+  "main": "twitter_client.js",
+  "type": "module",
+  "dependencies": {
+    "agent-twitter-client": "^0.0.18",
+    "dotenv": "^16.4.5"
+  }
+}

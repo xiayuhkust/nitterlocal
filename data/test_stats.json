@@ -1,0 +1,10 @@
+{
+  "total_urls": 3,
+  "active_urls": 2,
+  "total_tweets": 8,
+  "url_tweet_counts": {
+    "https://twitter.com/0xPolygon": 5,
+    "https://twitter.com/elonmusk": 3
+  },
+  "generated_at": "2025-03-02T05:46:54.592252"
+}

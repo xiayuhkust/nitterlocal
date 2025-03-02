@@ -1,0 +1,94 @@
+2025-03-02 05:47:57,904 - INFO - Starting end-to-end test
+2025-03-02 05:47:57,904 - INFO - Time: 2025-03-02T05:47:57.904941
+2025-03-02 05:47:57,907 - INFO - Setting up database with sample URLs
+2025-03-02 05:47:57,907 - INFO - Initializing local database at data/end_to_end_test.db
+2025-03-02 05:47:57,912 - INFO - Database initialization complete
+2025-03-02 05:47:57,916 - INFO - Added 3 sample URLs to the database
+2025-03-02 05:47:57,917 - INFO - Running daily update process
+2025-03-02 05:47:57,917 - INFO - Batch size: 2, Sleep between URLs: 1 seconds
+2025-03-02 05:47:57,917 - INFO - Max tweets per URL: 5
+2025-03-02 05:47:57,917 - INFO - Initializing daily update with database at data/end_to_end_test.db
+2025-03-02 05:47:57,927 - INFO - Initializing local database at data/end_to_end_test.db
+2025-03-02 05:47:57,928 - INFO - Database initialization complete
+2025-03-02 05:47:57,933 - INFO - Daily update initialization complete
+2025-03-02 05:47:57,933 - INFO - Starting daily update
+2025-03-02 05:47:57,933 - INFO - Time: 2025-03-02T05:47:57.933565
+2025-03-02 05:47:57,933 - INFO - Batch size: 2, Sleep between URLs: 1 seconds
+2025-03-02 05:47:57,933 - INFO - Max tweets per URL: 5
+2025-03-02 05:47:57,934 - INFO - Found 3 active URLs to process
+2025-03-02 05:47:57,934 - INFO - Processing batch 1/2
+2025-03-02 05:47:57,934 - INFO - Processing URL: https://twitter.com/0xPolygon
+2025-03-02 05:47:57,934 - INFO - Scraping URL: https://twitter.com/0xPolygon
+2025-03-02 05:47:57,934 - INFO - Extracted username: 0xPolygon
+2025-03-02 05:47:57,934 - INFO - Running Twitter client for 0xPolygon...
+2025-03-02 05:47:59,401 - INFO - Extracting tweets for @0xPolygon (max: 5)
+Processing tweet 1 from @0xPolygon: 1896015695709909064
+Processing tweet 2 from @0xPolygon: 1895961538361430222
+Processing tweet 3 from @0xPolygon: 1895953765938970814
+Processing tweet 4 from @0xPolygon: 1895936763614675420
+Processing tweet 5 from @0xPolygon: 1895888873789800721
+Reached maximum of 5 tweets
+Successfully extracted 5 tweets from @0xPolygon
+Tweets saved to /tmp/tmp4kk26uuu.json
+
+2025-03-02 05:47:59,401 - INFO - Extracted 5 tweets from https://twitter.com/0xPolygon
+2025-03-02 05:47:59,403 - INFO - Stored 5 tweets for URL: https://twitter.com/0xPolygon
+2025-03-02 05:47:59,405 - INFO - Processed 1/3 URLs
+2025-03-02 05:47:59,405 - INFO - Processing URL: https://twitter.com/elonmusk
+2025-03-02 05:47:59,405 - INFO - Scraping URL: https://twitter.com/elonmusk
+2025-03-02 05:47:59,405 - INFO - Extracted username: elonmusk
+2025-03-02 05:47:59,405 - INFO - Running Twitter client for elonmusk...
+2025-03-02 05:48:01,004 - INFO - Extracting tweets for @elonmusk (max: 5)
+Processing tweet 1 from @elonmusk: 1519480761749016577
+Processing tweet 2 from @elonmusk: 1812258574049157405
+Processing tweet 3 from @elonmusk: 1518623997054918657
+Processing tweet 4 from @elonmusk: 1854026234339938528
+Processing tweet 5 from @elonmusk: 1519495072802390016
+Reached maximum of 5 tweets
+Successfully extracted 5 tweets from @elonmusk
+Tweets saved to /tmp/tmpj2z9ynez.json
+
+2025-03-02 05:48:01,005 - INFO - Extracted 5 tweets from https://twitter.com/elonmusk
+2025-03-02 05:48:01,007 - INFO - Stored 5 tweets for URL: https://twitter.com/elonmusk
+2025-03-02 05:48:01,008 - INFO - Processed 2/3 URLs
+2025-03-02 05:48:01,008 - INFO - Sleeping for 1 seconds between batches
+2025-03-02 05:48:02,008 - INFO - Processing batch 2/2
+2025-03-02 05:48:02,009 - INFO - Processing URL: https://twitter.com/vitalikbuterin
+2025-03-02 05:48:02,009 - INFO - Scraping URL: https://twitter.com/vitalikbuterin
+2025-03-02 05:48:02,009 - INFO - Extracted username: vitalikbuterin
+2025-03-02 05:48:02,009 - INFO - Running Twitter client for vitalikbuterin...
+2025-03-02 05:48:03,640 - INFO - Extracting tweets for @vitalikbuterin (max: 5)
+Processing tweet 1 from @vitalikbuterin: 1570306185391378434
+Processing tweet 2 from @vitalikbuterin: 1496695587495981056
+Processing tweet 3 from @vitalikbuterin: 1496695424387801090
+Processing tweet 4 from @vitalikbuterin: 1498012161439932430
+Processing tweet 5 from @vitalikbuterin: 1570299062800510976
+Reached maximum of 5 tweets
+Successfully extracted 5 tweets from @vitalikbuterin
+Tweets saved to /tmp/tmp20vojeif.json
+
+2025-03-02 05:48:03,641 - INFO - Extracted 5 tweets from https://twitter.com/vitalikbuterin
+2025-03-02 05:48:03,643 - INFO - Stored 5 tweets for URL: https://twitter.com/vitalikbuterin
+2025-03-02 05:48:03,645 - INFO - Processed 3/3 URLs
+2025-03-02 05:48:03,645 - INFO - Generating statistics
+2025-03-02 05:48:03,645 - INFO - Generating statistics for local database
+2025-03-02 05:48:03,645 - INFO - Statistics generated: 3 URLs, 15 tweets
+2025-03-02 05:48:03,645 - INFO - Daily update completed successfully
+2025-03-02 05:48:03,646 - INFO - Processed: 3, Success: 3, Errors: 0
+2025-03-02 05:48:03,646 - INFO - Total tweets stored: 15
+2025-03-02 05:48:03,646 - INFO - Total URLs in database: 3
+2025-03-02 05:48:03,646 - INFO - Total tweets in database: 15
+2025-03-02 05:48:03,646 - INFO - Daily update result: {'processed_count': 3, 'success_count': 3, 'error_count': 0, 'total_tweets': 15, 'completed_at': '2025-03-02T05:48:03.646279'}
+2025-03-02 05:48:03,646 - INFO - Checking database for stored tweets
+2025-03-02 05:48:03,646 - INFO - Initializing local database at data/end_to_end_test.db
+2025-03-02 05:48:03,646 - INFO - Database initialization complete
+2025-03-02 05:48:03,647 - INFO - Found 15 tweets in the database
+2025-03-02 05:48:03,647 - INFO - Found 5 tweets for URL: https://twitter.com/0xPolygon
+2025-03-02 05:48:03,648 - INFO - Found 5 tweets for URL: https://twitter.com/elonmusk
+2025-03-02 05:48:03,648 - INFO - Found 5 tweets for URL: https://twitter.com/vitalikbuterin
+2025-03-02 05:48:03,648 - INFO - Generating statistics for local database
+2025-03-02 05:48:03,649 - INFO - Statistics generated: 3 URLs, 15 tweets
+2025-03-02 05:48:03,649 - INFO - Statistics: {'total_urls': 3, 'active_urls': 3, 'total_tweets': 15, 'url_tweet_counts': {'https://twitter.com/vitalikbuterin': 5, 'https://twitter.com/elonmusk': 5, 'https://twitter.com/0xPolygon': 5}, 'generated_at': '2025-03-02T05:48:03.648861'}
+2025-03-02 05:48:03,649 - INFO - End-to-end test completed successfully
+2025-03-02 05:48:03,649 - INFO - Total URLs: 3
+2025-03-02 05:48:03,649 - INFO - Total tweets: 15
