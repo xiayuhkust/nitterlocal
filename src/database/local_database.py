@@ -145,38 +145,51 @@ class LocalDatabase:
             cursor = conn.cursor()
             
             stored_count = 0
+            updated_count = 0
             
             for tweet in tweets:
                 try:
                     # Check if tweet already exists
                     cursor.execute("SELECT 1 FROM tweets WHERE tweet_id = ?", (tweet['tweet_id'],))
                     if cursor.fetchone():
-                        continue
-                    
-                    # Insert tweet
-                    cursor.execute('''
-                    INSERT INTO tweets (
-                        tweet_id, source_url, content, created_at, author, likes, retweets, replies, views
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (
-                        tweet['tweet_id'],
-                        source_url,
-                        tweet['content'],
-                        tweet['created_at'],
-                        tweet['author'],
-                        tweet['likes'],
-                        tweet['retweets'],
-                        tweet['replies'],
-                        tweet['views']
-                    ))
-                    
-                    stored_count += 1
-                    
+                        # Update existing tweet's metadata
+                        cursor.execute('''
+                        UPDATE tweets 
+                        SET likes = ?, retweets = ?, replies = ?, views = ?
+                        WHERE tweet_id = ?
+                        ''', (
+                            tweet['likes'],
+                            tweet['retweets'],
+                            tweet['replies'],
+                            tweet['views'],
+                            tweet['tweet_id']
+                        ))
+                        updated_count += 1
+                    else:
+                        # Insert new tweet
+                        cursor.execute('''
+                        INSERT INTO tweets (
+                            tweet_id, source_url, content, created_at, author, likes, retweets, replies, views
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (
+                            tweet['tweet_id'],
+                            source_url,
+                            tweet['content'],
+                            tweet['created_at'],
+                            tweet['author'],
+                            tweet['likes'],
+                            tweet['retweets'],
+                            tweet['replies'],
+                            tweet['views']
+                        ))
+                        
+                        stored_count += 1
+                        
                 except Exception as e:
-                    logging.warning(f"Error storing tweet {tweet['tweet_id']}: {str(e)}")
+                    logging.warning(f"Error storing/updating tweet {tweet['tweet_id']}: {str(e)}")
                     continue
             
-            # Update the tweet count for the URL
+            # Update the tweet count for the URL (only count new tweets, not updates)
             cursor.execute('''
             UPDATE url_tracking 
             SET tweet_count = tweet_count + ?, last_scraped = ?
@@ -186,7 +199,9 @@ class LocalDatabase:
             conn.commit()
             conn.close()
             
-            return stored_count
+            logging.info(f"Stored {stored_count} new tweets and updated {updated_count} existing tweets for URL: {source_url}")
+            
+            return stored_count + updated_count
             
         except Exception as e:
             logging.error(f"Error storing tweets: {str(e)}")

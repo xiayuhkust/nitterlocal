@@ -78,14 +78,14 @@ class DailyUpdate:
                         
                         if tweets:
                             # Store the tweets in the database
-                            stored_count = self.database.store_tweets(tweets, url)
+                            processed_count = self.database.store_tweets(tweets, url)
                             
-                            if stored_count > 0:
-                                logging.info(f"Stored {stored_count} tweets for URL: {url}")
+                            if processed_count > 0:
+                                logging.info(f"Processed {processed_count} tweets for URL: {url}")
                                 success_count += 1
-                                total_tweets += stored_count
+                                total_tweets += processed_count
                             else:
-                                logging.warning(f"No new tweets stored for URL: {url}")
+                                logging.warning(f"No tweets processed for URL: {url}")
                                 error_count += 1
                         else:
                             logging.warning(f"No tweets found for URL: {url}")
