@@ -58,6 +58,12 @@ def main():
     export_parser.add_argument('--source-url', type=str, help='Filter tweets by source URL')
     export_parser.add_argument('--limit', type=int, help='Limit the number of tweets to export')
     
+    # Analyze hashtags command
+    hashtag_parser = subparsers.add_parser('analyze-hashtags', help='Analyze hashtags in tweets')
+    hashtag_parser.add_argument('--db-path', type=str, default='data/local_database.db', help='Path to the local database')
+    hashtag_parser.add_argument('--limit', type=int, default=10, help='Limit the number of hashtags to return')
+    hashtag_parser.add_argument('--output', type=str, help='Output file for the analysis')
+    
     # Parse arguments
     args = parser.parse_args()
     
@@ -106,6 +112,16 @@ def main():
             output_file=args.output,
             source_url=args.source_url,
             limit=args.limit
+        )
+    
+    elif args.command == 'analyze-hashtags':
+        # Import the module directly
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'data_analysis'))
+        from analyze_hashtags import analyze_hashtags
+        analyze_hashtags(
+            db_path=args.db_path,
+            limit=args.limit,
+            output=args.output
         )
     
     else:

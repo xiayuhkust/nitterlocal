@@ -72,6 +72,21 @@ class LocalDatabase:
         )
         ''')
         
+        # Create the hashtags table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS hashtags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tweet_id TEXT,
+            hashtag TEXT,
+            FOREIGN KEY (tweet_id) REFERENCES tweets (tweet_id) ON DELETE CASCADE
+        )
+        ''')
+        
+        # Create an index on the hashtag column for faster queries
+        cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_hashtags_hashtag ON hashtags (hashtag)
+        ''')
+        
         # Create the backup log table
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS backup_log (
@@ -164,6 +179,10 @@ class LocalDatabase:
                             tweet['views'],
                             tweet['tweet_id']
                         ))
+                        
+                        # Delete existing hashtags for this tweet
+                        cursor.execute("DELETE FROM hashtags WHERE tweet_id = ?", (tweet['tweet_id'],))
+                        
                         updated_count += 1
                     else:
                         # Insert new tweet
@@ -184,6 +203,14 @@ class LocalDatabase:
                         ))
                         
                         stored_count += 1
+                    
+                    # Store hashtags for the tweet
+                    if 'hashtags' in tweet and tweet['hashtags']:
+                        for hashtag in tweet['hashtags']:
+                            cursor.execute('''
+                            INSERT INTO hashtags (tweet_id, hashtag)
+                            VALUES (?, ?)
+                            ''', (tweet['tweet_id'], hashtag))
                         
                 except Exception as e:
                     logging.warning(f"Error storing/updating tweet {tweet['tweet_id']}: {str(e)}")
@@ -328,6 +355,64 @@ class LocalDatabase:
         except Exception as e:
             logging.error(f"Error generating statistics: {str(e)}")
             return None
+    
+    def get_tweets_by_hashtag(self, hashtag, limit=None):
+        """Get tweets that contain a specific hashtag"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+            SELECT t.* FROM tweets t
+            JOIN hashtags h ON t.tweet_id = h.tweet_id
+            WHERE h.hashtag = ?
+            LIMIT ?
+            ''', (hashtag, limit or -1))
+            
+            columns = [column[0] for column in cursor.description]
+            tweets = []
+            
+            for row in cursor.fetchall():
+                tweet_data = dict(zip(columns, row))
+                tweets.append(tweet_data)
+            
+            conn.close()
+            
+            return tweets
+            
+        except Exception as e:
+            logging.error(f"Error getting tweets by hashtag {hashtag}: {str(e)}")
+            return []
+    
+    def get_popular_hashtags(self, limit=10):
+        """Get the most popular hashtags"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+            SELECT hashtag, COUNT(*) as count
+            FROM hashtags
+            GROUP BY hashtag
+            ORDER BY count DESC
+            LIMIT ?
+            ''', (limit,))
+            
+            hashtags = []
+            
+            for hashtag, count in cursor.fetchall():
+                hashtags.append({
+                    'hashtag': hashtag,
+                    'count': count
+                })
+            
+            conn.close()
+            
+            return hashtags
+            
+        except Exception as e:
+            logging.error(f"Error getting popular hashtags: {str(e)}")
+            return []
     
     def _log_operation(self, operation, details, success=1):
         """Log an operation to the backup log table"""

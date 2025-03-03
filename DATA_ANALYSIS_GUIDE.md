@@ -10,8 +10,9 @@
 4. [统计每个URL的推文数量](#统计每个URL的推文数量)
 5. [高级推文分析](#高级推文分析)
 6. [推文导出功能](#推文导出功能)
-7. [配置文件说明](#配置文件说明)
-8. [常见问题解答](#常见问题解答)
+7. [话题标签分析](#话题标签分析)
+8. [配置文件说明](#配置文件说明)
+9. [常见问题解答](#常见问题解答)
 
 ## 项目结构
 
@@ -252,6 +253,89 @@ python scripts/data_analysis.py export --limit 100
 - retweets
 - replies
 - source_url
+
+## 话题标签分析
+
+此功能用于分析推文中的话题标签（hashtags），识别热门话题和趋势。
+
+### 用法
+
+```bash
+python scripts/data_analysis.py analyze-hashtags [选项]
+```
+
+### 选项
+
+- `--limit`: 限制返回的话题标签数量，默认为10
+- `--output`: 输出文件路径，如不指定则只显示在控制台
+- `--db-path`: 指定数据库路径
+
+### 示例
+
+```bash
+# 显示前10个热门话题标签
+python scripts/data_analysis.py analyze-hashtags
+
+# 显示前20个热门话题标签
+python scripts/data_analysis.py analyze-hashtags --limit 20
+
+# 导出话题标签分析结果为JSON格式
+python scripts/data_analysis.py analyze-hashtags --output data/hashtag_analysis.json
+```
+
+### 输出示例
+
+```
+Top 10 hashtags:
+1. #crypto - 45 tweets
+2. #bitcoin - 38 tweets
+3. #ethereum - 27 tweets
+4. #blockchain - 22 tweets
+5. #nft - 18 tweets
+6. #defi - 15 tweets
+7. #web3 - 12 tweets
+8. #ai - 10 tweets
+9. #metaverse - 8 tweets
+10. #trading - 7 tweets
+```
+
+### 通过代码查询特定话题标签的推文
+
+您也可以使用 `LocalDatabase` 类的 `get_tweets_by_hashtag` 方法查询包含特定话题标签的推文：
+
+```python
+from src.database.local_database import LocalDatabase
+
+# 初始化数据库
+db = LocalDatabase()
+
+# 获取包含 #bitcoin 标签的前10条推文
+tweets = db.get_tweets_by_hashtag('bitcoin', limit=10)
+
+# 显示推文
+for tweet in tweets:
+    print(f"{tweet['author']}: {tweet['content']}")
+    print(f"点赞: {tweet['likes']}, 转发: {tweet['retweets']}, 回复: {tweet['replies']}")
+    print("---")
+```
+
+### 获取热门话题标签
+
+您可以使用 `get_popular_hashtags` 方法获取最热门的话题标签：
+
+```python
+from src.database.local_database import LocalDatabase
+
+# 初始化数据库
+db = LocalDatabase()
+
+# 获取前20个热门话题标签
+popular_hashtags = db.get_popular_hashtags(limit=20)
+
+# 显示热门话题标签
+for i, hashtag_data in enumerate(popular_hashtags):
+    print(f"{i+1}. #{hashtag_data['hashtag']} - {hashtag_data['count']} tweets")
+```
 
 ## 配置文件说明
 

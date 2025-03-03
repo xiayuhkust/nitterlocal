@@ -110,7 +110,8 @@ class TwitterScraper:
                     'retweets': tweet.get('retweets', 0),
                     'replies': tweet.get('replies', 0),
                     'views': tweet.get('views', 0),
-                    'source_url': url
+                    'source_url': url,
+                    'hashtags': tweet.get('hashtags', [])  # Add hashtags to the formatted tweet
                 }
                 formatted_tweets.append(formatted_tweet)
             
