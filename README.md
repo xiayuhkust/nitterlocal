@@ -91,6 +91,16 @@ Stores individual tweet information:
 - `views`: Number of views
 - `stored_at`: Timestamp when the tweet was stored
 
+### hashtags
+
+Stores hashtags from tweets:
+- `id`: Hashtag entry ID (primary key)
+- `tweet_id`: Foreign key referencing the tweets table
+- `hashtag`: The hashtag text (without the # symbol)
+- `stored_at`: Timestamp when the hashtag was stored
+
+This table has a many-to-one relationship with the tweets table, allowing multiple hashtags per tweet. The `tweet_id` column has a foreign key constraint with CASCADE delete, ensuring that when a tweet is deleted, its associated hashtags are also removed. The `hashtag` column is indexed for faster queries.
+
 ### backup_log
 
 Logs backup operations:
