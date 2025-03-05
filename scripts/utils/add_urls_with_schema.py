@@ -13,20 +13,36 @@ import re
 import requests
 from datetime import datetime
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
 # Import the database module
 from src.database.local_database import LocalDatabase
-from scripts.utils.url_utils import convert_nitter_to_twitter, extract_twitter_handle
+from scripts.utils.ensure_schema import ensure_schema
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
+
+def extract_twitter_handle(url):
+    """Extract Twitter handle from a nitter URL"""
+    if not url or 'nitter.net/' not in url:
+        return None
+    
+    try:
+        # Extract the handle from the URL
+        parts = url.split('nitter.net/')
+        if len(parts) > 1:
+            handle = parts[1].split('?')[0].strip('/')
+            if handle:
+                return handle.lower()
+    except Exception as e:
+        logging.error(f"Error extracting Twitter handle from {url}: {str(e)}")
+    
+    return None
 
 def get_user_id_from_twitter_handle(handle):
     """Get user ID from Twitter handle using Twitter API or scraping"""
@@ -35,7 +51,7 @@ def get_user_id_from_twitter_handle(handle):
     
     try:
         # Try to get user ID from Twitter handle using a simple scraping approach
-        url = f"https://twitter.com/{handle}"
+        url = f"https://nitter.net/{handle}"
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
@@ -105,19 +121,18 @@ def add_urls_from_file(file_path, db_path='data/local_database.db', clear_existi
     logging.info(f"Adding URLs from {file_path} to database at {db_path}")
     
     try:
+        # Ensure the database schema is correct
+        ensure_schema(db_path)
+        
         # Load URLs from file
         with open(file_path, 'r') as f:
             data = json.load(f)
         
-        # Extract URLs from the data
-        if isinstance(data, dict) and 'urls' in data:
-            urls = data['urls']
-        elif isinstance(data, list):
-            urls = data
-        else:
-            logging.error(f"Invalid data format in {file_path}")
+        if 'urls' not in data:
+            logging.error(f"Invalid JSON format: {file_path}")
             return False
         
+        urls = data['urls']
         logging.info(f"Found {len(urls)} URLs in {file_path}")
         
         # Initialize the database
@@ -138,23 +153,17 @@ def add_urls_from_file(file_path, db_path='data/local_database.db', clear_existi
         for url_data in urls:
             if isinstance(url_data, str):
                 # Simple URL string
-                # Convert to Twitter URL if it's a Nitter URL
-                url = convert_nitter_to_twitter(url_data)
-                
                 # Extract Twitter handle and get user ID
-                handle = extract_twitter_handle(url)
+                handle = extract_twitter_handle(url_data)
                 user_id = get_user_id_from_twitter_handle(handle) if handle else None
                 
-                result = db.add_url(url, user_id=user_id)
+                result = db.add_url(url_data, user_id=user_id)
                 if result:
                     added_count += 1
             elif isinstance(url_data, dict) and 'url' in url_data:
                 # URL with metadata
-                # Convert to Twitter URL if it's a Nitter URL
-                url = convert_nitter_to_twitter(url_data['url'])
-                
                 # Extract Twitter handle and get user ID
-                handle = extract_twitter_handle(url)
+                handle = extract_twitter_handle(url_data['url'])
                 
                 # Use existing user_id if available, otherwise get it from the handle
                 user_id = url_data.get('user_id')
@@ -166,7 +175,7 @@ def add_urls_from_file(file_path, db_path='data/local_database.db', clear_existi
                 
                 # Add URL to database
                 result = db.add_url(
-                    url,
+                    url_data['url'],
                     description=url_data.get('description', ''),
                     url_type=url_data.get('type', 'kol'),
                     user_id=user_id,
@@ -180,7 +189,7 @@ def add_urls_from_file(file_path, db_path='data/local_database.db', clear_existi
                     if subtype:
                         conn = db.get_connection()
                         cursor = conn.cursor()
-                        cursor.execute("UPDATE url_tracking SET subtype = ? WHERE url = ?", (subtype, url))
+                        cursor.execute("UPDATE url_tracking SET subtype = ? WHERE url = ?", (subtype, url_data['url']))
                         conn.commit()
                         conn.close()
             else:
@@ -189,6 +198,7 @@ def add_urls_from_file(file_path, db_path='data/local_database.db', clear_existi
         logging.info(f"Added {added_count} URLs to the database")
         
         return True
+        
     except Exception as e:
         logging.error(f"Error adding URLs from {file_path}: {str(e)}")
         return False
