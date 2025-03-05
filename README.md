@@ -59,24 +59,76 @@ python main.py --batch-size 5 --sleep 3 --max-tweets 30 --limit 20
 - `data`: Directory for storing the SQLite database and other data files
 - `config`: Configuration files for the application
 
-## Database Schema
+## 数据分析功能
 
-The local database uses SQLite with the following tables:
+本项目提供了多种数据分析功能，可以通过命令行工具 `scripts/data_analysis.py` 访问。所有分析功能现在都支持 `user_id` 字段，可以帮助您跟踪和分析特定 Twitter 用户的推文。
+
+### 热门推文分析
+
+分析热门推文并按点赞和转发数排序：
+
+```bash
+python scripts/data_analysis.py analyze --type popular --format json --output popular_tweets.json
+```
+
+### 推文统计分析
+
+统计每个 URL 的推文数量：
+
+```bash
+python scripts/data_analysis.py count-tweets --format json --output stats.json
+```
+
+### 列出 URL
+
+列出数据库中的所有 URL，包括 user_id 信息：
+
+```bash
+python scripts/data_analysis.py list-urls --format json --output urls.json
+```
+
+可用选项：
+- `--format`：输出格式，可选 text 或 json，默认为 text
+- `--output`：输出文件路径
+- `--limit`：限制显示的 URL 数量
+- `--type`：按类型筛选 URL
+
+### 删除重复推文
+
+```bash
+python scripts/data_analysis.py remove-duplicates
+```
+
+### 分析话题标签
+
+```bash
+python scripts/data_analysis.py analyze-hashtags --limit 20 --output hashtags.json
+```
+
+### 导出推文
+
+```bash
+python scripts/data_analysis.py export --format csv --output tweets.csv
+```
+
+## 数据库结构
+
+本地数据库使用 SQLite，包含以下表：
 
 ### url_tracking
 
-Stores URL metadata:
-- `user_id`: Twitter's unique user ID for the account (primary key)
-- `url`: URL to track (unique, not null)
-- `description`: Description of the URL
-- `status`: Status of the URL (active, error, etc.)
-- `last_checked`: Timestamp of the last check
-- `error_count`: Number of errors encountered
-- `tweet_count`: Number of tweets extracted
-- `type`: Type of URL (kol, media, etc.)
-- `added_at`: Timestamp when the URL was added
-- `last_scraped`: Timestamp of the last scrape
-- `last_error`: Last error message
+存储 URL 元数据：
+- `url`: 要跟踪的 URL（主键）
+- `user_id`: Twitter 账号的唯一用户 ID
+- `description`: URL 的描述
+- `status`: URL 的状态（active, error 等）
+- `last_checked`: 最后检查的时间戳
+- `error_count`: 遇到的错误次数
+- `tweet_count`: 提取的推文数量
+- `type`: URL 类型（kol, media 等）
+- `added_at`: URL 添加时的时间戳
+- `last_scraped`: 最后抓取的时间戳
+- `last_error`: 最后的错误消息
 
 ### tweets
 

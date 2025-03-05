@@ -64,6 +64,14 @@ def main():
     hashtag_parser.add_argument('--limit', type=int, default=10, help='Limit the number of hashtags to return')
     hashtag_parser.add_argument('--output', type=str, help='Output file for the analysis')
     
+    # List URLs command
+    list_urls_parser = subparsers.add_parser('list-urls', help='List URLs in the database')
+    list_urls_parser.add_argument('--db-path', type=str, default='data/local_database.db', help='Path to the local database')
+    list_urls_parser.add_argument('--format', type=str, choices=['text', 'json'], default='text', help='Output format')
+    list_urls_parser.add_argument('--output', type=str, help='Output file path')
+    list_urls_parser.add_argument('--limit', type=int, help='Limit the number of URLs to display')
+    list_urls_parser.add_argument('--type', type=str, help='Filter URLs by type')
+    
     # Parse arguments
     args = parser.parse_args()
     
@@ -122,6 +130,18 @@ def main():
             db_path=args.db_path,
             limit=args.limit,
             output=args.output
+        )
+    
+    elif args.command == 'list-urls':
+        # Import the module directly
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'data_analysis'))
+        from list_urls import list_urls
+        list_urls(
+            db_path=args.db_path,
+            output_format=args.format,
+            output_file=args.output,
+            limit=args.limit,
+            filter_type=args.type
         )
     
     else:
