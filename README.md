@@ -155,6 +155,9 @@ python scripts/data_analysis.py count-tweets --format json --output stats.json
 - `views`: 浏览数
 - `stored_at`: 推文存储时的时间戳
 - `user_id`: Twitter 账号的唯一用户 ID
+- `is_reply`: 布尔值，表示推文是否为回复
+- `in_reply_to_status_id`: 被回复推文的 ID
+- `conversation_id`: 对话线程的 ID
 
 ### hashtags
 
@@ -218,6 +221,32 @@ python scripts/data_analysis.py analyze-hashtags --limit 20 --output hashtags.js
 ```bash
 python scripts/data_analysis.py export --format csv --output tweets.csv
 ```
+
+### 分析回复
+
+分析推文回复，支持多种分析类型：
+
+```bash
+# 分析用户发出的回复
+python scripts/data_analysis/analyze_replies.py --type user-replies --author username
+
+# 分析对用户推文的回复
+python scripts/data_analysis/analyze_replies.py --type replies-to-user --author username
+
+# 分析特定对话线程中的所有回复
+python scripts/data_analysis/analyze_replies.py --type conversation --conversation conversation_id
+```
+
+回复分析支持以下参数：
+- `--type`: 分析类型（user-replies, replies-to-user, conversation）
+- `--days`: 最近几天的回复（默认：7）
+- `--min-likes`: 最小点赞数
+- `--author`: 按作者筛选
+- `--keyword`: 按关键词搜索
+- `--conversation`: 按对话 ID 筛选
+- `--format`: 输出格式（text, json）
+- `--output`: 输出文件路径
+- `--limit`: 限制回复数量
 
 ## 用户 ID 字段说明
 

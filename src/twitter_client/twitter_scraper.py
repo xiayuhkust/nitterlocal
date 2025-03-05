@@ -122,8 +122,11 @@ class TwitterScraper:
                     'replies': tweet.get('replies', 0),
                     'views': tweet.get('views', 0),
                     'source_url': url,
-                    'user_id': user_id,  # Add user_id to the formatted tweet
-                    'hashtags': tweet.get('hashtags', [])
+                    'user_id': user_id,
+                    'hashtags': tweet.get('hashtags', []),
+                    'is_reply': tweet.get('isReply', False),
+                    'in_reply_to_status_id': tweet.get('inReplyToStatusId', None),
+                    'conversation_id': tweet.get('conversationId', None)
                 }
                 formatted_tweets.append(formatted_tweet)
             
@@ -164,6 +167,165 @@ class TwitterScraper:
         except Exception as e:
             logging.error(f"Error updating user ID for URL {url}: {str(e)}")
             return False
+    
+    def scrape_user_replies(self, url, max_tweets=50):
+        """Scrape replies from a user to others"""
+        logging.info(f"Scraping replies from URL: {url}")
+        
+        # Extract the username from the URL
+        username = self.extract_username_from_url(url)
+        if not username:
+            return []
+        
+        # Create a temporary file for the output
+        with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as temp_file:
+            output_file = temp_file.name
+        
+        try:
+            # Run the Twitter client with the --replies flag
+            logging.info(f"Running Twitter client for {username} replies...")
+            process = subprocess.run(
+                ['node', self.client_path, username, str(max_tweets), output_file, '--replies'],
+                cwd=self.client_dir,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            
+            logging.info(process.stdout)
+            
+            # Check if the output file exists
+            if not os.path.exists(output_file):
+                logging.error(f"Output file {output_file} does not exist")
+                return []
+            
+            # Load the tweets from the output file
+            with open(output_file, 'r') as f:
+                result = json.load(f)
+            
+            # Get tweets and user ID from the result
+            tweets = result.get('tweets', [])
+            user_id = result.get('userId')
+            
+            if user_id:
+                logging.info(f"Got user ID for {username}: {user_id}")
+                
+                # Update the URL with the user ID
+                self.update_url_user_id(url, user_id)
+            
+            # Convert the tweets to our format
+            formatted_tweets = []
+            for tweet in tweets:
+                formatted_tweet = {
+                    'tweet_id': tweet.get('id', ''),
+                    'content': tweet.get('text', ''),
+                    'author': username,
+                    'created_at': tweet.get('timeParsed') or datetime.now().isoformat(),
+                    'likes': tweet.get('likes', 0),
+                    'retweets': tweet.get('retweets', 0),
+                    'replies': tweet.get('replies', 0),
+                    'views': tweet.get('views', 0),
+                    'source_url': url,
+                    'user_id': user_id,
+                    'hashtags': tweet.get('hashtags', []),
+                    'is_reply': True,  # These are all replies
+                    'in_reply_to_status_id': tweet.get('inReplyToStatusId', None),
+                    'conversation_id': tweet.get('conversationId', None)
+                }
+                formatted_tweets.append(formatted_tweet)
+            
+            logging.info(f"Extracted {len(formatted_tweets)} replies from {url}")
+            
+            return formatted_tweets
+            
+        except Exception as e:
+            logging.error(f"Error scraping replies for URL {url}: {str(e)}")
+            return []
+        finally:
+            # Remove the temporary file
+            if os.path.exists(output_file):
+                os.remove(output_file)
+    
+    def scrape_replies_to_user(self, url, max_tweets=50):
+        """Scrape replies to a user's tweets"""
+        logging.info(f"Scraping replies to URL: {url}")
+        
+        # Extract the username from the URL
+        username = self.extract_username_from_url(url)
+        if not username:
+            return []
+        
+        # Create a temporary file for the output
+        with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as temp_file:
+            output_file = temp_file.name
+        
+        try:
+            # Run the Twitter client with the --replies-to flag
+            logging.info(f"Running Twitter client for replies to {username}...")
+            process = subprocess.run(
+                ['node', self.client_path, username, str(max_tweets), output_file, '--replies-to'],
+                cwd=self.client_dir,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            
+            logging.info(process.stdout)
+            
+            # Check if the output file exists
+            if not os.path.exists(output_file):
+                logging.error(f"Output file {output_file} does not exist")
+                return []
+            
+            # Load the tweets from the output file
+            with open(output_file, 'r') as f:
+                result = json.load(f)
+            
+            # Get tweets and user ID from the result
+            tweets = result.get('tweets', [])
+            user_id = result.get('userId')
+            
+            if user_id:
+                logging.info(f"Got user ID for {username}: {user_id}")
+                
+                # Update the URL with the user ID
+                self.update_url_user_id(url, user_id)
+            
+            # Convert the tweets to our format
+            formatted_tweets = []
+            for tweet in tweets:
+                # These tweets are from other users replying to the target user
+                tweet_author = tweet.get('author', 'unknown')
+                
+                formatted_tweet = {
+                    'tweet_id': tweet.get('id', ''),
+                    'content': tweet.get('text', ''),
+                    'author': tweet_author,  # Author is the replying user, not the target user
+                    'created_at': tweet.get('timeParsed') or datetime.now().isoformat(),
+                    'likes': tweet.get('likes', 0),
+                    'retweets': tweet.get('retweets', 0),
+                    'replies': tweet.get('replies', 0),
+                    'views': tweet.get('views', 0),
+                    'source_url': url,  # Still track the original URL as the source
+                    'user_id': user_id,  # This is the target user's ID, not the replying user's ID
+                    'hashtags': tweet.get('hashtags', []),
+                    'is_reply': True,  # These are all replies
+                    'in_reply_to_status_id': tweet.get('inReplyToStatusId', None),
+                    'conversation_id': tweet.get('conversationId', None)
+                }
+                formatted_tweets.append(formatted_tweet)
+            
+            logging.info(f"Extracted {len(formatted_tweets)} replies to {url}")
+            
+            return formatted_tweets
+            
+        except Exception as e:
+            logging.error(f"Error scraping replies to URL {url}: {str(e)}")
+            return []
+        finally:
+            # Remove the temporary file
+            if os.path.exists(output_file):
+                os.remove(output_file)
     
     def scrape_urls(self, urls, max_tweets=50, batch_size=10, sleep_between_urls=2):
         """Scrape tweets from multiple URLs"""

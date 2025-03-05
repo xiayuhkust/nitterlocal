@@ -26,6 +26,7 @@ logging.basicConfig(
 
 def analyze_tweets(db_path='data/local_database.db', analysis_type='recent', days=7, 
                  min_likes=0, min_retweets=0, author=None, keyword=None, 
+                 is_reply=None, in_reply_to_status_id=None, conversation_id=None,
                  output_format='text', output_file=None, limit=50):
     """Analyze tweets in the database"""
     logging.info(f"Analyzing tweets in database at {db_path}")
@@ -63,6 +64,21 @@ def analyze_tweets(db_path='data/local_database.db', analysis_type='recent', day
         if author:
             query += " AND author = ?"
             params.append(author)
+        
+        # Filter by reply status if specified
+        if is_reply is not None:
+            query += " AND is_reply = ?"
+            params.append(1 if is_reply else 0)
+        
+        # Filter by in_reply_to_status_id if specified
+        if in_reply_to_status_id:
+            query += " AND in_reply_to_status_id = ?"
+            params.append(in_reply_to_status_id)
+        
+        # Filter by conversation_id if specified
+        if conversation_id:
+            query += " AND conversation_id = ?"
+            params.append(conversation_id)
         
         # Add limit
         query += " LIMIT ?"
@@ -152,11 +168,19 @@ def main():
     parser.add_argument('--min-retweets', type=int, default=0, help='Minimum retweets for popular analysis')
     parser.add_argument('--author', type=str, help='Filter by author')
     parser.add_argument('--keyword', type=str, help='Search keyword')
+    parser.add_argument('--is-reply', type=str, choices=['yes', 'no'], help='Filter by reply status')
+    parser.add_argument('--in-reply-to', type=str, help='Filter by in_reply_to_status_id')
+    parser.add_argument('--conversation', type=str, help='Filter by conversation_id')
     parser.add_argument('--format', type=str, choices=['text', 'json'], default='text', help='Output format')
     parser.add_argument('--output', type=str, help='Output file path')
     parser.add_argument('--limit', type=int, default=50, help='Limit the number of tweets to display')
     
     args = parser.parse_args()
+    
+    # Convert is_reply string to boolean
+    is_reply = None
+    if args.is_reply:
+        is_reply = args.is_reply.lower() == 'yes'
     
     # Analyze tweets
     analyze_tweets(
@@ -167,6 +191,9 @@ def main():
         min_retweets=args.min_retweets,
         author=args.author,
         keyword=args.keyword,
+        is_reply=is_reply,
+        in_reply_to_status_id=args.in_reply_to,
+        conversation_id=args.conversation,
         output_format=args.format,
         output_file=args.output,
         limit=args.limit

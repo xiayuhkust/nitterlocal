@@ -36,10 +36,12 @@ def count_tweets_per_url(db_path='data/local_database.db', output_format='text',
         
         # Get tweet counts per URL
         try:
-            # Try with user_id column
+            # Try with user_id column and reply counts
             cursor.execute("""
                 SELECT url_tracking.url, url_tracking.description, url_tracking.type, 
-                       url_tracking.user_id, COUNT(tweets.tweet_id) as tweet_count
+                       url_tracking.user_id, COUNT(tweets.tweet_id) as tweet_count,
+                       SUM(CASE WHEN tweets.is_reply = 1 THEN 1 ELSE 0 END) as reply_count,
+                       SUM(CASE WHEN tweets.is_reply = 0 OR tweets.is_reply IS NULL THEN 1 ELSE 0 END) as non_reply_count
                 FROM url_tracking
                 LEFT JOIN tweets ON url_tracking.url = tweets.source_url
                 GROUP BY url_tracking.url
@@ -51,7 +53,22 @@ def count_tweets_per_url(db_path='data/local_database.db', output_format='text',
                 # Fall back to query without user_id
                 cursor.execute("""
                     SELECT url_tracking.url, url_tracking.description, url_tracking.type, 
-                           NULL as user_id, COUNT(tweets.tweet_id) as tweet_count
+                           NULL as user_id, COUNT(tweets.tweet_id) as tweet_count,
+                           0 as reply_count,
+                           COUNT(tweets.tweet_id) as non_reply_count
+                    FROM url_tracking
+                    LEFT JOIN tweets ON url_tracking.url = tweets.source_url
+                    GROUP BY url_tracking.url
+                    ORDER BY tweet_count DESC
+                    LIMIT ?
+                """, (limit or -1,))
+            elif "no such column: tweets.is_reply" in str(e):
+                # Fall back to query without reply counts
+                cursor.execute("""
+                    SELECT url_tracking.url, url_tracking.description, url_tracking.type, 
+                           url_tracking.user_id, COUNT(tweets.tweet_id) as tweet_count,
+                           0 as reply_count,
+                           COUNT(tweets.tweet_id) as non_reply_count
                     FROM url_tracking
                     LEFT JOIN tweets ON url_tracking.url = tweets.source_url
                     GROUP BY url_tracking.url
@@ -102,6 +119,8 @@ def count_tweets_per_url(db_path='data/local_database.db', output_format='text',
                 print(f"   Type: {result['type']}")
                 print(f"   User ID: {result['user_id'] or 'N/A'}")
                 print(f"   Tweet Count: {result['tweet_count']}")
+                print(f"   Reply Count: {result.get('reply_count', 0)}")
+                print(f"   Non-Reply Count: {result.get('non_reply_count', result['tweet_count'])}")
                 print()
             
             if output_file:
@@ -118,6 +137,8 @@ def count_tweets_per_url(db_path='data/local_database.db', output_format='text',
                         f.write(f"   Type: {result['type']}\n")
                         f.write(f"   User ID: {result['user_id'] or 'N/A'}\n")
                         f.write(f"   Tweet Count: {result['tweet_count']}\n")
+                        f.write(f"   Reply Count: {result.get('reply_count', 0)}\n")
+                        f.write(f"   Non-Reply Count: {result.get('non_reply_count', result['tweet_count'])}\n")
                         f.write("\n")
                 
                 logging.info(f"Statistics saved to {output_file}")
