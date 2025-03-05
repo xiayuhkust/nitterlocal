@@ -91,6 +91,7 @@ Stores individual tweet information:
 - `replies`: Number of replies
 - `views`: Number of views
 - `stored_at`: Timestamp when the tweet was stored
+- `user_id`: Twitter's unique user ID for the account
 
 ### hashtags
 

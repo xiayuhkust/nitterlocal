@@ -122,6 +122,7 @@ class TwitterScraper:
                     'replies': tweet.get('replies', 0),
                     'views': tweet.get('views', 0),
                     'source_url': url,
+                    'user_id': user_id,  # Add user_id to the formatted tweet
                     'hashtags': tweet.get('hashtags', [])
                 }
                 formatted_tweets.append(formatted_tweet)

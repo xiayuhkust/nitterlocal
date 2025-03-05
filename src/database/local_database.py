@@ -74,8 +74,14 @@ class LocalDatabase:
             replies INTEGER DEFAULT 0,
             views INTEGER DEFAULT 0,
             stored_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            user_id TEXT,
             FOREIGN KEY (source_url) REFERENCES url_tracking (url)
         )
+        ''')
+        
+        # Create an index on the user_id column for faster lookups
+        cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_tweets_user_id ON tweets (user_id)
         ''')
         
         # Create the hashtags table
@@ -135,13 +141,15 @@ class LocalDatabase:
             logging.error(f"Error getting URLs from local database: {str(e)}")
             return []
     
-    def get_tweets(self, source_url=None, limit=None):
+    def get_tweets(self, source_url=None, limit=None, user_id=None):
         """Get tweets from the local database"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            if source_url:
+            if user_id:
+                cursor.execute("SELECT * FROM tweets WHERE user_id = ? LIMIT ?", (user_id, limit or -1))
+            elif source_url:
                 cursor.execute("SELECT * FROM tweets WHERE source_url = ? LIMIT ?", (source_url, limit or -1))
             else:
                 cursor.execute("SELECT * FROM tweets LIMIT ?", (limit or -1,))
@@ -178,13 +186,14 @@ class LocalDatabase:
                         # Update existing tweet's metadata
                         cursor.execute('''
                         UPDATE tweets 
-                        SET likes = ?, retweets = ?, replies = ?, views = ?
+                        SET likes = ?, retweets = ?, replies = ?, views = ?, user_id = ?
                         WHERE tweet_id = ?
                         ''', (
                             tweet['likes'],
                             tweet['retweets'],
                             tweet['replies'],
                             tweet['views'],
+                            tweet.get('user_id'),  # Include user_id in the update
                             tweet['tweet_id']
                         ))
                         
@@ -196,8 +205,8 @@ class LocalDatabase:
                         # Insert new tweet
                         cursor.execute('''
                         INSERT INTO tweets (
-                            tweet_id, source_url, content, created_at, author, likes, retweets, replies, views
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            tweet_id, source_url, content, created_at, author, likes, retweets, replies, views, user_id
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ''', (
                             tweet['tweet_id'],
                             source_url,
@@ -207,7 +216,8 @@ class LocalDatabase:
                             tweet['likes'],
                             tweet['retweets'],
                             tweet['replies'],
-                            tweet['views']
+                            tweet['views'],
+                            tweet.get('user_id')  # Include user_id in the insert
                         ))
                         
                         stored_count += 1
