@@ -52,7 +52,8 @@ class LocalDatabase:
             type TEXT,
             added_at TEXT DEFAULT CURRENT_TIMESTAMP,
             last_scraped TEXT,
-            last_error TEXT
+            last_error TEXT,
+            subtype TEXT
         )
         ''')
         
@@ -255,22 +256,40 @@ class LocalDatabase:
             logging.error(f"Error storing tweets: {str(e)}")
             return 0
     
-    def add_url(self, url, description="", url_type="kol", user_id=None):
+    def get_connection(self):
+        """Get a connection to the database"""
+        return sqlite3.connect(self.db_path)
+            
+    def add_url(self, url, description="", url_type="kol", user_id=None, subtype=None):
         """Add a URL to the database"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
             # Check if URL already exists
-            cursor.execute("SELECT user_id FROM url_tracking WHERE url = ?", (url,))
+            cursor.execute("SELECT user_id, subtype FROM url_tracking WHERE url = ?", (url,))
             existing = cursor.fetchone()
             
             if existing:
-                # If URL exists but user_id is being updated
+                # If URL exists but user_id or subtype is being updated
+                update_fields = []
+                params = []
+                
                 if user_id and not existing[0]:
-                    cursor.execute("UPDATE url_tracking SET user_id = ? WHERE url = ?", (user_id, url))
+                    update_fields.append("user_id = ?")
+                    params.append(user_id)
+                    logging.info(f"Updating user_id for existing URL {url}: {user_id}")
+                
+                if subtype and not existing[1]:
+                    update_fields.append("subtype = ?")
+                    params.append(subtype)
+                    logging.info(f"Updating subtype for existing URL {url}: {subtype}")
+                
+                if update_fields:
+                    query = f"UPDATE url_tracking SET {', '.join(update_fields)} WHERE url = ?"
+                    params.append(url)
+                    cursor.execute(query, params)
                     conn.commit()
-                    logging.info(f"Updated user_id for existing URL {url}: {user_id}")
                 
                 conn.close()
                 return True
@@ -287,8 +306,8 @@ class LocalDatabase:
             now = datetime.now().isoformat()
             cursor.execute('''
             INSERT INTO url_tracking (
-                user_id, url, description, status, last_checked, error_count, tweet_count, type, added_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                user_id, url, description, status, last_checked, error_count, tweet_count, type, added_at, subtype
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 user_id,  # Can be None for now, will be updated later
                 url,
@@ -298,7 +317,8 @@ class LocalDatabase:
                 0,
                 0,
                 url_type,
-                now
+                now,
+                subtype
             ))
             
             conn.commit()
