@@ -39,11 +39,11 @@ class LocalDatabase:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Create the URL tracking table with user_id as primary key
+        # Create the URL tracking table with url as primary key
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS url_tracking (
-            user_id TEXT PRIMARY KEY,
-            url TEXT UNIQUE NOT NULL,
+            url TEXT PRIMARY KEY,
+            user_id TEXT,
             description TEXT,
             status TEXT DEFAULT 'active',
             last_checked TEXT,
