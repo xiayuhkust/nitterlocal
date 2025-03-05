@@ -35,15 +35,31 @@ def count_tweets_per_url(db_path='data/local_database.db', output_format='text',
         cursor = conn.cursor()
         
         # Get tweet counts per URL
-        cursor.execute("""
-            SELECT url_tracking.url, url_tracking.description, url_tracking.type, 
-                   url_tracking.user_id, COUNT(tweets.tweet_id) as tweet_count
-            FROM url_tracking
-            LEFT JOIN tweets ON url_tracking.url = tweets.source_url
-            GROUP BY url_tracking.url
-            ORDER BY tweet_count DESC
-            LIMIT ?
-        """, (limit or -1,))
+        try:
+            # Try with user_id column
+            cursor.execute("""
+                SELECT url_tracking.url, url_tracking.description, url_tracking.type, 
+                       url_tracking.user_id, COUNT(tweets.tweet_id) as tweet_count
+                FROM url_tracking
+                LEFT JOIN tweets ON url_tracking.url = tweets.source_url
+                GROUP BY url_tracking.url
+                ORDER BY tweet_count DESC
+                LIMIT ?
+            """, (limit or -1,))
+        except sqlite3.OperationalError as e:
+            if "no such column: url_tracking.user_id" in str(e):
+                # Fall back to query without user_id
+                cursor.execute("""
+                    SELECT url_tracking.url, url_tracking.description, url_tracking.type, 
+                           NULL as user_id, COUNT(tweets.tweet_id) as tweet_count
+                    FROM url_tracking
+                    LEFT JOIN tweets ON url_tracking.url = tweets.source_url
+                    GROUP BY url_tracking.url
+                    ORDER BY tweet_count DESC
+                    LIMIT ?
+                """, (limit or -1,))
+            else:
+                raise
         
         results = [dict(row) for row in cursor.fetchall()]
         
