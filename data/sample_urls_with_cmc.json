@@ -1,0 +1,89 @@
+{
+  "urls": [
+    {
+      "url": "https://nitter.net/cz_binance",
+      "description": "Binance创始人赵长鹏",
+      "type": "kol"
+    },
+    {
+      "url": "https://nitter.net/VitalikButerin",
+      "description": "以太坊创始人Vitalik Buterin",
+      "type": "kol"
+    },
+    {
+      "url": "https://nitter.net/SBF_FTX",
+      "description": "FTX创始人Sam Bankman-Fried",
+      "type": "kol"
+    },
+    {
+      "url": "https://nitter.net/binance",
+      "description": "Binance Exchange",
+      "type": "institution",
+      "subtype": "exchange",
+      "coinmarketcap_url": "https://coinmarketcap.com/exchanges/binance/"
+    },
+    {
+      "url": "https://nitter.net/coinbase",
+      "description": "Coinbase Exchange",
+      "type": "institution",
+      "subtype": "exchange",
+      "coinmarketcap_url": "https://coinmarketcap.com/exchanges/coinbase/"
+    },
+    {
+      "url": "https://nitter.net/krakenfx",
+      "description": "Kraken Exchange",
+      "type": "institution",
+      "subtype": "exchange",
+      "coinmarketcap_url": "https://coinmarketcap.com/exchanges/kraken/"
+    },
+    {
+      "url": "https://nitter.net/OKX",
+      "description": "OKX Exchange",
+      "type": "institution",
+      "subtype": "exchange",
+      "coinmarketcap_url": "https://coinmarketcap.com/exchanges/okx/"
+    },
+    {
+      "url": "https://nitter.net/HuobiGlobal",
+      "description": "Huobi Global Exchange",
+      "type": "institution",
+      "subtype": "exchange",
+      "coinmarketcap_url": "https://coinmarketcap.com/exchanges/huobi/"
+    },
+    {
+      "url": "https://nitter.net/dogecoin",
+      "description": "Dogecoin",
+      "type": "institution",
+      "subtype": "meme",
+      "coinmarketcap_url": "https://coinmarketcap.com/currencies/dogecoin/"
+    },
+    {
+      "url": "https://nitter.net/ShibainuCoin",
+      "description": "Shiba Inu",
+      "type": "institution",
+      "subtype": "meme",
+      "coinmarketcap_url": "https://coinmarketcap.com/currencies/shiba-inu/"
+    },
+    {
+      "url": "https://nitter.net/pepe",
+      "description": "Pepe",
+      "type": "institution",
+      "subtype": "meme",
+      "coinmarketcap_url": "https://coinmarketcap.com/currencies/pepe/"
+    },
+    {
+      "url": "https://nitter.net/floki",
+      "description": "Floki",
+      "type": "institution",
+      "subtype": "meme",
+      "coinmarketcap_url": "https://coinmarketcap.com/currencies/floki/"
+    },
+    {
+      "url": "https://nitter.net/bonk_inu",
+      "description": "Bonk",
+      "type": "institution",
+      "subtype": "meme",
+      "coinmarketcap_url": "https://coinmarketcap.com/currencies/bonk/"
+    }
+  ]
+}
