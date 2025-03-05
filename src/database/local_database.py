@@ -75,9 +75,6 @@ class LocalDatabase:
             views INTEGER DEFAULT 0,
             stored_at TEXT DEFAULT CURRENT_TIMESTAMP,
             user_id TEXT,
-            is_reply BOOLEAN DEFAULT 0,
-            in_reply_to_status_id TEXT,
-            conversation_id TEXT,
             FOREIGN KEY (source_url) REFERENCES url_tracking (url)
         )
         ''')
@@ -144,49 +141,25 @@ class LocalDatabase:
             logging.error(f"Error getting URLs from local database: {str(e)}")
             return []
     
-    def get_tweets(self, source_url=None, limit=None, user_id=None, is_reply=None, in_reply_to_status_id=None, conversation_id=None):
+    def get_tweets(self, source_url=None, limit=None, user_id=None):
         """Get tweets from the local database"""
         try:
             conn = sqlite3.connect(self.db_path)
-            conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             
-            # Build the query dynamically based on the provided parameters
-            query = "SELECT * FROM tweets WHERE 1=1"
-            params = []
-            
-            if source_url:
-                query += " AND source_url = ?"
-                params.append(source_url)
-            
             if user_id:
-                query += " AND user_id = ?"
-                params.append(user_id)
+                cursor.execute("SELECT * FROM tweets WHERE user_id = ? LIMIT ?", (user_id, limit or -1))
+            elif source_url:
+                cursor.execute("SELECT * FROM tweets WHERE source_url = ? LIMIT ?", (source_url, limit or -1))
+            else:
+                cursor.execute("SELECT * FROM tweets LIMIT ?", (limit or -1,))
             
-            if is_reply is not None:
-                query += " AND is_reply = ?"
-                params.append(1 if is_reply else 0)
+            columns = [column[0] for column in cursor.description]
+            tweets = []
             
-            if in_reply_to_status_id:
-                query += " AND in_reply_to_status_id = ?"
-                params.append(in_reply_to_status_id)
-            
-            if conversation_id:
-                query += " AND conversation_id = ?"
-                params.append(conversation_id)
-            
-            # Add order by and limit
-            query += " ORDER BY created_at DESC"
-            
-            if limit:
-                query += " LIMIT ?"
-                params.append(limit)
-            
-            # Execute the query
-            cursor.execute(query, params)
-            
-            # Get the results
-            tweets = [dict(row) for row in cursor.fetchall()]
+            for row in cursor.fetchall():
+                tweet_data = dict(zip(columns, row))
+                tweets.append(tweet_data)
             
             conn.close()
             
@@ -232,9 +205,8 @@ class LocalDatabase:
                         # Insert new tweet
                         cursor.execute('''
                         INSERT INTO tweets (
-                            tweet_id, source_url, content, created_at, author, likes, retweets, replies, views, user_id,
-                            is_reply, in_reply_to_status_id, conversation_id
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            tweet_id, source_url, content, created_at, author, likes, retweets, replies, views, user_id
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ''', (
                             tweet['tweet_id'],
                             source_url,
@@ -245,10 +217,7 @@ class LocalDatabase:
                             tweet['retweets'],
                             tweet['replies'],
                             tweet['views'],
-                            tweet.get('user_id'),  # Include user_id in the insert
-                            tweet.get('is_reply', False),  # Include is_reply in the insert
-                            tweet.get('in_reply_to_status_id'),  # Include in_reply_to_status_id in the insert
-                            tweet.get('conversation_id')  # Include conversation_id in the insert
+                            tweet.get('user_id')  # Include user_id in the insert
                         ))
                         
                         stored_count += 1

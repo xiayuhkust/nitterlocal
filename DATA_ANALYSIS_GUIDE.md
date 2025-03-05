@@ -11,9 +11,8 @@
 5. [高级推文分析](#高级推文分析)
 6. [推文导出功能](#推文导出功能)
 7. [话题标签分析](#话题标签分析)
-8. [回复分析功能](#回复分析功能)
-9. [配置文件说明](#配置文件说明)
-10. [常见问题解答](#常见问题解答)
+8. [配置文件说明](#配置文件说明)
+9. [常见问题解答](#常见问题解答)
 
 ## 项目结构
 
@@ -337,100 +336,6 @@ popular_hashtags = db.get_popular_hashtags(limit=20)
 for i, hashtag_data in enumerate(popular_hashtags):
     print(f"{i+1}. #{hashtag_data['hashtag']} - {hashtag_data['count']} tweets")
 ```
-
-## 回复分析功能
-
-此功能用于分析推文回复，包括用户发出的回复和对用户推文的回复，以及完整的对话线程。
-
-### 用法
-
-```bash
-python scripts/data_analysis/analyze_replies.py [选项]
-```
-
-### 选项
-
-- `--type`: 分析类型，可选 `user-replies`（用户发出的回复）、`replies-to-user`（对用户推文的回复）或 `conversation`（对话线程），默认为 `user-replies`
-- `--days`: 最近天数，默认为 7
-- `--min-likes`: 最小点赞数，默认为 0
-- `--author`: 按作者筛选
-- `--keyword`: 搜索关键词
-- `--conversation`: 按对话 ID 筛选，用于 `conversation` 类型
-- `--format`: 输出格式，可选 `text` 或 `json`，默认为 `text`
-- `--output`: 输出文件路径，如不指定则输出到控制台
-- `--limit`: 限制显示的回复数量，默认为 50
-- `--db-path`: 指定数据库路径
-
-### 示例
-
-```bash
-# 分析用户发出的回复
-python scripts/data_analysis/analyze_replies.py --type user-replies --author "elonmusk"
-
-# 分析对用户推文的回复
-python scripts/data_analysis/analyze_replies.py --type replies-to-user --author "elonmusk"
-
-# 分析特定对话线程中的所有回复
-python scripts/data_analysis/analyze_replies.py --type conversation --conversation "1234567890"
-
-# 导出回复分析结果为JSON格式
-python scripts/data_analysis/analyze_replies.py --type user-replies --author "elonmusk" --format json --output replies_analysis.json
-```
-
-### 输出示例
-
-```
-Reply Analysis Results:
-Analysis Type: user-replies
-Total Replies: 245
-Filtered Replies: 10
-Generated at: 2025-03-02T12:44:42.789123
-
-Replies:
-1. Reply ID: 1894019006161473996
-   Author: elonmusk
-   User ID: 44196397
-   Created at: 2025-02-24T13:38:14.000Z
-   Content: 回复 @tim_cook: 感谢您的支持！我们将继续在美国投资和创新。
-   Likes: 73288, Retweets: 9091, Replies: 5235
-   In Reply To: 1894018006161473996
-   Conversation ID: 1894018006161473996
-   Source URL: https://twitter.com/elonmusk
-
-...
-```
-
-### 通过代码查询回复
-
-您可以使用 `LocalDatabase` 类的 `get_tweets` 方法查询回复，通过设置 `is_reply` 参数：
-
-```python
-from src.database.local_database import LocalDatabase
-
-# 初始化数据库
-db = LocalDatabase()
-
-# 获取用户发出的回复
-user_replies = db.get_tweets(author="elonmusk", is_reply=True, limit=10)
-
-# 获取特定对话线程中的回复
-conversation_replies = db.get_tweets(conversation_id="1234567890", limit=20)
-
-# 显示回复
-for reply in user_replies:
-    print(f"{reply['author']} 回复 {reply['in_reply_to_status_id']}: {reply['content']}")
-    print(f"点赞: {reply['likes']}, 转发: {reply['retweets']}, 回复: {reply['replies']}")
-    print("---")
-```
-
-### 回复相关字段说明
-
-推文表中的回复相关字段：
-- `is_reply`: 布尔值，表示推文是否为回复
-- `in_reply_to_status_id`: 被回复推文的 ID
-- `conversation_id`: 对话线程的 ID
-
-这些字段可用于构建完整的对话线程，跟踪回复关系，以及分析用户互动模式。
 
 ## 配置文件说明
 
