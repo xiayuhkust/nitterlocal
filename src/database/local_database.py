@@ -39,10 +39,11 @@ class LocalDatabase:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # Create the URL tracking table
+        # Create the URL tracking table with user_id as primary key
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS url_tracking (
-            url TEXT PRIMARY KEY,
+            user_id TEXT PRIMARY KEY,
+            url TEXT UNIQUE NOT NULL,
             description TEXT,
             status TEXT DEFAULT 'active',
             last_checked TEXT,
@@ -53,6 +54,11 @@ class LocalDatabase:
             last_scraped TEXT,
             last_error TEXT
         )
+        ''')
+        
+        # Create an index on the url column for faster lookups
+        cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_url_tracking_url ON url_tracking (url)
         ''')
         
         # Create the tweets table
@@ -101,13 +107,15 @@ class LocalDatabase:
         conn.commit()
         conn.close()
     
-    def get_urls(self, status=None, limit=None):
+    def get_urls(self, status=None, limit=None, user_id=None):
         """Get URLs from the local database"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            if status:
+            if user_id:
+                cursor.execute("SELECT * FROM url_tracking WHERE user_id = ? LIMIT ?", (user_id, limit or -1))
+            elif status:
                 cursor.execute("SELECT * FROM url_tracking WHERE status = ? LIMIT ?", (status, limit or -1))
             else:
                 cursor.execute("SELECT * FROM url_tracking LIMIT ?", (limit or -1,))
@@ -223,6 +231,9 @@ class LocalDatabase:
             WHERE url = ?
             ''', (stored_count, datetime.now().isoformat(), source_url))
             
+            # Note: We're still using url for lookups to maintain compatibility
+            # with existing code, but we're using the index on url for efficiency
+            
             conn.commit()
             conn.close()
             
@@ -234,25 +245,42 @@ class LocalDatabase:
             logging.error(f"Error storing tweets: {str(e)}")
             return 0
     
-    def add_url(self, url, description="", url_type="kol"):
+    def add_url(self, url, description="", url_type="kol", user_id=None):
         """Add a URL to the database"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
             # Check if URL already exists
-            cursor.execute("SELECT 1 FROM url_tracking WHERE url = ?", (url,))
-            if cursor.fetchone():
+            cursor.execute("SELECT user_id FROM url_tracking WHERE url = ?", (url,))
+            existing = cursor.fetchone()
+            
+            if existing:
+                # If URL exists but user_id is being updated
+                if user_id and not existing[0]:
+                    cursor.execute("UPDATE url_tracking SET user_id = ? WHERE url = ?", (user_id, url))
+                    conn.commit()
+                    logging.info(f"Updated user_id for existing URL {url}: {user_id}")
+                
                 conn.close()
                 return True
+            
+            # Check if user_id already exists (if provided)
+            if user_id:
+                cursor.execute("SELECT url FROM url_tracking WHERE user_id = ?", (user_id,))
+                if cursor.fetchone():
+                    logging.warning(f"User ID {user_id} already exists in the database. Cannot add URL {url}")
+                    conn.close()
+                    return False
             
             # Add URL
             now = datetime.now().isoformat()
             cursor.execute('''
             INSERT INTO url_tracking (
-                url, description, status, last_checked, error_count, tweet_count, type, added_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                user_id, url, description, status, last_checked, error_count, tweet_count, type, added_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
+                user_id,  # Can be None for now, will be updated later
                 url,
                 description,
                 'active',
@@ -292,6 +320,9 @@ class LocalDatabase:
                 SET status = ?, last_checked = ?
                 WHERE url = ?
                 ''', (status, now, url))
+            
+            # Note: We're still using url for lookups to maintain compatibility
+            # with existing code, but we're using the index on url for efficiency
             
             conn.commit()
             conn.close()

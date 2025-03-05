@@ -66,7 +66,8 @@ The local database uses SQLite with the following tables:
 ### url_tracking
 
 Stores URL metadata:
-- `url`: URL to track (primary key)
+- `user_id`: Twitter's unique user ID for the account (primary key)
+- `url`: URL to track (unique, not null)
 - `description`: Description of the URL
 - `status`: Status of the URL (active, error, etc.)
 - `last_checked`: Timestamp of the last check
@@ -76,7 +77,6 @@ Stores URL metadata:
 - `added_at`: Timestamp when the URL was added
 - `last_scraped`: Timestamp of the last scrape
 - `last_error`: Last error message
-- `user_id`: Twitter's unique user ID for the account
 
 ### tweets
 
