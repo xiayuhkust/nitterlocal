@@ -75,6 +75,9 @@ class LocalDatabase:
             views INTEGER DEFAULT 0,
             stored_at TEXT DEFAULT CURRENT_TIMESTAMP,
             user_id TEXT,
+            is_reply INTEGER DEFAULT 0,
+            in_reply_to_status_id TEXT,
+            conversation_id TEXT,
             FOREIGN KEY (source_url) REFERENCES url_tracking (url)
         )
         ''')
@@ -186,14 +189,18 @@ class LocalDatabase:
                         # Update existing tweet's metadata
                         cursor.execute('''
                         UPDATE tweets 
-                        SET likes = ?, retweets = ?, replies = ?, views = ?, user_id = ?
+                        SET likes = ?, retweets = ?, replies = ?, views = ?, user_id = ?,
+                            is_reply = ?, in_reply_to_status_id = ?, conversation_id = ?
                         WHERE tweet_id = ?
                         ''', (
                             tweet['likes'],
                             tweet['retweets'],
                             tweet['replies'],
                             tweet['views'],
-                            tweet.get('user_id'),  # Include user_id in the update
+                            tweet.get('user_id'),
+                            1 if tweet.get('is_reply') else 0,
+                            tweet.get('in_reply_to_status_id'),
+                            tweet.get('conversation_id'),
                             tweet['tweet_id']
                         ))
                         
@@ -205,8 +212,9 @@ class LocalDatabase:
                         # Insert new tweet
                         cursor.execute('''
                         INSERT INTO tweets (
-                            tweet_id, source_url, content, created_at, author, likes, retweets, replies, views, user_id
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            tweet_id, source_url, content, created_at, author, likes, retweets, replies, views, user_id,
+                            is_reply, in_reply_to_status_id, conversation_id
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ''', (
                             tweet['tweet_id'],
                             source_url,
@@ -217,7 +225,10 @@ class LocalDatabase:
                             tweet['retweets'],
                             tweet['replies'],
                             tweet['views'],
-                            tweet.get('user_id')  # Include user_id in the insert
+                            tweet.get('user_id'),
+                            1 if tweet.get('is_reply') else 0,
+                            tweet.get('in_reply_to_status_id'),
+                            tweet.get('conversation_id')
                         ))
                         
                         stored_count += 1
@@ -500,6 +511,231 @@ class LocalDatabase:
         except Exception as e:
             logging.error(f"Error getting URL by user ID {user_id}: {str(e)}")
             return None
+    
+    def get_replies(self, limit=100, offset=0):
+        """Get all replies from the database"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Get replies
+            cursor.execute('''
+            SELECT * FROM tweets
+            WHERE is_reply = 1
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+            ''', (limit, offset))
+            
+            # Fetch the results
+            columns = [column[0] for column in cursor.description]
+            replies = []
+            
+            for row in cursor.fetchall():
+                reply_data = dict(zip(columns, row))
+                replies.append(reply_data)
+            
+            conn.close()
+            
+            return replies
+            
+        except Exception as e:
+            logging.error(f"Error getting replies: {str(e)}")
+            return []
+    
+    def get_replies_by_user(self, user_id=None, author=None, limit=100, offset=0):
+        """Get replies by a specific user"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Get replies by user
+            if user_id:
+                cursor.execute('''
+                SELECT * FROM tweets
+                WHERE is_reply = 1 AND user_id = ?
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+                ''', (user_id, limit, offset))
+            elif author:
+                cursor.execute('''
+                SELECT * FROM tweets
+                WHERE is_reply = 1 AND author = ?
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+                ''', (author, limit, offset))
+            else:
+                logging.error("Either user_id or author must be provided")
+                return []
+            
+            # Fetch the results
+            columns = [column[0] for column in cursor.description]
+            replies = []
+            
+            for row in cursor.fetchall():
+                reply_data = dict(zip(columns, row))
+                replies.append(reply_data)
+            
+            conn.close()
+            
+            return replies
+            
+        except Exception as e:
+            logging.error(f"Error getting replies by user: {str(e)}")
+            return []
+    
+    def get_replies_to_tweet(self, tweet_id, limit=100, offset=0):
+        """Get replies to a specific tweet"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Get replies to tweet
+            cursor.execute('''
+            SELECT * FROM tweets
+            WHERE is_reply = 1 AND in_reply_to_status_id = ?
+            ORDER BY created_at ASC
+            LIMIT ? OFFSET ?
+            ''', (tweet_id, limit, offset))
+            
+            # Fetch the results
+            columns = [column[0] for column in cursor.description]
+            replies = []
+            
+            for row in cursor.fetchall():
+                reply_data = dict(zip(columns, row))
+                replies.append(reply_data)
+            
+            conn.close()
+            
+            return replies
+            
+        except Exception as e:
+            logging.error(f"Error getting replies to tweet: {str(e)}")
+            return []
+    
+    def get_conversation(self, conversation_id, limit=100, offset=0):
+        """Get all tweets in a conversation thread"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # Get conversation
+            cursor.execute('''
+            SELECT * FROM tweets
+            WHERE conversation_id = ?
+            ORDER BY created_at ASC
+            LIMIT ? OFFSET ?
+            ''', (conversation_id, limit, offset))
+            
+            # Fetch the results
+            columns = [column[0] for column in cursor.description]
+            conversation = []
+            
+            for row in cursor.fetchall():
+                tweet_data = dict(zip(columns, row))
+                conversation.append(tweet_data)
+            
+            conn.close()
+            
+            return conversation
+            
+        except Exception as e:
+            logging.error(f"Error getting conversation: {str(e)}")
+            return []
+    
+    def get_reply_statistics(self, user_id=None, author=None):
+        """Get statistics about replies for a user"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            stats = {}
+            
+            # Get total replies by user
+            if user_id:
+                cursor.execute('''
+                SELECT COUNT(*) FROM tweets
+                WHERE is_reply = 1 AND user_id = ?
+                ''', (user_id,))
+            elif author:
+                cursor.execute('''
+                SELECT COUNT(*) FROM tweets
+                WHERE is_reply = 1 AND author = ?
+                ''', (author,))
+            else:
+                logging.error("Either user_id or author must be provided")
+                return {}
+            
+            stats['total_replies_by_user'] = cursor.fetchone()[0]
+            
+            # Get total replies to user's tweets
+            if user_id:
+                # First get the user's tweets
+                cursor.execute('''
+                SELECT tweet_id FROM tweets
+                WHERE user_id = ? AND (is_reply = 0 OR is_reply IS NULL)
+                ''', (user_id,))
+            elif author:
+                cursor.execute('''
+                SELECT tweet_id FROM tweets
+                WHERE author = ? AND (is_reply = 0 OR is_reply IS NULL)
+                ''', (author,))
+            
+            user_tweets = [row[0] for row in cursor.fetchall()]
+            
+            if user_tweets:
+                # Then count replies to these tweets
+                placeholders = ', '.join(['?'] * len(user_tweets))
+                cursor.execute(f'''
+                SELECT COUNT(*) FROM tweets
+                WHERE is_reply = 1 AND in_reply_to_status_id IN ({placeholders})
+                ''', user_tweets)
+                
+                stats['total_replies_to_user'] = cursor.fetchone()[0]
+            else:
+                stats['total_replies_to_user'] = 0
+            
+            # Get most replied-to tweets
+            if user_id:
+                cursor.execute('''
+                SELECT t.tweet_id, t.content, COUNT(r.tweet_id) as reply_count
+                FROM tweets t
+                LEFT JOIN tweets r ON t.tweet_id = r.in_reply_to_status_id
+                WHERE t.user_id = ? AND (t.is_reply = 0 OR t.is_reply IS NULL)
+                GROUP BY t.tweet_id
+                ORDER BY reply_count DESC
+                LIMIT 5
+                ''', (user_id,))
+            elif author:
+                cursor.execute('''
+                SELECT t.tweet_id, t.content, COUNT(r.tweet_id) as reply_count
+                FROM tweets t
+                LEFT JOIN tweets r ON t.tweet_id = r.in_reply_to_status_id
+                WHERE t.author = ? AND (t.is_reply = 0 OR t.is_reply IS NULL)
+                GROUP BY t.tweet_id
+                ORDER BY reply_count DESC
+                LIMIT 5
+                ''', (author,))
+            
+            stats['most_replied_to_tweets'] = []
+            for row in cursor.fetchall():
+                stats['most_replied_to_tweets'].append({
+                    'tweet_id': row[0],
+                    'content': row[1],
+                    'reply_count': row[2]
+                })
+            
+            conn.close()
+            
+            return stats
+            
+        except Exception as e:
+            logging.error(f"Error getting reply statistics: {str(e)}")
+            return {}
     
     def _log_operation(self, operation, details, success=1):
         """Log an operation to the backup log table"""
