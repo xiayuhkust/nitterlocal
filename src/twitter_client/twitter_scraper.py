@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import logging
+import sqlite3
 import subprocess
 import tempfile
 from datetime import datetime
@@ -96,7 +97,17 @@ class TwitterScraper:
             
             # Load the tweets from the output file
             with open(output_file, 'r') as f:
-                tweets = json.load(f)
+                result = json.load(f)
+            
+            # Get tweets and user ID from the result
+            tweets = result.get('tweets', [])
+            user_id = result.get('userId')
+            
+            if user_id:
+                logging.info(f"Got user ID for {username}: {user_id}")
+                
+                # Update the URL with the user ID
+                self.update_url_user_id(url, user_id)
             
             # Convert the tweets to our format
             formatted_tweets = []
@@ -111,7 +122,7 @@ class TwitterScraper:
                     'replies': tweet.get('replies', 0),
                     'views': tweet.get('views', 0),
                     'source_url': url,
-                    'hashtags': tweet.get('hashtags', [])  # Add hashtags to the formatted tweet
+                    'hashtags': tweet.get('hashtags', [])
                 }
                 formatted_tweets.append(formatted_tweet)
             
@@ -126,6 +137,32 @@ class TwitterScraper:
             # Remove the temporary file
             if os.path.exists(output_file):
                 os.remove(output_file)
+    
+    def update_url_user_id(self, url, user_id):
+        """Update the user ID for a URL"""
+        try:
+            # Connect to the database
+            db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data/local_database.db')
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            # Update the user ID
+            cursor.execute('''
+            UPDATE url_tracking 
+            SET user_id = ?
+            WHERE url = ?
+            ''', (user_id, url))
+            
+            conn.commit()
+            conn.close()
+            
+            logging.info(f"Updated user ID for URL {url}: {user_id}")
+            
+            return True
+            
+        except Exception as e:
+            logging.error(f"Error updating user ID for URL {url}: {str(e)}")
+            return False
     
     def scrape_urls(self, urls, max_tweets=50, batch_size=10, sleep_between_urls=2):
         """Scrape tweets from multiple URLs"""

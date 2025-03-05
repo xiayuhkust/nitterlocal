@@ -414,6 +414,52 @@ class LocalDatabase:
             logging.error(f"Error getting popular hashtags: {str(e)}")
             return []
     
+    def update_url_user_id(self, url, user_id):
+        """Update the user ID for a URL"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+            UPDATE url_tracking 
+            SET user_id = ?
+            WHERE url = ?
+            ''', (user_id, url))
+            
+            conn.commit()
+            conn.close()
+            
+            logging.info(f"Updated user ID for URL {url}: {user_id}")
+            
+            return True
+            
+        except Exception as e:
+            logging.error(f"Error updating user ID for URL {url}: {str(e)}")
+            return False
+    
+    def get_url_by_user_id(self, user_id):
+        """Get URL by user ID"""
+        try:
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT * FROM url_tracking WHERE user_id = ?", (user_id,))
+            
+            columns = [column[0] for column in cursor.description]
+            row = cursor.fetchone()
+            
+            conn.close()
+            
+            if row:
+                url_data = dict(zip(columns, row))
+                return url_data
+            
+            return None
+            
+        except Exception as e:
+            logging.error(f"Error getting URL by user ID {user_id}: {str(e)}")
+            return None
+    
     def _log_operation(self, operation, details, success=1):
         """Log an operation to the backup log table"""
         try:

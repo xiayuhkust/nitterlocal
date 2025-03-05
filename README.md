@@ -76,6 +76,7 @@ Stores URL metadata:
 - `added_at`: Timestamp when the URL was added
 - `last_scraped`: Timestamp of the last scrape
 - `last_error`: Last error message
+- `user_id`: Twitter's unique user ID for the account
 
 ### tweets
 

@@ -9,6 +9,15 @@ async function extractTweets(username, maxTweets = 50) {
     // Create a new scraper instance
     const scraper = new Scraper();
     
+    // Get user ID from username
+    let userId = null;
+    try {
+      userId = await scraper.getUserIdByScreenName(username);
+      console.log(`User ID for @${username}: ${userId}`);
+    } catch (error) {
+      console.warn(`Could not get user ID for @${username}: ${error.message}`);
+    }
+    
     // Extract tweets from account
     const tweets = scraper.getTweets(username, maxTweets);
     
@@ -51,11 +60,15 @@ async function extractTweets(username, maxTweets = 50) {
     
     console.log(`Successfully extracted ${extractedTweets.length} tweets from @${username}`);
     
-    return extractedTweets;
+    // Return tweets and user ID
+    return {
+      tweets: extractedTweets,
+      userId: userId
+    };
     
   } catch (error) {
     console.error(`Error extracting tweets for @${username}:`, error.message);
-    return [];
+    return { tweets: [], userId: null };
   }
 }
 
@@ -71,10 +84,10 @@ if (!username) {
 
 // Run the extraction function
 extractTweets(username, maxTweets)
-  .then(tweets => {
-    // Save tweets to a JSON file
-    fs.writeFileSync(outputFile, JSON.stringify(tweets, null, 2), 'utf8');
-    console.log(`Tweets saved to ${outputFile}`);
+  .then(result => {
+    // Save tweets and user ID to a JSON file
+    fs.writeFileSync(outputFile, JSON.stringify(result, null, 2), 'utf8');
+    console.log(`Tweets and user ID saved to ${outputFile}`);
   })
   .catch(error => {
     console.error('Error:', error.message);
