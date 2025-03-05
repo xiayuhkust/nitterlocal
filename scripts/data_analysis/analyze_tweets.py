@@ -108,6 +108,7 @@ def analyze_tweets(db_path='data/local_database.db', analysis_type='recent', day
             for i, tweet in enumerate(tweets):
                 print(f"{i+1}. Tweet ID: {tweet['tweet_id']}")
                 print(f"   Author: {tweet['author']}")
+                print(f"   User ID: {tweet.get('user_id') or 'N/A'}")
                 print(f"   Created at: {tweet['created_at']}")
                 print(f"   Content: {tweet['content'][:100]}...")
                 print(f"   Likes: {tweet['likes']}, Retweets: {tweet['retweets']}, Replies: {tweet['replies']}")
@@ -126,6 +127,7 @@ def analyze_tweets(db_path='data/local_database.db', analysis_type='recent', day
                     for i, tweet in enumerate(tweets):
                         f.write(f"{i+1}. Tweet ID: {tweet['tweet_id']}\n")
                         f.write(f"   Author: {tweet['author']}\n")
+                        f.write(f"   User ID: {tweet.get('user_id') or 'N/A'}\n")
                         f.write(f"   Created at: {tweet['created_at']}\n")
                         f.write(f"   Content: {tweet['content'][:100]}...\n")
                         f.write(f"   Likes: {tweet['likes']}, Retweets: {tweet['retweets']}, Replies: {tweet['replies']}\n")

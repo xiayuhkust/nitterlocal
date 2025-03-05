@@ -37,7 +37,7 @@ def count_tweets_per_url(db_path='data/local_database.db', output_format='text',
         # Get tweet counts per URL
         cursor.execute("""
             SELECT url_tracking.url, url_tracking.description, url_tracking.type, 
-                   COUNT(tweets.tweet_id) as tweet_count
+                   url_tracking.user_id, COUNT(tweets.tweet_id) as tweet_count
             FROM url_tracking
             LEFT JOIN tweets ON url_tracking.url = tweets.source_url
             GROUP BY url_tracking.url
@@ -84,6 +84,7 @@ def count_tweets_per_url(db_path='data/local_database.db', output_format='text',
                 print(f"{i+1}. {result['url']}")
                 print(f"   Description: {result['description']}")
                 print(f"   Type: {result['type']}")
+                print(f"   User ID: {result['user_id'] or 'N/A'}")
                 print(f"   Tweet Count: {result['tweet_count']}")
                 print()
             
@@ -99,6 +100,7 @@ def count_tweets_per_url(db_path='data/local_database.db', output_format='text',
                         f.write(f"{i+1}. {result['url']}\n")
                         f.write(f"   Description: {result['description']}\n")
                         f.write(f"   Type: {result['type']}\n")
+                        f.write(f"   User ID: {result['user_id'] or 'N/A'}\n")
                         f.write(f"   Tweet Count: {result['tweet_count']}\n")
                         f.write("\n")
                 
