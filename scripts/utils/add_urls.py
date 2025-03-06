@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirna
 # Import the database module
 from src.database.local_database import LocalDatabase
 from scripts.utils.url_utils import convert_nitter_to_twitter, extract_twitter_handle
+from src.twitter_client.twitter_scraper import TwitterScraper  # Add TwitterScraper import
 
 # Configure logging
 logging.basicConfig(
@@ -29,14 +30,34 @@ logging.basicConfig(
 )
 
 def get_user_id_from_twitter_handle(handle):
-    """Get user ID from Twitter handle"""
+    """Get user ID from Twitter handle using agent-twitter-client"""
     if not handle:
         return None
     
-    # Use the handle as the user ID
-    # This avoids making HTTP requests to Twitter which can cause timeouts
-    logging.info(f"Using handle as user ID: {handle}")
-    return handle
+    try:
+        # Initialize the Twitter scraper
+        scraper = TwitterScraper()
+        
+        # Use the scraper to get the user ID
+        # This will make a single request to get the user ID without scraping tweets
+        user_id = None
+        try:
+            # Run the Twitter client to get the user ID
+            logging.info(f"Getting user ID for handle: {handle}")
+            user_id = scraper.extract_user_id_from_handle(handle)
+            logging.info(f"Got user ID for handle {handle}: {user_id}")
+        except Exception as e:
+            logging.error(f"Error getting user ID for handle {handle}: {str(e)}")
+        
+        # If we couldn't get the user ID, fall back to using the handle
+        if not user_id:
+            logging.warning(f"Could not get user ID for handle {handle}, using handle as fallback")
+            user_id = handle
+            
+        return user_id
+    except Exception as e:
+        logging.error(f"Error initializing Twitter scraper: {str(e)}")
+        return handle  # Fall back to using the handle as the user ID
 
 def determine_subtype(url_data):
     """Determine the subtype of a URL based on its type and other metadata"""

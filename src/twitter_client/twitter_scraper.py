@@ -165,6 +165,52 @@ class TwitterScraper:
             logging.error(f"Error updating user ID for URL {url}: {str(e)}")
             return False
     
+    def extract_user_id_from_handle(self, handle):
+        """Extract the user ID from a Twitter handle without scraping tweets"""
+        logging.info(f"Extracting user ID for handle: {handle}")
+        
+        # Create a temporary file for the output
+        with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as temp_file:
+            output_file = temp_file.name
+        
+        try:
+            # Run a modified version of the Twitter client that only gets the user ID
+            logging.info(f"Running Twitter client to get user ID for {handle}...")
+            process = subprocess.run(
+                ['node', self.client_path, handle, '1', output_file],
+                cwd=self.client_dir,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            
+            # Check if the output file exists
+            if not os.path.exists(output_file):
+                logging.error(f"Output file {output_file} does not exist")
+                return None
+            
+            # Load the result from the output file
+            with open(output_file, 'r') as f:
+                result = json.load(f)
+            
+            # Get user ID from the result
+            user_id = result.get('userId')
+            
+            if user_id:
+                logging.info(f"Got user ID for {handle}: {user_id}")
+                return user_id
+            else:
+                logging.warning(f"Could not get user ID for {handle}")
+                return None
+                
+        except Exception as e:
+            logging.error(f"Error extracting user ID for handle {handle}: {str(e)}")
+            return None
+        finally:
+            # Remove the temporary file
+            if os.path.exists(output_file):
+                os.remove(output_file)
+    
     def scrape_urls(self, urls, max_tweets=50, batch_size=10, sleep_between_urls=2):
         """Scrape tweets from multiple URLs"""
         logging.info(f"Scraping {len(urls)} URLs...")
