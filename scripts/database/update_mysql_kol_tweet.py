@@ -11,9 +11,19 @@ import sqlite3
 from datetime import datetime
 import argparse
 
+# Try to import dotenv for environment variable management
+try:
+    from dotenv import load_dotenv
+    # Load environment variables from .env file if it exists
+    load_dotenv()
+    logging.info("Loaded environment variables from .env file")
+except ImportError:
+    logging.info("python-dotenv not installed, using environment variables directly")
+    pass
+
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
@@ -209,16 +219,27 @@ def main():
     
     args = parser.parse_args()
     
+    print("Starting MySQL update script for tweets")
     logging.info("Starting MySQL update script for tweets")
+    
+    # Print environment variables (without password)
+    print(f"MySQL Host: {MYSQL_HOST}")
+    print(f"MySQL Port: {MYSQL_PORT}")
+    print(f"MySQL User: {MYSQL_USER}")
+    print(f"MySQL Database: {MYSQL_DATABASE}")
     
     # Get tweets from SQLite
     tweets = get_tweets_from_sqlite(args.limit, args.since_days)
+    print(f"Got {len(tweets)} tweets from SQLite")
     logging.info(f"Got {len(tweets)} tweets from SQLite")
     
     # Connect to MySQL
     if not args.test:
         mysql_conn = get_mysql_connection()
+        print("Connected to MySQL database")
         logging.info("Connected to MySQL database")
+    else:
+        print("Test mode - not connecting to MySQL database")
     
     # Process each tweet
     processed_count = 0
@@ -226,6 +247,7 @@ def main():
         # Map to kol_tweet
         kol_tweet = map_to_kol_tweet(tweet_data)
         if not kol_tweet:
+            print(f"Could not map tweet to kol_tweet for tweet_id: {tweet_data[0]}")
             logging.error(f"Could not map tweet to kol_tweet for tweet_id: {tweet_data[0]}")
             continue
         
@@ -233,21 +255,26 @@ def main():
         if not args.test:
             insert_or_update_kol_tweet(mysql_conn, kol_tweet)
         else:
+            print(f"Test mode - would insert or update record for kol_id: {kol_tweet['kol_id']}, tweet_id: {kol_tweet['tweet_id']}")
             logging.info(f"Test mode - would insert or update record for kol_id: {kol_tweet['kol_id']}, tweet_id: {kol_tweet['tweet_id']}")
         
         processed_count += 1
         
         # Log progress every 100 tweets
         if processed_count % 100 == 0:
+            print(f"Processed {processed_count}/{len(tweets)} tweets")
             logging.info(f"Processed {processed_count}/{len(tweets)} tweets")
     
+    print(f"Processed {processed_count} tweets")
     logging.info(f"Processed {processed_count} tweets")
     
     # Close MySQL connection
     if not args.test:
         mysql_conn.close()
+        print("Closed MySQL connection")
         logging.info("Closed MySQL connection")
     
+    print("MySQL update script for tweets completed")
     logging.info("MySQL update script for tweets completed")
 
 if __name__ == "__main__":
