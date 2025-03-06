@@ -14,6 +14,16 @@ import subprocess
 from datetime import datetime
 import argparse
 
+# Try to import dotenv for environment variable management
+try:
+    from dotenv import load_dotenv
+    # Load environment variables from .env file if it exists
+    load_dotenv()
+    logging.info("Loaded environment variables from .env file")
+except ImportError:
+    logging.info("python-dotenv not installed, using environment variables directly")
+    pass
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -24,11 +34,11 @@ logging.basicConfig(
 SQLITE_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data/local_database.db')
 
 # MySQL connection parameters
-MYSQL_HOST = "43.135.26.222"
-MYSQL_PORT = 3306
-MYSQL_USER = "root"
-MYSQL_PASSWORD = "z1050493759"
-MYSQL_DATABASE = "kol_info"  # Database name confirmed from check_kol_info_table.py
+MYSQL_HOST = os.environ.get("MYSQL_HOST", "localhost")
+MYSQL_PORT = int(os.environ.get("MYSQL_PORT", "3306"))
+MYSQL_USER = os.environ.get("MYSQL_USER", "root")
+MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "")
+MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE", "kol_info")  # Database name confirmed from check_kol_info_table.py
 
 def get_sqlite_connection():
     """Get a connection to the SQLite database"""
@@ -278,7 +288,14 @@ def main():
     
     args = parser.parse_args()
     
+    print("Starting MySQL update script")
     logging.info("Starting MySQL update script")
+    
+    # Print environment variables (without password)
+    print(f"MySQL Host: {MYSQL_HOST}")
+    print(f"MySQL Port: {MYSQL_PORT}")
+    print(f"MySQL User: {MYSQL_USER}")
+    print(f"MySQL Database: {MYSQL_DATABASE}")
     
     # Get URLs from SQLite
     urls = get_urls_from_sqlite(args.limit)
