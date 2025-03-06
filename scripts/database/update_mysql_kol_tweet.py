@@ -21,11 +21,11 @@ logging.basicConfig(
 SQLITE_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data/local_database.db')
 
 # MySQL connection parameters
-MYSQL_HOST = "43.135.26.222"
-MYSQL_PORT = 3306
-MYSQL_USER = "root"
-MYSQL_PASSWORD = "z1050493759"
-MYSQL_DATABASE = "kol_info"  # Database name confirmed from check_kol_info_table.py
+MYSQL_HOST = os.environ.get("MYSQL_HOST", "localhost")
+MYSQL_PORT = int(os.environ.get("MYSQL_PORT", "3306"))
+MYSQL_USER = os.environ.get("MYSQL_USER", "root")
+MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "")
+MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE", "kol_info")  # Database name confirmed from check_kol_info_table.py
 
 def get_sqlite_connection():
     """Get a connection to the SQLite database"""
