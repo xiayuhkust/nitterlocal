@@ -64,9 +64,9 @@ class TwitterScraper:
         logging.info(f"Extracted username: {username}")
         return username
     
-    def scrape_url(self, url, max_tweets=50):
+    def scrape_url(self, url, max_tweets=10, max_replies=30):
         """Scrape tweets from a URL"""
-        logging.info(f"Scraping URL: {url}")
+        logging.info(f"Scraping URL: {url} (max tweets: {max_tweets}, max replies: {max_replies})")
         
         # Extract the username from the URL
         username = self.extract_username_from_url(url)
@@ -81,7 +81,7 @@ class TwitterScraper:
             # Run the Twitter client
             logging.info(f"Running Twitter client for {username}...")
             process = subprocess.run(
-                ['node', self.client_path, username, str(max_tweets), output_file],
+                ['node', self.client_path, username, str(max_tweets), str(max_replies), output_file],
                 cwd=self.client_dir,
                 check=True,
                 capture_output=True,
@@ -123,7 +123,10 @@ class TwitterScraper:
                     'views': tweet.get('views', 0),
                     'source_url': url,
                     'user_id': user_id,  # Add user_id to the formatted tweet
-                    'hashtags': tweet.get('hashtags', [])
+                    'hashtags': tweet.get('hashtags', []),
+                    'is_reply': 1 if tweet.get('isReply', False) else 0,  # Add is_reply field
+                    'reply_to': tweet.get('replyToId', None),  # Add reply_to field
+                    'conversation_id': tweet.get('conversationId', None)  # Add conversation_id field
                 }
                 formatted_tweets.append(formatted_tweet)
             

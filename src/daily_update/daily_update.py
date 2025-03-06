@@ -37,12 +37,12 @@ class DailyUpdate:
         
         logging.info("Daily update initialization complete")
     
-    def run(self, batch_size=10, sleep_between_urls=2, max_tweets=50, limit=None):
+    def run(self, batch_size=10, sleep_between_urls=2, max_tweets=10, max_replies=30, limit=None):
         """Run the daily update"""
         logging.info("Starting daily update")
         logging.info(f"Time: {datetime.now().isoformat()}")
         logging.info(f"Batch size: {batch_size}, Sleep between URLs: {sleep_between_urls} seconds")
-        logging.info(f"Max tweets per URL: {max_tweets}")
+        logging.info(f"Max tweets per URL: {max_tweets}, Max replies per URL: {max_replies}")
         
         try:
             # Get active URLs
@@ -73,8 +73,8 @@ class DailyUpdate:
                     try:
                         logging.info(f"Processing URL: {url}")
                         
-                        # Scrape the URL
-                        tweets = self.scraper.scrape_url(url, max_tweets=max_tweets)
+                        # Scrape the URL for both regular tweets and replies
+                        tweets = self.scraper.scrape_url(url, max_tweets=max_tweets, max_replies=max_replies)
                         
                         if tweets:
                             # Store the tweets in the database

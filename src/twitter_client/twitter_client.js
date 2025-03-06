@@ -2,8 +2,8 @@
 import { Scraper } from 'agent-twitter-client';
 import fs from 'fs';
 
-async function extractTweets(username, maxTweets = 50) {
-  console.log(`Extracting tweets for @${username} (max: ${maxTweets})`);
+async function extractTweets(username, maxTweets = 50, maxReplies = 0) {
+  console.log(`Extracting tweets for @${username} (max tweets: ${maxTweets}, max replies: ${maxReplies})`);
   
   try {
     // Create a new scraper instance
@@ -18,7 +18,8 @@ async function extractTweets(username, maxTweets = 50) {
       console.warn(`Could not get user ID for @${username}: ${error.message}`);
     }
     
-    // Extract tweets from account
+    // Extract regular tweets from account
+    console.log(`Getting regular tweets for @${username}...`);
     const tweets = scraper.getTweets(username, maxTweets);
     
     // Store tweets in an array
@@ -27,7 +28,7 @@ async function extractTweets(username, maxTweets = 50) {
     
     for await (const tweet of tweets) {
       count++;
-      console.log(`Processing tweet ${count} from @${username}: ${tweet.id}`);
+      console.log(`Processing regular tweet ${count}/${maxTweets} from @${username}: ${tweet.id}`);
       
       extractedTweets.push({
         id: tweet.id,
@@ -45,6 +46,7 @@ async function extractTweets(username, maxTweets = 50) {
         isReply: tweet.isReply,
         isRetweet: tweet.isRetweet,
         isQuoted: tweet.isQuoted,
+        replyToId: tweet.replyToId,
         media: {
           photos: tweet.photos,
           videos: tweet.videos
@@ -53,12 +55,69 @@ async function extractTweets(username, maxTweets = 50) {
       
       // Break if we've reached the maximum number of tweets
       if (count >= maxTweets) {
-        console.log(`Reached maximum of ${maxTweets} tweets`);
+        console.log(`Reached maximum of ${maxTweets} regular tweets`);
         break;
       }
     }
     
-    console.log(`Successfully extracted ${extractedTweets.length} tweets from @${username}`);
+    console.log(`Successfully extracted ${extractedTweets.length} regular tweets from @${username}`);
+    
+    // Extract replies if requested
+    if (maxReplies > 0) {
+      console.log(`Getting replies for @${username}...`);
+      
+      try {
+        // Check if getTweetsAndReplies method exists
+        if (typeof scraper.getTweetsAndReplies === 'function') {
+          const replies = scraper.getTweetsAndReplies(username, maxReplies);
+          
+          let replyCount = 0;
+          
+          for await (const reply of replies) {
+            replyCount++;
+            console.log(`Processing reply ${replyCount}/${maxReplies} from @${username}: ${reply.id}`);
+            
+            // Only add if it's actually a reply
+            if (reply.isReply) {
+              extractedTweets.push({
+                id: reply.id,
+                text: reply.text,
+                timestamp: reply.timestamp,
+                timeParsed: reply.timeParsed ? reply.timeParsed.toISOString() : null,
+                likes: reply.likes,
+                retweets: reply.retweets,
+                replies: reply.replies,
+                views: reply.views,
+                conversationId: reply.conversationId,
+                hashtags: reply.hashtags,
+                mentions: reply.mentions,
+                urls: reply.urls,
+                isReply: reply.isReply,
+                isRetweet: reply.isRetweet,
+                isQuoted: reply.isQuoted,
+                replyToId: reply.replyToId,
+                media: {
+                  photos: reply.photos,
+                  videos: reply.videos
+                }
+              });
+            }
+            
+            // Break if we've reached the maximum number of replies
+            if (replyCount >= maxReplies) {
+              console.log(`Reached maximum of ${maxReplies} replies`);
+              break;
+            }
+          }
+          
+          console.log(`Successfully extracted replies from @${username}`);
+        } else {
+          console.warn('getTweetsAndReplies method does not exist in the Scraper class');
+        }
+      } catch (error) {
+        console.error(`Error extracting replies for @${username}:`, error.message);
+      }
+    }
     
     // Return tweets and user ID
     return {
@@ -75,15 +134,16 @@ async function extractTweets(username, maxTweets = 50) {
 // Handle command line arguments
 const username = process.argv[2];
 const maxTweets = parseInt(process.argv[3] || '50');
-const outputFile = process.argv[4] || 'tweets.json';
+const maxReplies = parseInt(process.argv[4] || '0');
+const outputFile = process.argv[5] || 'tweets.json';
 
 if (!username) {
-  console.error('Usage: node twitter_client.js <username> [maxTweets] [outputFile]');
+  console.error('Usage: node twitter_client.js <username> [maxTweets] [maxReplies] [outputFile]');
   process.exit(1);
 }
 
 // Run the extraction function
-extractTweets(username, maxTweets)
+extractTweets(username, maxTweets, maxReplies)
   .then(result => {
     // Save tweets and user ID to a JSON file
     fs.writeFileSync(outputFile, JSON.stringify(result, null, 2), 'utf8');
