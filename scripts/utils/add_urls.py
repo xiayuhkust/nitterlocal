@@ -29,51 +29,14 @@ logging.basicConfig(
 )
 
 def get_user_id_from_twitter_handle(handle):
-    """Get user ID from Twitter handle using Twitter API or scraping"""
+    """Get user ID from Twitter handle"""
     if not handle:
         return None
     
-    try:
-        # Try to get user ID from Twitter handle using a simple scraping approach
-        url = f"https://twitter.com/{handle}"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            logging.warning(f"Failed to fetch {url}: {response.status_code}")
-            return None
-        
-        # Try to extract user ID from the page
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Look for user ID in the page
-        # This is a simplified approach and may not work for all cases
-        # A more robust approach would be to use the Twitter API
-        user_id = None
-        
-        # Try to find user ID in the page content
-        page_text = soup.get_text()
-        user_id_match = re.search(r'user_id=(\d+)', page_text)
-        if user_id_match:
-            user_id = user_id_match.group(1)
-        
-        if not user_id:
-            # Try another approach - look for data attributes
-            profile_div = soup.select_one('div.profile-card')
-            if profile_div:
-                user_id = profile_div.get('data-user-id')
-        
-        if not user_id:
-            # As a fallback, use the handle as the user ID
-            user_id = handle
-        
-        return user_id
-        
-    except Exception as e:
-        logging.error(f"Error getting user ID for handle {handle}: {str(e)}")
-        return None
+    # Use the handle as the user ID
+    # This avoids making HTTP requests to Twitter which can cause timeouts
+    logging.info(f"Using handle as user ID: {handle}")
+    return handle
 
 def determine_subtype(url_data):
     """Determine the subtype of a URL based on its type and other metadata"""
@@ -127,6 +90,8 @@ def add_urls_from_file(file_path, db_path='data/local_database.db', clear_existi
         if clear_existing:
             logging.warning("Clearing existing URLs from the database")
             conn = db.get_connection()
+            # Set a timeout for the operation
+            conn.execute("PRAGMA busy_timeout = 10000")  # 10 seconds timeout
             cursor = conn.cursor()
             cursor.execute("DELETE FROM url_tracking")
             conn.commit()
