@@ -11,7 +11,45 @@ pip3 install mysql-connector-python
 pip3 install python-dotenv
 ```
 
-## 2. 创建.env文件
+## 2. 安装Node.js
+
+Twitter客户端功能需要Node.js环境。使用以下命令安装Node.js：
+
+```bash
+# 添加NodeSource仓库
+curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+# 安装Node.js
+yum install -y nodejs
+```
+
+安装完成后，验证Node.js是否正确安装：
+
+```bash
+node --version
+```
+
+您应该看到Node.js的版本号，例如v18.20.6。
+
+安装Node.js依赖项：
+
+```bash
+cd src/twitter_client
+npm install
+```
+
+如果在运行kol_info同步脚本时遇到以下错误：
+
+```
+Error getting profile for handle: Command '['node', '/root/nitterlocal/src/twitter_client/test_profile.js', '...' returned non-zero exit status 1.
+```
+
+这通常表示Node.js未正确安装或Twitter客户端脚本存在问题。您可以使用以下命令测试Twitter客户端脚本：
+
+```bash
+cd src/twitter_client && node test_profile.js cz_binance
+```
+
+## 3. 创建.env文件
 
 在项目根目录中创建一个.env文件，其中包含MySQL连接参数：
 
