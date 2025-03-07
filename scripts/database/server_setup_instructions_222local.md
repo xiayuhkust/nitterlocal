@@ -71,8 +71,19 @@ EOL
 
 - `scripts/database/update_mysql_kol_tweet_server_py36.py` - 用于同步tweets表
 - `scripts/database/update_mysql_kol_info_py36.py` - 用于同步kol_info表
+- `scripts/database/update_mysql_kol_info_no_nodejs.py` - 不依赖Node.js的kol_info同步脚本
 
 这些脚本已经移除了所有Python 3.6不支持的特性，包括f-strings和类型注解，并修复了SQLite查询错误。
+
+### 3.1 不依赖Node.js的kol_info脚本
+
+如果您在服务器上遇到Node.js或wrtc模块相关的问题，可以使用不依赖Node.js的kol_info脚本：
+
+```bash
+python3 scripts/database/update_mysql_kol_info_no_nodejs.py --no-nodejs
+```
+
+这个脚本不需要Node.js环境，可以在没有安装Node.js的服务器上运行。它会使用URL中的用户名作为kol_id，并将基本信息同步到MySQL数据库。
 
 ## 4. 测试脚本
 
