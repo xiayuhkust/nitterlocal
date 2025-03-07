@@ -1,27 +1,17 @@
 #!/usr/bin/env python3
 """
-Script to add URLs to the database.
-This script adds URLs from a JSON file to the database.
+Script to add URLs from a JSON file to the local database.
 Python 3.6 compatible version.
 """
 
 import os
-import sys
-import logging
 import json
+import logging
 import argparse
-import re
-import requests
+import subprocess
+import sys
+import sqlite3
 from datetime import datetime
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse
-
-# Add the project root to the Python path
-sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-
-# Import the database module
-from src.database.local_database import LocalDatabase
-from scripts.utils.url_utils import convert_nitter_to_twitter, extract_twitter_handle
 
 # Configure logging
 logging.basicConfig(
@@ -29,147 +19,197 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
-def get_user_id_from_twitter_handle(handle):
-    """Get user ID from Twitter handle without using TwitterScraper"""
-    if not handle:
+# Path to the SQLite database
+SQLITE_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data/local_database.db')
+
+def initialize_database():
+    """Initialize the local database"""
+    try:
+        # Get the path to the database initialization script
+        init_script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'src/database/init_database.sql')
+        
+        # Connect to the database
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+        
+        # Read and execute the initialization script
+        with open(init_script_path, 'r') as f:
+            init_script = f.read()
+            cursor.executescript(init_script)
+        
+        # Commit changes and close connection
+        conn.commit()
+        conn.close()
+        
+        logging.info("Database initialization complete")
+    except Exception as e:
+        logging.error("Error initializing database: {}".format(str(e)))
+        sys.exit(1)
+
+def clear_urls():
+    """Clear existing URLs from the database"""
+    try:
+        # Connect to the database
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+        
+        # Delete all records from the url_tracking table
+        cursor.execute("DELETE FROM url_tracking")
+        
+        # Commit changes and close connection
+        conn.commit()
+        conn.close()
+        
+        logging.info("Existing URLs cleared from the database")
+    except Exception as e:
+        logging.error("Error clearing URLs from the database: {}".format(str(e)))
+        sys.exit(1)
+
+def get_twitter_user_id(handle):
+    """Get the Twitter user ID for a handle using the Twitter client"""
+    try:
+        # Since test_user_id.js doesn't exist, we'll use the handle as the user_id
+        # In a production environment, you would implement a proper way to get the user ID
+        logging.warning("Using handle as user_id for {}".format(handle))
+        return handle
+    except Exception as e:
+        logging.error("Error getting user ID for handle {}: {}".format(handle, str(e)))
+        return None
+
+def extract_handle_from_url(url):
+    """Extract the Twitter handle from a URL"""
+    if not url:
         return None
     
-    # Use the handle as the user ID
-    # This avoids making HTTP requests to Twitter which can cause timeouts
-    logging.info("Using handle as user ID: {}".format(handle))
+    # Remove trailing slash if present
+    if url.endswith('/'):
+        url = url[:-1]
+    
+    # Extract the last part of the URL path
+    parts = url.split('/')
+    if len(parts) < 4:
+        return None
+    
+    handle = parts[-1]
+    
     return handle
 
-def determine_subtype(url_data):
-    """Determine the subtype of a URL based on its type and other metadata"""
-    url_type = url_data.get('type', 'kol')
-    
-    # For KOL type, subtype is null
-    if url_type == 'kol':
-        return None
-    
-    # For institution type, check if it's an exchange or meme
-    if url_type == 'institution':
-        # Check if subtype is already specified
-        if 'subtype' in url_data and url_data['subtype']:
-            return url_data['subtype']
-        
-        # Check if it's from CoinMarketCap exchanges
-        if url_data.get('coinmarketcap_url') and 'coinmarketcap.com/exchanges/' in url_data.get('coinmarketcap_url', ''):
-            return 'exchange'
-        
-        # Check if it's from CoinMarketCap memes
-        if url_data.get('coinmarketcap_url') and 'coinmarketcap.com/view/memes/' in url_data.get('coinmarketcap_url', ''):
-            return 'meme'
-    
-    # Default to null
-    return None
-
-def add_urls_from_file(file_path, db_path='data/local_database.db', clear_existing=False):
-    """Add URLs from a JSON file to the database"""
-    logging.info("Adding URLs from {} to database at {}".format(file_path, db_path))
-    
+def add_url_to_database(url, description, url_type, subtype=None):
+    """Add a URL to the database"""
     try:
-        # Load URLs from file
-        with open(file_path, 'r') as f:
-            data = json.load(f)
+        # Connect to the database
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
         
-        # Extract URLs from the data
-        if isinstance(data, dict) and 'urls' in data:
-            urls = data['urls']
-        elif isinstance(data, list):
-            urls = data
-        else:
-            logging.error("Invalid data format in {}".format(file_path))
+        # Extract handle from URL
+        handle = extract_handle_from_url(url)
+        if not handle:
+            logging.error("Could not extract handle from URL: {}".format(url))
+            conn.close()
             return False
         
-        logging.info("Found {} URLs in {}".format(len(urls), file_path))
+        # Get Twitter user ID
+        user_id = get_twitter_user_id(handle)
+        if not user_id:
+            logging.warning("Could not get user ID for handle {}, using handle as user_id".format(handle))
+            user_id = handle
         
-        # Initialize the database
-        db = LocalDatabase(db_path=db_path)
+        # Insert the URL into the database
+        cursor.execute(
+            "INSERT INTO url_tracking (url, description, type, tweet_count, user_id, subtype) VALUES (?, ?, ?, ?, ?, ?)",
+            (url, description, url_type, 0, user_id, subtype)
+        )
         
-        # Clear existing URLs if requested
-        if clear_existing:
-            logging.warning("Clearing existing URLs from the database")
-            conn = db.get_connection()
-            # Set a timeout for the operation
-            conn.execute("PRAGMA busy_timeout = 10000")  # 10 seconds timeout
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM url_tracking")
-            conn.commit()
-            conn.close()
-            logging.info("Existing URLs cleared from the database")
+        # Commit changes and close connection
+        conn.commit()
+        conn.close()
         
-        # Add URLs to the database
-        added_count = 0
-        for url_data in urls:
-            if isinstance(url_data, str):
-                # Simple URL string
-                # Convert to Twitter URL if it's a Nitter URL
-                url = convert_nitter_to_twitter(url_data)
-                
-                # Extract Twitter handle and get user ID
-                handle = extract_twitter_handle(url)
-                user_id = get_user_id_from_twitter_handle(handle) if handle else None
-                
-                result = db.add_url(url, user_id=user_id)
-                if result:
-                    added_count += 1
-            elif isinstance(url_data, dict) and 'url' in url_data:
-                # URL with metadata
-                # Convert to Twitter URL if it's a Nitter URL
-                url = convert_nitter_to_twitter(url_data['url'])
-                
-                # Extract Twitter handle and get user ID
-                handle = extract_twitter_handle(url)
-                
-                # Use existing user_id if available, otherwise get it from the handle
-                user_id = url_data.get('user_id')
-                if not user_id and handle:
-                    user_id = get_user_id_from_twitter_handle(handle)
-                
-                # Determine subtype
-                subtype = determine_subtype(url_data)
-                
-                # Add URL to database
-                result = db.add_url(
-                    url,
-                    description=url_data.get('description', ''),
-                    url_type=url_data.get('type', 'kol'),
-                    user_id=user_id,
-                    subtype=subtype
-                )
-                
-                if result:
-                    added_count += 1
-                    
-                    # Update subtype if needed
-                    if subtype:
-                        conn = db.get_connection()
-                        cursor = conn.cursor()
-                        cursor.execute("UPDATE url_tracking SET subtype = ? WHERE url = ?", (subtype, url))
-                        conn.commit()
-                        conn.close()
-            else:
-                logging.warning("Invalid URL format: {}".format(url_data))
-        
-        logging.info("Added {} URLs to the database".format(added_count))
-        
+        logging.info("Added URL {} to database with user_id {}".format(url, user_id))
         return True
     except Exception as e:
-        logging.error("Error adding URLs from {}: {}".format(file_path, str(e)))
+        logging.error("Error adding URL {} to database: {}".format(url, str(e)))
         return False
+
+def add_urls_from_json(json_file):
+    """Add URLs from a JSON file to the database"""
+    try:
+        # Read the JSON file
+        with open(json_file, 'r') as f:
+            data = json.load(f)
+        
+        # Check if the JSON has a 'urls' key (new format) or is a direct array (old format)
+        if isinstance(data, dict) and 'urls' in data:
+            urls = data['urls']
+        else:
+            urls = data
+        
+        logging.info("Found {} URLs in {}".format(len(urls), json_file))
+        
+        # Initialize Twitter scraper
+        try:
+            # Path to the Twitter scraper module
+            scraper_module_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'src/twitter_client')
+            
+            # Add the scraper module path to the Python path
+            sys.path.insert(0, scraper_module_path)
+            
+            # Import the Twitter scraper
+            from twitter_scraper import TwitterScraper
+            
+            # Initialize the scraper
+            scraper = TwitterScraper()
+        except Exception as e:
+            logging.error("Error initializing Twitter scraper: {}".format(str(e)))
+            scraper = None
+        
+        # Add each URL to the database
+        success_count = 0
+        for url_data in urls:
+            url = url_data.get('url')
+            description = url_data.get('description')
+            url_type = url_data.get('type')
+            subtype = url_data.get('subtype')
+            
+            if not url:
+                logging.warning("Skipping URL data with no URL: {}".format(url_data))
+                continue
+            
+            if add_url_to_database(url, description, url_type, subtype):
+                success_count += 1
+        
+        logging.info("Added {} URLs to the database".format(success_count))
+        return success_count
+    except Exception as e:
+        logging.error("Error adding URLs from JSON file: {}".format(str(e)))
+        return 0
 
 def main():
     """Main function"""
-    parser = argparse.ArgumentParser(description='Add URLs to the database')
-    parser.add_argument('--file', type=str, required=True, help='Path to the JSON file containing URLs')
-    parser.add_argument('--db-path', type=str, default='data/local_database.db', help='Path to the local database')
-    parser.add_argument('--clear', action='store_true', help='Clear existing URLs before adding new ones')
+    parser = argparse.ArgumentParser(description='Add URLs from a JSON file to the local database')
+    parser.add_argument('--file', required=True, help='Path to the JSON file containing URLs')
+    parser.add_argument('--clear', action='store_true', help='Clear existing URLs from the database')
     
     args = parser.parse_args()
     
-    # Add URLs from file
-    add_urls_from_file(args.file, db_path=args.db_path, clear_existing=args.clear)
+    # Check if the JSON file exists
+    if not os.path.isfile(args.file):
+        logging.error("JSON file not found: {}".format(args.file))
+        sys.exit(1)
+    
+    logging.info("Adding URLs from {} to database at {}".format(args.file, SQLITE_DB_PATH))
+    
+    # Initialize the database if it doesn't exist
+    if not os.path.isfile(SQLITE_DB_PATH):
+        logging.info("Initializing local database at {}".format(SQLITE_DB_PATH))
+        initialize_database()
+    
+    # Clear existing URLs if requested
+    if args.clear:
+        logging.warning("Clearing existing URLs from the database")
+        clear_urls()
+    
+    # Add URLs from the JSON file
+    add_urls_from_json(args.file)
 
 if __name__ == "__main__":
     main()
