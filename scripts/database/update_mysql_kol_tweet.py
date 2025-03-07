@@ -58,7 +58,7 @@ def get_tweets_from_sqlite(limit=None, since_days=None):
     query = """
     SELECT 
         t.tweet_id, 
-        t.user_id, 
+        t.author,  -- Changed from t.user_id to t.author
         t.content, 
         t.created_at, 
         t.replies, 
@@ -70,7 +70,7 @@ def get_tweets_from_sqlite(limit=None, since_days=None):
     JOIN 
         url_tracking u ON t.source_url = u.url
     WHERE 
-        t.user_id IS NOT NULL
+        t.author IS NOT NULL  -- Changed from t.user_id to t.author
     """
     
     params = []
@@ -91,7 +91,7 @@ def get_tweets_from_sqlite(limit=None, since_days=None):
 
 def map_to_kol_tweet(tweet_data):
     """Map tweet data to kol_tweet table fields"""
-    tweet_id, user_id, content, created_at, replies, likes, views, retweets = tweet_data
+    tweet_id, author, content, created_at, replies, likes, views, retweets = tweet_data
     
     # Convert created_at from SQLite format to MySQL datetime format
     mysql_created_at = None
@@ -115,7 +115,7 @@ def map_to_kol_tweet(tweet_data):
     
     # Map fields from tweet to kol_tweet
     kol_tweet = {
-        'kol_id': user_id,
+        'kol_id': author,  # Changed from user_id to author
         'tweet_id': tweet_id,
         'tweet_text': content,
         'created_at': mysql_created_at,
@@ -209,7 +209,15 @@ def main():
     
     args = parser.parse_args()
     
+    print("Starting MySQL update script for tweets")
     logging.info("Starting MySQL update script for tweets")
+    
+    # Print environment variables (without password)
+    print(f"MySQL Host: {MYSQL_HOST}")
+    print(f"MySQL Port: {MYSQL_PORT}")
+    print(f"MySQL User: {MYSQL_USER}")
+    print(f"MySQL Database: {MYSQL_DATABASE}")
+    print(f"SQLite Database: {SQLITE_DB_PATH}")
     
     # Get tweets from SQLite
     tweets = get_tweets_from_sqlite(args.limit, args.since_days)
