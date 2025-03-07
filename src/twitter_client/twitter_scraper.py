@@ -85,7 +85,7 @@ class TwitterScraper:
                 cwd=self.client_dir,
                 check=True,
                 capture_output=True,
-                text=True
+                universal_newlines=True
             )
             
             logging.info(process.stdout)
@@ -184,7 +184,7 @@ class TwitterScraper:
                 cwd=self.client_dir,
                 check=True,
                 capture_output=True,
-                text=True
+                universal_newlines=True
             )
             
             # Check if the output file exists
