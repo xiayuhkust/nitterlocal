@@ -33,7 +33,7 @@ logging.basicConfig(
 try:
     from src.database.local_database import LocalDatabase
     from src.database.url_manager import URLManager
-    from src.twitter_client.twitter_scraper import TwitterScraper
+    from src.twitter_client.twitter_scraper_py36 import TwitterScraper  # Use Python 3.6 compatible version
     from dotenv import load_dotenv
 except ImportError as e:
     logging.error("Error importing required modules: {}".format(str(e)))
