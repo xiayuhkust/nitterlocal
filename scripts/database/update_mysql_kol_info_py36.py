@@ -107,8 +107,9 @@ def get_profile_info(handle, client_dir=None):
             ['node', test_script_path, handle, output_file],
             cwd=client_dir,
             check=True,
-            capture_output=True,
-            text=True
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True  # This is equivalent to text=True in Python 3.7+
         )
         
         # Check if the output file exists
