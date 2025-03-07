@@ -28,7 +28,7 @@ def test_mysql_update():
             ['python', update_script, '--limit', '2'],
             check=True,
             capture_output=True,
-            text=True
+            universal_newlines=True
         )
         
         # Print the output

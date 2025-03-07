@@ -28,7 +28,7 @@ def test_mysql_tweet_update():
             ['python', update_script, '--limit', '2', '--test'],
             check=True,
             capture_output=True,
-            text=True
+            universal_newlines=True
         )
         
         # Print the output
@@ -42,7 +42,7 @@ def test_mysql_tweet_update():
             ['python', update_script, '--limit', '2'],
             check=True,
             capture_output=True,
-            text=True
+            universal_newlines=True
         )
         
         # Print the output

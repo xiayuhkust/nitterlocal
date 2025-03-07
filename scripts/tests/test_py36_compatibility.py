@@ -40,7 +40,7 @@ def test_subprocess_compatibility():
             ['python3', '--version'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            universal_newlines=True
         )
         
         logging.info("Subprocess test passed: {}".format(process.stdout.strip()))
@@ -90,7 +90,7 @@ def test_combined_update_script():
             ['python3', script_path, '--limit', '2', '--skip-sqlite'],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            universal_newlines=True
         )
         
         # Check if the script ran successfully

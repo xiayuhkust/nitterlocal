@@ -105,7 +105,7 @@ def get_profile_info(handle, client_dir=None):
             cwd=client_dir,
             check=True,
             capture_output=True,
-            text=True
+            universal_newlines=True
         )
         
         # Check if the output file exists

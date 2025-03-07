@@ -31,7 +31,7 @@ def test_combined_update(limit=2, max_tweets=5, max_replies=5):
              '--max-tweets', str(max_tweets), '--max-replies', str(max_replies)],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True
+            universal_newlines=True
         )
         
         # Check if the script ran successfully
