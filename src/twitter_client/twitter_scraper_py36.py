@@ -86,7 +86,7 @@ class TwitterScraper:
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                universal_newlines=True  # Python 3.6 compatible version of text=True
             )
             
             logging.info(process.stdout)
@@ -186,7 +186,7 @@ class TwitterScraper:
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                universal_newlines=True  # Python 3.6 compatible version of text=True
             )
             
             # Check if the output file exists
