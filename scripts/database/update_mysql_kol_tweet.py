@@ -11,6 +11,16 @@ import sqlite3
 from datetime import datetime
 import argparse
 
+# Try to import dotenv for environment variable management
+try:
+    from dotenv import load_dotenv
+    # Load environment variables from .env file if it exists
+    load_dotenv()
+    logging.info("Loaded environment variables from .env file")
+except ImportError:
+    logging.info("python-dotenv not installed, using environment variables directly")
+    pass
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -58,7 +68,8 @@ def get_tweets_from_sqlite(limit=None, since_days=None):
     query = """
     SELECT 
         t.tweet_id, 
-        t.author,  -- Changed from t.user_id to t.author
+        t.user_id,
+        t.author,
         t.content, 
         t.created_at, 
         t.replies, 
@@ -70,7 +81,7 @@ def get_tweets_from_sqlite(limit=None, since_days=None):
     JOIN 
         url_tracking u ON t.source_url = u.url
     WHERE 
-        t.author IS NOT NULL  -- Changed from t.user_id to t.author
+        (t.user_id IS NOT NULL OR t.author IS NOT NULL)
     """
     
     params = []
@@ -91,7 +102,7 @@ def get_tweets_from_sqlite(limit=None, since_days=None):
 
 def map_to_kol_tweet(tweet_data):
     """Map tweet data to kol_tweet table fields"""
-    tweet_id, author, content, created_at, replies, likes, views, retweets = tweet_data
+    tweet_id, user_id, author, content, created_at, replies, likes, views, retweets = tweet_data
     
     # Convert created_at from SQLite format to MySQL datetime format
     mysql_created_at = None
@@ -113,9 +124,15 @@ def map_to_kol_tweet(tweet_data):
         except Exception as e:
             logging.error(f"Error converting date {created_at}: {str(e)}")
     
+    # Use user_id if available, otherwise fall back to author
+    kol_id = user_id if user_id else author
+    if not kol_id:
+        logging.warning(f"No user_id or author available for tweet_id: {tweet_id}")
+        return None
+    
     # Map fields from tweet to kol_tweet
     kol_tweet = {
-        'kol_id': author,  # Changed from user_id to author
+        'kol_id': kol_id,  # Use user_id if available, otherwise fall back to author
         'tweet_id': tweet_id,
         'tweet_text': content,
         'created_at': mysql_created_at,
@@ -221,12 +238,16 @@ def main():
     
     # Get tweets from SQLite
     tweets = get_tweets_from_sqlite(args.limit, args.since_days)
+    print(f"Got {len(tweets)} tweets from SQLite")
     logging.info(f"Got {len(tweets)} tweets from SQLite")
     
     # Connect to MySQL
     if not args.test:
         mysql_conn = get_mysql_connection()
+        print("Connected to MySQL database")
         logging.info("Connected to MySQL database")
+    else:
+        print("Test mode - not connecting to MySQL database")
     
     # Process each tweet
     processed_count = 0
@@ -234,6 +255,7 @@ def main():
         # Map to kol_tweet
         kol_tweet = map_to_kol_tweet(tweet_data)
         if not kol_tweet:
+            print(f"Could not map tweet to kol_tweet for tweet_id: {tweet_data[0]}")
             logging.error(f"Could not map tweet to kol_tweet for tweet_id: {tweet_data[0]}")
             continue
         
@@ -241,21 +263,26 @@ def main():
         if not args.test:
             insert_or_update_kol_tweet(mysql_conn, kol_tweet)
         else:
+            print(f"Test mode - would insert or update record for kol_id: {kol_tweet['kol_id']}, tweet_id: {kol_tweet['tweet_id']}")
             logging.info(f"Test mode - would insert or update record for kol_id: {kol_tweet['kol_id']}, tweet_id: {kol_tweet['tweet_id']}")
         
         processed_count += 1
         
         # Log progress every 100 tweets
         if processed_count % 100 == 0:
+            print(f"Processed {processed_count}/{len(tweets)} tweets")
             logging.info(f"Processed {processed_count}/{len(tweets)} tweets")
     
+    print(f"Processed {processed_count} tweets")
     logging.info(f"Processed {processed_count} tweets")
     
     # Close MySQL connection
     if not args.test:
         mysql_conn.close()
+        print("Closed MySQL connection")
         logging.info("Closed MySQL connection")
     
+    print("MySQL update script for tweets completed")
     logging.info("MySQL update script for tweets completed")
 
 if __name__ == "__main__":
