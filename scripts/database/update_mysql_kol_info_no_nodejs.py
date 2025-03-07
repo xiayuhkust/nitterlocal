@@ -110,7 +110,7 @@ def try_get_profile_info(handle, client_dir=None):
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            universal_newlines=True  # This is equivalent to text=True in Python 3.7+
+            universal_newlines=True  # This is equivalent to universal_newlines=True in Python 3.7+
         )
         
         # Check if the output file exists
