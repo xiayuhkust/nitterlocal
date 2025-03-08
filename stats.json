@@ -1,0 +1,2380 @@
+{
+  "total_tweets": 13444,
+  "total_urls": 339,
+  "url_tweet_counts": [
+    {
+      "url": "https://twitter.com/0xPolygon",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 0xPolygon",
+      "type": "institution",
+      "user_id": "914738730740715521",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/100trillionUSD",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL 100trillionUSD",
+      "type": "kol",
+      "user_id": "918804624303382528",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/8btcnews",
+      "description": "\u5df4\u6bd4\u7279 - \u4e2d\u6587\u533a\u5757\u94fe\u5a92\u4f53",
+      "type": "media",
+      "user_id": "2477895691",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/APompliano",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL APompliano",
+      "type": "kol",
+      "user_id": "339061487",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/AaveAave",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 AaveAave",
+      "type": "institution",
+      "user_id": "1719825249397604352",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/AltcoinSherpa",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL AltcoinSherpa",
+      "type": "kol",
+      "user_id": "1068237257977544704",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Anbessa100",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Anbessa100",
+      "type": "kol",
+      "user_id": "226749344",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/AndreCronjeTech",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL AndreCronjeTech",
+      "type": "kol",
+      "user_id": "905395394",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/AntonioMJuliano",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL AntonioMJuliano",
+      "type": "kol",
+      "user_id": "888066710619668481",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/AriDavidPaul",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL AriDavidPaul",
+      "type": "kol",
+      "user_id": "847882255540342784",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/AriJuels",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL AriJuels",
+      "type": "kol",
+      "user_id": "2563769700",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/AscendEX_Global",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 AscendEX",
+      "type": "institution",
+      "user_id": "1402141973482328065",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Asvanevik",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Asvanevik",
+      "type": "kol",
+      "user_id": "42584365",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Austin_Federa",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Austin_Federa",
+      "type": "kol",
+      "user_id": "38055242",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/AyaMiyagotchi",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL AyaMiyagotchi",
+      "type": "kol",
+      "user_id": "1428909246",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BKEXGlobal",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 BKEX",
+      "type": "institution",
+      "user_id": "1006365249149079552",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BNBCHAIN",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 BNBCHAIN",
+      "type": "institution",
+      "user_id": "1052454006537314306",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BTC_Archive",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL BTC_Archive",
+      "type": "kol",
+      "user_id": "970994516357472257",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BanklessHQ",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 BanklessHQ",
+      "type": "institution",
+      "user_id": "1225557966142820354",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BarrySilbert",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL BarrySilbert",
+      "type": "kol",
+      "user_id": "396045469",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BeInCrypto",
+      "description": "BeInCrypto - \u52a0\u5bc6\u8d27\u5e01\u65b0\u95fb\u548c\u6559\u80b2\u5e73\u53f0",
+      "type": "media",
+      "user_id": "1021643080208801792",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BenArmstrongsX",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL BenArmstrongsX",
+      "type": "kol",
+      "user_id": "1699124734670028800",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Bibox365",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Bibox",
+      "type": "institution",
+      "user_id": "910589747491418112",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BillyM2k",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL BillyM2k",
+      "type": "kol",
+      "user_id": "30699048",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Binance",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 Binance",
+      "type": "institution",
+      "user_id": "877807935493033984",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BinanceAcademy",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 BinanceAcademy",
+      "type": "institution",
+      "user_id": "985686071244541952",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BinanceResearch",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 BinanceResearch",
+      "type": "institution",
+      "user_id": "985688130509393920",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BinanceUS",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Binance US",
+      "type": "institution",
+      "user_id": "1115465940831891457",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BitBoy_Crypto",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 BitBoy_Crypto",
+      "type": "institution",
+      "user_id": "954005112174862336",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BitMartExchange",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 BitMart",
+      "type": "institution",
+      "user_id": "937166242208763904",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BitcoinMagazine",
+      "description": "Bitcoin Magazine - \u6700\u65e9\u7684\u6bd4\u7279\u5e01\u5a92\u4f53\u4e4b\u4e00",
+      "type": "media",
+      "user_id": "361289499",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BitcoinPierre",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL BitcoinPierre",
+      "type": "kol",
+      "user_id": "1467491136851873802",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BithumbOfficial",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Bithumb",
+      "type": "institution",
+      "user_id": "908496633196814337",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BitrueOfficial",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Bitrue",
+      "type": "institution",
+      "user_id": "978184299122892800",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Bitso",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Bitso",
+      "type": "institution",
+      "user_id": "2241683586",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Bitstamp",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Bitstamp",
+      "type": "institution",
+      "user_id": "352518189",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BittrexExchange",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Bittrex",
+      "type": "institution",
+      "user_id": "2309637680",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BittrexGlobal",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Bittrex Global",
+      "type": "institution",
+      "user_id": "1027584103825137664",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BlockBeatsChina",
+      "description": "BlockBeats - \u4e2d\u6587\u533a\u5757\u94fe\u5a92\u4f53",
+      "type": "media",
+      "user_id": "blockbeatschina",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Blockworks_",
+      "description": "Blockworks - \u52a0\u5bc6\u8d27\u5e01\u91d1\u878d\u65b0\u95fb\u548c\u7814\u7a76",
+      "type": "media",
+      "user_id": "989912836901089282",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Breedlove22",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Breedlove22",
+      "type": "kol",
+      "user_id": "285636352",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/BrianBrooksUS",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL BrianBrooksUS",
+      "type": "kol",
+      "user_id": "1151261857618907136",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Bybit_Official",
+      "description": "Bybit Exchange",
+      "type": "institution",
+      "user_id": "999947328621395968",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CaitlinLong_",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CaitlinLong_",
+      "type": "kol",
+      "user_id": "717926102614716417",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Cardano_CF",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 Cardano_CF",
+      "type": "institution",
+      "user_id": "4135644558",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CarpeNoctom",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CarpeNoctom",
+      "type": "kol",
+      "user_id": "22328981",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ChainLinkGod",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL ChainLinkGod",
+      "type": "kol",
+      "user_id": "1035721495",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ChainNews",
+      "description": "\u94fe\u95fb - \u4e2d\u6587\u533a\u5757\u94fe\u5a92\u4f53",
+      "type": "media",
+      "user_id": "1697863182",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CharlieShrem",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CharlieShrem",
+      "type": "kol",
+      "user_id": "22682896",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CoinDeskChina",
+      "description": "CoinDesk\u4e2d\u6587 - \u52a0\u5bc6\u8d27\u5e01\u65b0\u95fb\u4e2d\u6587\u5e73\u53f0",
+      "type": "media",
+      "user_id": "coindeskchina",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CoinMarketCap",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 CoinMarketCap",
+      "type": "institution",
+      "user_id": "2260491445",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CoinTelegraphCN",
+      "description": "Cointelegraph\u4e2d\u6587 - \u52a0\u5bc6\u8d27\u5e01\u65b0\u95fb\u4e2d\u6587\u5e73\u53f0",
+      "type": "media",
+      "user_id": "cointelegraphcn",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CoinTigerEX",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 CoinTiger",
+      "type": "institution",
+      "user_id": "940933824191406080",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CredibleCrypto",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CredibleCrypto",
+      "type": "kol",
+      "user_id": "944746889194364928",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoBull",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoBull",
+      "type": "kol",
+      "user_id": "2520888308",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoCapo_",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoCapo_",
+      "type": "kol",
+      "user_id": "988796804446769153",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoChimpanz",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoChimpanz",
+      "type": "kol",
+      "user_id": "1007179644825726976",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoCred",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoCred",
+      "type": "kol",
+      "user_id": "899558268795842561",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoDiffer",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 CryptoDiffer",
+      "type": "institution",
+      "user_id": "963815487481303040",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoDonAlt",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoDonAlt",
+      "type": "kol",
+      "user_id": "878219545785372673",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoFeras",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoFeras",
+      "type": "kol",
+      "user_id": "951888527079497728",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoHayes",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoHayes",
+      "type": "kol",
+      "user_id": "983993370048630785",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoKaleo",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoKaleo",
+      "type": "kol",
+      "user_id": "906234475604037637",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoMichNL",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoMichNL",
+      "type": "kol",
+      "user_id": "146008010",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoMocho",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoMocho",
+      "type": "kol",
+      "user_id": "851180269285625856",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoNewton",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoNewton",
+      "type": "kol",
+      "user_id": "910899153772916736",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoSlate",
+      "description": "CryptoSlate - \u52a0\u5bc6\u8d27\u5e01\u65b0\u95fb\u548c\u7814\u7a76\u5e73\u53f0",
+      "type": "media",
+      "user_id": "893284234042855424",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoTony__",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoTony__",
+      "type": "kol",
+      "user_id": "893111826254356481",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoWendyO",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoWendyO",
+      "type": "kol",
+      "user_id": "935742315389444096",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoWizardd",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoWizardd",
+      "type": "kol",
+      "user_id": "972970759416111104",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/CryptoYoda1338",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL CryptoYoda1338",
+      "type": "kol",
+      "user_id": "852256178021294080",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/DailyCoin",
+      "description": "DailyCoin - \u52a0\u5bc6\u8d27\u5e01\u65b0\u95fb\u548c\u5206\u6790\u5e73\u53f0",
+      "type": "media",
+      "user_id": "dailycoin",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/DeFiSaver",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 DeFiSaver",
+      "type": "institution",
+      "user_id": "1120736534704066561",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/DeFi_Dad",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL DeFi_Dad",
+      "type": "kol",
+      "user_id": "991745162274467840",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/DefiRate",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 DefiRate",
+      "type": "institution",
+      "user_id": "1150505915059060737",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/DenelleDixon",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL DenelleDixon",
+      "type": "kol",
+      "user_id": "3820356254",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/DigiFinex",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 DigiFinex",
+      "type": "institution",
+      "user_id": "989251920610054144",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/DylanLeClair_",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL DylanLeClair_",
+      "type": "kol",
+      "user_id": "1649128015",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ErikVoorhees",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL ErikVoorhees",
+      "type": "kol",
+      "user_id": "61417559",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Exmo_Com",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 EXMO",
+      "type": "institution",
+      "user_id": "2422590972",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/F_Gregaard",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL F_Gregaard",
+      "type": "kol",
+      "user_id": "796694432720519169",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Gemini",
+      "description": "Gemini Exchange",
+      "type": "institution",
+      "user_id": "2815661158",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Hotbit_news",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Hotbit",
+      "type": "institution",
+      "user_id": "1085357358186881025",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/HuobiGlobal",
+      "description": "Huobi Exchange",
+      "type": "institution",
+      "user_id": "1546055871955800065",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/IOHK_Charles",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL IOHK_Charles",
+      "type": "kol",
+      "user_id": "1376161898",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/IamNomad",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL IamNomad",
+      "type": "kol",
+      "user_id": "22341856",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/InputOutputHK",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 InputOutputHK",
+      "type": "institution",
+      "user_id": "3021837038",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/IvanOnTech",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL IvanOnTech",
+      "type": "kol",
+      "user_id": "390627208",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/JeffBooth",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL JeffBooth",
+      "type": "kol",
+      "user_id": "16461706",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/JoelKatz",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL JoelKatz",
+      "type": "kol",
+      "user_id": "35749949",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/JohnEDeaton1",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL JohnEDeaton1",
+      "type": "kol",
+      "user_id": "1079853966681346048",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/JordanLyall",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL JordanLyall",
+      "type": "kol",
+      "user_id": "14910027",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/JungleIncXRP",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL JungleIncXRP",
+      "type": "kol",
+      "user_id": "988983720794177536",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/KoroushAK",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL KoroushAK",
+      "type": "kol",
+      "user_id": "1392927426",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/KyleSamani",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL KyleSamani",
+      "type": "kol",
+      "user_id": "46332443",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/LBank_Exchange",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 LBank",
+      "type": "institution",
+      "user_id": "913302048564637696",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/LTCFoundation",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 LTCFoundation",
+      "type": "institution",
+      "user_id": "1656328279",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/LefterisJP",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL LefterisJP",
+      "type": "kol",
+      "user_id": "43949721",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Liquid_Global",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Liquid",
+      "type": "institution",
+      "user_id": "3023646139",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Litecoin",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 Litecoin",
+      "type": "institution",
+      "user_id": "385562752",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Livercoin",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Livercoin",
+      "type": "kol",
+      "user_id": "1077844224408723456",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/LynAldenContact",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL LynAldenContact",
+      "type": "kol",
+      "user_id": "823766058909761536",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/MEXC_Global",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 MEXC Global",
+      "type": "institution",
+      "user_id": "mexc_global",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/MartyBent",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL MartyBent",
+      "type": "kol",
+      "user_id": "375707743",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/MattWallace888",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL MattWallace888",
+      "type": "kol",
+      "user_id": "805532293951606785",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Melt_Dem",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Melt_Dem",
+      "type": "kol",
+      "user_id": "2363290915",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/MessariCrypto",
+      "description": "Messari\u52a0\u5bc6\u8d27\u5e01\u7814\u7a76\u673a\u6784",
+      "type": "institution",
+      "user_id": "412587524",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/MetaMask",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 MetaMask",
+      "type": "institution",
+      "user_id": "3278906401",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/MoonLamboio",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL MoonLamboio",
+      "type": "kol",
+      "user_id": "947673769694416896",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/MustStopMurad",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL MustStopMurad",
+      "type": "kol",
+      "user_id": "844304603336232960",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Mysten_Labs",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 Mysten_Labs",
+      "type": "institution",
+      "user_id": "1501216180698234881",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/NebraskanGooner",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL NebraskanGooner",
+      "type": "kol",
+      "user_id": "3696215239",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/NickSzabo4",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL NickSzabo4",
+      "type": "kol",
+      "user_id": "2568108282",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/OdailyChina",
+      "description": "Odaily\u661f\u7403\u65e5\u62a5 - \u4e2d\u6587\u533a\u5757\u94fe\u5a92\u4f53",
+      "type": "media",
+      "user_id": "1026696890304233473",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/PANewsLab",
+      "description": "PANews - \u4e2d\u6587\u533a\u5757\u94fe\u5a92\u4f53",
+      "type": "media",
+      "user_id": "1514857069446590465",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/PancakeSwap",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 PancakeSwap",
+      "type": "institution",
+      "user_id": "1305349277422477313",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/PaulRBerg",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL PaulRBerg",
+      "type": "kol",
+      "user_id": "619916463",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Pentosh1",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Pentosh1",
+      "type": "kol",
+      "user_id": "1138993163706753029",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/PeterMcCormack",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL PeterMcCormack",
+      "type": "kol",
+      "user_id": "893818632089763840",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/PeterSchiff",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL PeterSchiff",
+      "type": "kol",
+      "user_id": "56562803",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Phemex_official",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Phemex",
+      "type": "institution",
+      "user_id": "1171719416389591041",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Poloniex",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Poloniex",
+      "type": "institution",
+      "user_id": "2288889440",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/PositiveCrypto",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL PositiveCrypto",
+      "type": "kol",
+      "user_id": "874629802422145025",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/PrestonPysh",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL PrestonPysh",
+      "type": "kol",
+      "user_id": "538399586",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ProBit_Exchange",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 ProBit Global",
+      "type": "institution",
+      "user_id": "1012582092612382720",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/QwQiao",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL QwQiao",
+      "type": "kol",
+      "user_id": "712457848874086400",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/RaoulGMI",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL RaoulGMI",
+      "type": "kol",
+      "user_id": "2453385626",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/RealFlokiInu",
+      "description": "Floki Meme Token",
+      "type": "institution",
+      "user_id": "1408806420233916416",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/RektCapital",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL RektCapital",
+      "type": "kol",
+      "user_id": "918122676195090433",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Rewkang",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Rewkang",
+      "type": "kol",
+      "user_id": "1138033434",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Ripple",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 Ripple",
+      "type": "institution",
+      "user_id": "1051053836",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/RuneKek",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL RuneKek",
+      "type": "kol",
+      "user_id": "385328034",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/RyanSAdams",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL RyanSAdams",
+      "type": "kol",
+      "user_id": "14571055",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/RyanWatkins_",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL RyanWatkins_",
+      "type": "kol",
+      "user_id": "708805895258574849",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/RyoshiResearch",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL RyoshiResearch",
+      "type": "kol",
+      "user_id": "1357307595749433348",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/SatoshiLite",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL SatoshiLite",
+      "type": "kol",
+      "user_id": "14338147",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Scaramucci",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Scaramucci",
+      "type": "kol",
+      "user_id": "24578794",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/SergeyNazarov",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL SergeyNazarov",
+      "type": "kol",
+      "user_id": "46238620",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ShibArmy",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 ShibArmy",
+      "type": "institution",
+      "user_id": "1357282440335736833",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ShibaSwapDEX",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 ShibaSwapDEX",
+      "type": "institution",
+      "user_id": "1397172651211296769",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Shibtoken",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 Shibtoken",
+      "type": "institution",
+      "user_id": "1356248804899565569",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ShytoshiKusama",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL ShytoshiKusama",
+      "type": "kol",
+      "user_id": "1349928660136910851",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Solana",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 Solana",
+      "type": "institution",
+      "user_id": "951329744804392960",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/StellarOrg",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 StellarOrg",
+      "type": "institution",
+      "user_id": "2460502890",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/SuiFoundation",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 SuiFoundation",
+      "type": "institution",
+      "user_id": "1582498720527962113",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TamaraHaasen",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TamaraHaasen",
+      "type": "kol",
+      "user_id": "1623268278",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Tether_to",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 Tether_to",
+      "type": "institution",
+      "user_id": "2893133450",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TheBlock__",
+      "description": "The Block - \u4e13\u4e1a\u52a0\u5bc6\u8d27\u5e01\u7814\u7a76\u548c\u65b0\u95fb\u5e73\u53f0",
+      "type": "media",
+      "user_id": "963767159536209921",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TheCryptoDog",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TheCryptoDog",
+      "type": "kol",
+      "user_id": "887748030304329728",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TheMoonCarl",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TheMoonCarl",
+      "type": "kol",
+      "user_id": "978732571738755072",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TheRealXinxi",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TheRealXinxi",
+      "type": "kol",
+      "user_id": "727071292805910528",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TheTradingHubb",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TheTradingHubb",
+      "type": "kol",
+      "user_id": "920268737034489856",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TimBeiko",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TimBeiko",
+      "type": "kol",
+      "user_id": "80722677",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TraceMayer",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TraceMayer",
+      "type": "kol",
+      "user_id": "57689645",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TraderKoz",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TraderKoz",
+      "type": "kol",
+      "user_id": "1019660554472837120",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TraderStewie",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TraderStewie",
+      "type": "kol",
+      "user_id": "52166809",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Trader_Jibon",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Trader_Jibon",
+      "type": "kol",
+      "user_id": "1409903853743480832",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Trader_XO",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Trader_XO",
+      "type": "kol",
+      "user_id": "1381341090",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Tradermayne",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL Tradermayne",
+      "type": "kol",
+      "user_id": "2446024556",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TrustlessState",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TrustlessState",
+      "type": "kol",
+      "user_id": "981208355115974656",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TuurDemeester",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TuurDemeester",
+      "type": "kol",
+      "user_id": "40742821",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/TylerFallon",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL TylerFallon",
+      "type": "kol",
+      "user_id": "1155240953692741633",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/Uniswap",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 Uniswap",
+      "type": "institution",
+      "user_id": "984188226826010624",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/VentureCoinist",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL VentureCoinist",
+      "type": "kol",
+      "user_id": "877728873340956672",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/VitalikButerin",
+      "description": "\u4ee5\u592a\u574a\u521b\u59cb\u4ebaVitalik Buterin",
+      "type": "kol",
+      "user_id": "295218901",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/VladZamfir",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL VladZamfir",
+      "type": "kol",
+      "user_id": "139487079",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/WClementeIII",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL WClementeIII",
+      "type": "kol",
+      "user_id": "1270906326823186432",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/WazirXIndia",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 WazirX",
+      "type": "institution",
+      "user_id": "955744720092835841",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/XRP_Productions",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL XRP_Productions",
+      "type": "kol",
+      "user_id": "1131352246573195264",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ZB_Group",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 ZB.com",
+      "type": "institution",
+      "user_id": "zb_group",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/_Checkmatey_",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL _Checkmatey_",
+      "type": "kol",
+      "user_id": "951920334831173632",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/_prestwich",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL _prestwich",
+      "type": "kol",
+      "user_id": "2556480187",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/aantonop",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL aantonop",
+      "type": "kol",
+      "user_id": "1469101279",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/adam3us",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL adam3us",
+      "type": "kol",
+      "user_id": "213236426",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/adelynzhou",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL adelynzhou",
+      "type": "kol",
+      "user_id": "104562738",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/aeyakovenko",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL aeyakovenko",
+      "type": "kol",
+      "user_id": "2327407569",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/alistairmilne",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL alistairmilne",
+      "type": "kol",
+      "user_id": "20902138",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ameensol",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL ameensol",
+      "type": "kol",
+      "user_id": "1646685096",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/armaniferrante",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL armaniferrante",
+      "type": "kol",
+      "user_id": "276810355",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/arthurb",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL arthurb",
+      "type": "kol",
+      "user_id": "14080479",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/avsa",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL avsa",
+      "type": "kol",
+      "user_id": "10157",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/balajis",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL balajis",
+      "type": "kol",
+      "user_id": "2178012643",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/benjaminion_xyz",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL benjaminion_xyz",
+      "type": "kol",
+      "user_id": "896771345031233536",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/benohanlon",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL benohanlon",
+      "type": "kol",
+      "user_id": "104464691",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/bgarlinghouse",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL bgarlinghouse",
+      "type": "kol",
+      "user_id": "28582680",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/bitFlyer",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 BitFlyer",
+      "type": "institution",
+      "user_id": "2291828892",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/bitfinex",
+      "description": "Bitfinex\u4ea4\u6613\u6240\u5b98\u65b9\u8d26\u53f7",
+      "type": "institution",
+      "user_id": "886832413",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/bitgetglobal",
+      "description": "Bitget Exchange",
+      "type": "institution",
+      "user_id": "1098881129057112064",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/bitstein",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL bitstein",
+      "type": "kol",
+      "user_id": "820282353436200960",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/bittorrent",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 bittorrent",
+      "type": "institution",
+      "user_id": "36208197",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/bitvavocom",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Bitvavo",
+      "type": "institution",
+      "user_id": "951463331143053312",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/blknoiz06",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL blknoiz06",
+      "type": "kol",
+      "user_id": "973261472",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/blockchain",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 blockchain",
+      "type": "institution",
+      "user_id": "125304737",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/bonk_inu",
+      "description": "Bonk Meme Token",
+      "type": "institution",
+      "user_id": "1553567565577854976",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/brettcoin",
+      "description": "Brett Meme Token",
+      "type": "institution",
+      "user_id": "brettcoin",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/brian_armstrong",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL brian_armstrong",
+      "type": "kol",
+      "user_id": "14379660",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/brianlong",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL brianlong",
+      "type": "kol",
+      "user_id": "14962805",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/btcfans",
+      "description": "\u6bd4\u7279\u8303 - \u4e2d\u6587\u533a\u5757\u94fe\u5a92\u4f53",
+      "type": "media",
+      "user_id": "499170550",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/btcturk",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 BtcTurk",
+      "type": "institution",
+      "user_id": "1125319374599012352",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/c0insbit",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Coinsbit",
+      "type": "institution",
+      "user_id": "30831487",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/cameron",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL cameron",
+      "type": "kol",
+      "user_id": "250980843",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/cburniske",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL cburniske",
+      "type": "kol",
+      "user_id": "710463119886262272",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/cdixon",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL cdixon",
+      "type": "kol",
+      "user_id": "2529971",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/cex_io",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 CEX.IO",
+      "type": "institution",
+      "user_id": "1920515281",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/chainlink",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 chainlink",
+      "type": "institution",
+      "user_id": "1530530365",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/chrislarsensf",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL chrislarsensf",
+      "type": "kol",
+      "user_id": "23137860",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/circle",
+      "description": "Circle USDC\u7a33\u5b9a\u5e01\u53d1\u884c\u65b9",
+      "type": "institution",
+      "user_id": "2151686839",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ck_SNARKs",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL ck_SNARKs",
+      "type": "kol",
+      "user_id": "259999631",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/coinbase",
+      "description": "Coinbase\u4ea4\u6613\u6240\u5b98\u65b9\u8d26\u53f7",
+      "type": "institution",
+      "user_id": "574032254",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/coincheck_en",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Coincheck",
+      "type": "institution",
+      "user_id": "coincheck_en",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/coindesk",
+      "description": "CoinDesk - \u5168\u7403\u9886\u5148\u7684\u52a0\u5bc6\u8d27\u5e01\u65b0\u95fb\u5a92\u4f53",
+      "type": "media",
+      "user_id": "1333467482",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/coinexcom",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 CoinEx",
+      "type": "institution",
+      "user_id": "460537897",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/coingecko",
+      "description": "CoinGecko\u52a0\u5bc6\u8d27\u5e01\u5e02\u573a\u6570\u636e\u5e73\u53f0",
+      "type": "institution",
+      "user_id": "2412652615",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/coinmetrics",
+      "description": "Coin Metrics\u6570\u636e\u5206\u6790\u5e73\u53f0",
+      "type": "institution",
+      "user_id": "867328053416001536",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/coinone_info",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Coinone",
+      "type": "institution",
+      "user_id": "1108926869984808961",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/cointelegraph",
+      "description": "Cointelegraph - \u52a0\u5bc6\u8d27\u5e01\u548c\u533a\u5757\u94fe\u65b0\u95fb\u5a92\u4f53",
+      "type": "media",
+      "user_id": "2207129125",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/compoundfinance",
+      "description": "Compound\u501f\u8d37\u534f\u8bae",
+      "type": "institution",
+      "user_id": "292132128",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/crypto_birb",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL crypto_birb",
+      "type": "kol",
+      "user_id": "897446848004227072",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/crypto_rand",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL crypto_rand",
+      "type": "kol",
+      "user_id": "859484337850523648",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/cryptocom",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Crypto.com Exchange",
+      "type": "institution",
+      "user_id": "864347902029709314",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/cryptoquant_com",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 cryptoquant_com",
+      "type": "institution",
+      "user_id": "1136819035163619328",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/cz_binance",
+      "description": "Binance\u521b\u59cb\u4eba\u8d75\u957f\u9e4f",
+      "type": "kol",
+      "user_id": "902926941413453824",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/dan_pantera",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL dan_pantera",
+      "type": "kol",
+      "user_id": "385162204",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/danheld",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL danheld",
+      "type": "kol",
+      "user_id": "1598709350",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/dannyryan",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL dannyryan",
+      "type": "kol",
+      "user_id": "17260940",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/decryptmedia",
+      "description": "Decrypt - \u52a0\u5bc6\u8d27\u5e01\u548cWeb3\u65b0\u95fb\u5a92\u4f53",
+      "type": "media",
+      "user_id": "993530753014054912",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/defipulse",
+      "description": "DeFi Pulse DeFi\u6570\u636e\u5e73\u53f0",
+      "type": "institution",
+      "user_id": "1096456962022223872",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/dogecoin",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 dogecoin",
+      "type": "institution",
+      "user_id": "2235729541",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/dogwifcoin",
+      "description": "Dogwifhat Meme Token",
+      "type": "institution",
+      "user_id": "1650331044971773952",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/drakefjustin",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL drakefjustin",
+      "type": "kol",
+      "user_id": "258480276",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/dwr",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL dwr",
+      "type": "kol",
+      "user_id": "9615352",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/econoar",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL econoar",
+      "type": "kol",
+      "user_id": "14101591",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/el33th4xor",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL el33th4xor",
+      "type": "kol",
+      "user_id": "399412477",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/emilianobonassi",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL emilianobonassi",
+      "type": "kol",
+      "user_id": "15253843",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/erikfinman",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL erikfinman",
+      "type": "kol",
+      "user_id": "131868148",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ethereumJoseph",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL ethereumJoseph",
+      "type": "kol",
+      "user_id": "2362854624",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/etherscan",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 etherscan",
+      "type": "institution",
+      "user_id": "3313312856",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/evan_van_ness",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL evan_van_ness",
+      "type": "kol",
+      "user_id": "189518354",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/filbfilb",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL filbfilb",
+      "type": "kol",
+      "user_id": "1036115996",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/forkast_news",
+      "description": "Forkast News - \u4e9a\u6d32\u52a0\u5bc6\u8d27\u5e01\u65b0\u95fb\u5a92\u4f53",
+      "type": "media",
+      "user_id": "forkast_news",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/francispouliot_",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL francispouliot_",
+      "type": "kol",
+      "user_id": "1643500784",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/gaborgurbacs",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL gaborgurbacs",
+      "type": "kol",
+      "user_id": "2809989583",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/gakonst",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL gakonst",
+      "type": "kol",
+      "user_id": "804029200315334656",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/gate_io",
+      "description": "Gate.io Exchange",
+      "type": "institution",
+      "user_id": "912539725071777792",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/gavofyork",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL gavofyork",
+      "type": "kol",
+      "user_id": "33962758",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/glassnode",
+      "description": "Glassnode\u94fe\u4e0a\u6570\u636e\u5206\u6790\u5e73\u53f0",
+      "type": "institution",
+      "user_id": "1022821051187822593",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/hasufl",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL hasufl",
+      "type": "kol",
+      "user_id": "566534886",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/haydenadams",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL haydenadams",
+      "type": "kol",
+      "user_id": "15345849",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/hedera",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 hedera",
+      "type": "institution",
+      "user_id": "898917341051965441",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/heyibinance",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 heyibinance",
+      "type": "institution",
+      "user_id": "1003840309166366721",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/hitbtc",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 HitBTC",
+      "type": "institution",
+      "user_id": "1364642054",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/hudsonjameson",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL hudsonjameson",
+      "type": "kol",
+      "user_id": "801236832",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/iamDCinvestor",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL iamDCinvestor",
+      "type": "kol",
+      "user_id": "956670268596015105",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/indodax",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Indodax",
+      "type": "institution",
+      "user_id": "2339859001",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/intotheblock",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 intotheblock",
+      "type": "institution",
+      "user_id": "1095652151903297536",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/itBit",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 itBit",
+      "type": "institution",
+      "user_id": "712580966",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/jackmallers",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL jackmallers",
+      "type": "kol",
+      "user_id": "2360241314",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/jbaylina",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL jbaylina",
+      "type": "kol",
+      "user_id": "52147487",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/jerallaire",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL jerallaire",
+      "type": "kol",
+      "user_id": "2478756618",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/jimmysong",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL jimmysong",
+      "type": "kol",
+      "user_id": "21263333",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/jinsetv",
+      "description": "\u91d1\u8272\u8d22\u7ecf - \u4e2d\u6587\u533a\u5757\u94fe\u5a92\u4f53",
+      "type": "media",
+      "user_id": "jinsetv",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/jjtoconnor",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL jjtoconnor",
+      "type": "kol",
+      "user_id": "569184853",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/joemccann",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL joemccann",
+      "type": "kol",
+      "user_id": "14814762",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/jonwu_",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL jonwu_",
+      "type": "kol",
+      "user_id": "15809138",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/justinsuntron",
+      "description": "TRON\u521b\u59cb\u4eba\u5b59\u5b87\u6668",
+      "type": "kol",
+      "user_id": "902839045356744704",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/kaiynne",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL kaiynne",
+      "type": "kol",
+      "user_id": "24809221",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/kevinrose",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL kevinrose",
+      "type": "kol",
+      "user_id": "657863",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/kevinsekniqi",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL kevinsekniqi",
+      "type": "kol",
+      "user_id": "995834351316324352",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/koeppelmann",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL koeppelmann",
+      "type": "kol",
+      "user_id": "63064338",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/krakenfx",
+      "description": "Kraken Exchange",
+      "type": "institution",
+      "user_id": "1399148563",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/krugermacro",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL krugermacro",
+      "type": "kol",
+      "user_id": "534493783",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/krzkaczor",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL krzkaczor",
+      "type": "kol",
+      "user_id": "2368769642",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/kucoincom",
+      "description": "KuCoin Exchange",
+      "type": "institution",
+      "user_id": "910110294625492992",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/latokens",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 LATOKEN",
+      "type": "institution",
+      "user_id": "latokens",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/laurashin",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL laurashin",
+      "type": "kol",
+      "user_id": "26377478",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/lawmaster",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL lawmaster",
+      "type": "kol",
+      "user_id": "16709601",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ledgerstatus",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL ledgerstatus",
+      "type": "kol",
+      "user_id": "897142437344419842",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/leemonbaird",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL leemonbaird",
+      "type": "kol",
+      "user_id": "913463264264245248",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/loomdart",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL loomdart",
+      "type": "kol",
+      "user_id": "2603525726",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/lopp",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL lopp",
+      "type": "kol",
+      "user_id": "23618940",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/lrettig",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL lrettig",
+      "type": "kol",
+      "user_id": "95308902",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/manceharmon",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL manceharmon",
+      "type": "kol",
+      "user_id": "18943630",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/matt_odell",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL matt_odell",
+      "type": "kol",
+      "user_id": "1400182698308771842",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/mattytay",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL mattytay",
+      "type": "kol",
+      "user_id": "2943424636",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/maxbranzburg",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL maxbranzburg",
+      "type": "kol",
+      "user_id": "160707729",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/maxkeiser",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL maxkeiser",
+      "type": "kol",
+      "user_id": "20374262",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/mccannatron",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL mccannatron",
+      "type": "kol",
+      "user_id": "59177045",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/mishaboar",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL mishaboar",
+      "type": "kol",
+      "user_id": "1385271926852104193",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/mogcoin_",
+      "description": "Mog Coin Meme Token",
+      "type": "institution",
+      "user_id": "mogcoin_",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/n3ocortex",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL n3ocortex",
+      "type": "kol",
+      "user_id": "748483312965062656",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/nanexcool",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL nanexcool",
+      "type": "kol",
+      "user_id": "789299",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/nansen_ai",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 nansen_ai",
+      "type": "institution",
+      "user_id": "1260559704335568896",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/natbrunell",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL natbrunell",
+      "type": "kol",
+      "user_id": "543483223",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/nic__carter",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL nic__carter",
+      "type": "kol",
+      "user_id": "420308365",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/nicksdjohnson",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL nicksdjohnson",
+      "type": "kol",
+      "user_id": "34592834",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/novogratz",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL novogratz",
+      "type": "kol",
+      "user_id": "19847181",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/okx",
+      "description": "OKX Exchange",
+      "type": "institution",
+      "user_id": "867617849208037377",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/opensea",
+      "description": "OpenSea NFT\u5e02\u573a",
+      "type": "institution",
+      "user_id": "946213559213555712",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/paoloardoino",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL paoloardoino",
+      "type": "kol",
+      "user_id": "109404961",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/pepecoinofficial",
+      "description": "Pepe Meme Token",
+      "type": "institution",
+      "user_id": "pepecoinofficial",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/peter_szilagyi",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL peter_szilagyi",
+      "type": "kol",
+      "user_id": "186028018",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/philip_salter",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL philip_salter",
+      "type": "kol",
+      "user_id": "222086320",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/popcatsolana",
+      "description": "Popcat Meme Token",
+      "type": "institution",
+      "user_id": "1734808822168870912",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/pythianism",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL pythianism",
+      "type": "kol",
+      "user_id": "887851445982068737",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/rajgokal",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL rajgokal",
+      "type": "kol",
+      "user_id": "101833150",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/real_vijay",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL real_vijay",
+      "type": "kol",
+      "user_id": "95066790",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/richardchen39",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL richardchen39",
+      "type": "kol",
+      "user_id": "724450298933055497",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/rleshner",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL rleshner",
+      "type": "kol",
+      "user_id": "394480074",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/rogerkver",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL rogerkver",
+      "type": "kol",
+      "user_id": "176758255",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/saifedean",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL saifedean",
+      "type": "kol",
+      "user_id": "18469669",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/sandeepnailwal",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL sandeepnailwal",
+      "type": "kol",
+      "user_id": "100798845",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/santiagoroel",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL santiagoroel",
+      "type": "kol",
+      "user_id": "737132550",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/santimentfeed",
+      "description": "Santiment\u6570\u636e\u5206\u6790\u5e73\u53f0",
+      "type": "institution",
+      "user_id": "776078472477347840",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/sassal0x",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL sassal0x",
+      "type": "kol",
+      "user_id": "313724502",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/saylor",
+      "description": "MicroStrategy\u521b\u59cb\u4ebaMichael Saylor",
+      "type": "kol",
+      "user_id": "244647486",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/scottmelker",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL scottmelker",
+      "type": "kol",
+      "user_id": "17351167",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/scupytrooples",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL scupytrooples",
+      "type": "kol",
+      "user_id": "1012777913299689477",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/spencernoon",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL spencernoon",
+      "type": "kol",
+      "user_id": "1527806202",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/staniKulechov",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL staniKulechov",
+      "type": "kol",
+      "user_id": "952921795316912133",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/stephanlivera",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL stephanlivera",
+      "type": "kol",
+      "user_id": "230517800",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/synthetix_io",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 synthetix_io",
+      "type": "institution",
+      "user_id": "898875132864716800",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/tayvano_",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL tayvano_",
+      "type": "kol",
+      "user_id": "19748227",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/tederminant",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL tederminant",
+      "type": "kol",
+      "user_id": "21392423",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/thegrifft",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL thegrifft",
+      "type": "kol",
+      "user_id": "263162731",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/ton_blockchain",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 ton_blockchain",
+      "type": "institution",
+      "user_id": "1442437262663319565",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/tonevays",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL tonevays",
+      "type": "kol",
+      "user_id": "2577886615",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/trondao",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 trondao",
+      "type": "institution",
+      "user_id": "894231710065446912",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/turbocoin",
+      "description": "Turbo Meme Token",
+      "type": "institution",
+      "user_id": "302286462",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/tusharjain_",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL tusharjain_",
+      "type": "kol",
+      "user_id": "1523751438",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/twobitidiot",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL twobitidiot",
+      "type": "kol",
+      "user_id": "2193616844",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/tyler",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL tyler",
+      "type": "kol",
+      "user_id": "24222556",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/upbitglobal",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Upbit",
+      "type": "institution",
+      "user_id": "1084690589558267905",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/whale_alert",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 whale_alert",
+      "type": "institution",
+      "user_id": "1039833297751302144",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/woonomic",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL woonomic",
+      "type": "kol",
+      "user_id": "13418472",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/wublockchain",
+      "description": "\u5434\u8bf4\u533a\u5757\u94fe - \u4e2d\u6587\u533a\u5757\u94fe\u5a92\u4f53",
+      "type": "media",
+      "user_id": "111533746",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/yearnfi",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 yearnfi",
+      "type": "institution",
+      "user_id": "1223779978459770880",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/zaifdotjp",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u4ea4\u6613\u6240 Zaif",
+      "type": "institution",
+      "user_id": "2611040016",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/zapper_fi",
+      "description": "\u52a0\u5bc6\u8d27\u5e01\u673a\u6784 zapper_fi",
+      "type": "institution",
+      "user_id": "1208076242366283776",
+      "tweet_count": 0
+    },
+    {
+      "url": "https://twitter.com/zhusu",
+      "description": "\u52a0\u5bc6\u8d27\u5e01KOL zhusu",
+      "type": "kol",
+      "user_id": "79714172",
+      "tweet_count": 0
+    }
+  ],
+  "generated_at": "2025-03-06T18:20:16.284496"
+}
