@@ -37,7 +37,7 @@ class DailyUpdate:
         
         logging.info("Daily update initialization complete")
     
-    def run(self, batch_size=10, sleep_between_urls=2, max_tweets=10, max_replies=30, limit=None, performance_monitoring=False):
+    def run(self, batch_size=10, sleep_between_urls=2, max_tweets=10, max_replies=5, limit=None, performance_monitoring=False):
         """Run the daily update"""
         logging.info("Starting daily update")
         logging.info(f"Time: {datetime.now().isoformat()}")

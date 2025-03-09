@@ -26,7 +26,8 @@ def main():
     parser = argparse.ArgumentParser(description='Twitter client daily update process')
     parser.add_argument('--batch-size', type=int, default=10, help='Batch size for processing URLs')
     parser.add_argument('--sleep', type=int, default=2, help='Sleep time between URLs (seconds)')
-    parser.add_argument('--max-tweets', type=int, default=50, help='Maximum number of tweets per URL')
+    parser.add_argument('--max-tweets', type=int, default=10, help='Maximum number of tweets per URL')
+    parser.add_argument('--max-replies', type=int, default=5, help='Maximum number of reply tweets per URL')
     parser.add_argument('--limit', type=int, help='Limit the number of URLs to process')
     parser.add_argument('--db-path', type=str, default='data/local_database.db', help='Path to the local database')
     parser.add_argument('--performance', action='store_true', help='Enable detailed performance monitoring')
@@ -47,6 +48,7 @@ def main():
         batch_size=args.batch_size,
         sleep_between_urls=args.sleep,
         max_tweets=args.max_tweets,
+        max_replies=args.max_replies,
         limit=args.limit,
         performance_monitoring=args.performance
     )
