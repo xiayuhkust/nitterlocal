@@ -37,12 +37,14 @@ class DailyUpdate:
         
         logging.info("Daily update initialization complete")
     
-    def run(self, batch_size=10, sleep_between_urls=2, max_tweets=10, max_replies=5, limit=None, performance_monitoring=False):
+    def run(self, batch_size=10, sleep_between_urls=2, max_tweets=10, max_replies=5, limit=None, 
+            performance_monitoring=False, parallel=False, num_threads=2):
         """Run the daily update"""
         logging.info("Starting daily update")
         logging.info(f"Time: {datetime.now().isoformat()}")
         logging.info(f"Batch size: {batch_size}, Sleep between URLs: {sleep_between_urls} seconds")
         logging.info(f"Max tweets per URL: {max_tweets}, Max replies per URL: {max_replies}")
+        logging.info(f"Parallel processing: {parallel}, Number of threads: {num_threads}")
         
         # Initialize performance metrics if monitoring is enabled
         performance_metrics = {}
@@ -87,78 +89,178 @@ class DailyUpdate:
                 
                 batch_urls = [url_data['url'] for url_data in batch]
                 
-                # Scrape the batch of URLs
-                for url_data in batch:
-                    url = url_data['url']
+                # Process the batch of URLs
+                if parallel:
+                    # Use parallel processing
+                    logging.info(f"Using parallel processing with {num_threads} threads")
                     
+                    if performance_monitoring:
+                        scrape_start_time = time.time()
+                    
+                    # Scrape URLs in parallel
+                    tweets_by_url = {}
                     try:
-                        logging.info(f"Processing URL: {url}")
+                        # Extract just the URLs from the batch
+                        batch_urls = [url_data['url'] for url_data in batch]
                         
-                        url_start_time = time.time()
-                        url_metrics = {'url': url} if performance_monitoring else None
+                        # Scrape URLs in parallel
+                        all_tweets = self.scraper.scrape_urls_parallel(
+                            batch_urls, 
+                            max_tweets=max_tweets, 
+                            max_replies=max_replies,
+                            num_threads=num_threads,
+                            sleep_between_urls=sleep_between_urls
+                        )
                         
-                        # Scrape the URL for both regular tweets and replies
-                        if performance_monitoring:
-                            scrape_start_time = time.time()
-                            
-                        tweets = self.scraper.scrape_url(url, max_tweets=max_tweets, max_replies=max_replies)
+                        # Group tweets by URL
+                        for tweet in all_tweets:
+                            source_url = tweet.get('source_url')
+                            if source_url not in tweets_by_url:
+                                tweets_by_url[source_url] = []
+                            tweets_by_url[source_url].append(tweet)
                         
                         if performance_monitoring:
                             scrape_time = time.time() - scrape_start_time
                             performance_metrics['tweet_scraping_time'] += scrape_time
-                            if url_metrics:
-                                url_metrics['scrape_time'] = f"{scrape_time:.2f} seconds"
-                        
-                        if tweets:
-                            # Store the tweets in the database
-                            if performance_monitoring:
-                                db_start_time = time.time()
-                                
-                            processed_count = self.database.store_tweets(tweets, url)
-                            
-                            if performance_monitoring:
-                                db_time = time.time() - db_start_time
-                                performance_metrics['db_storage_time'] += db_time
-                                if url_metrics:
-                                    url_metrics['db_time'] = f"{db_time:.2f} seconds"
-                            
-                            if processed_count > 0:
-                                logging.info(f"Processed {processed_count} tweets for URL: {url}")
-                                success_count += 1
-                                total_tweets += processed_count
-                            else:
-                                logging.warning(f"No tweets processed for URL: {url}")
-                                error_count += 1
-                        else:
-                            logging.warning(f"No tweets found for URL: {url}")
-                            error_count += 1
-                        
-                        # Update the URL status
-                        if performance_monitoring:
-                            update_start_time = time.time()
-                            
-                        self.url_manager.update_last_scraped(url)
-                        
-                        if performance_monitoring:
-                            update_time = time.time() - update_start_time
-                            performance_metrics['url_status_update_time'] += update_time
-                            if url_metrics:
-                                url_metrics['update_time'] = f"{update_time:.2f} seconds"
-                        
-                        processed_count += 1
-                        logging.info(f"Processed {processed_count}/{total_urls} URLs")
-                        
-                        if performance_monitoring:
-                            url_total_time = time.time() - url_start_time
-                            if url_metrics:
-                                url_metrics['total_time'] = f"{url_total_time:.2f} seconds"
-                                performance_metrics['url_times'].append(url_metrics)
-                        
+                            logging.info(f"Parallel scraping completed in {scrape_time:.2f} seconds")
+                    
                     except Exception as e:
-                        logging.error(f"Error processing URL {url}: {str(e)}")
-                        self.url_manager.update_url_status(url, 'error', str(e))
-                        error_count += 1
-                        processed_count += 1
+                        logging.error(f"Error in parallel scraping: {str(e)}")
+                        # Continue with processing what we have
+                    
+                    # Process the results
+                    for url_data in batch:
+                        url = url_data['url']
+                        try:
+                            url_start_time = time.time()
+                            url_metrics = {'url': url} if performance_monitoring else None
+                            
+                            # Get tweets for this URL
+                            tweets = tweets_by_url.get(url, [])
+                            
+                            if tweets:
+                                # Store the tweets in the database
+                                if performance_monitoring:
+                                    db_start_time = time.time()
+                                
+                                processed_count_url = self.database.store_tweets(tweets, url)
+                                
+                                if performance_monitoring:
+                                    db_time = time.time() - db_start_time
+                                    performance_metrics['db_storage_time'] += db_time
+                                    if url_metrics:
+                                        url_metrics['db_time'] = f"{db_time:.2f} seconds"
+                                
+                                if processed_count_url > 0:
+                                    logging.info(f"Processed {processed_count_url} tweets for URL: {url}")
+                                    success_count += 1
+                                    total_tweets += processed_count_url
+                                else:
+                                    logging.warning(f"No tweets processed for URL: {url}")
+                                    error_count += 1
+                            else:
+                                logging.warning(f"No tweets found for URL: {url}")
+                                error_count += 1
+                            
+                            # Update the URL status
+                            if performance_monitoring:
+                                update_start_time = time.time()
+                            
+                            self.url_manager.update_last_scraped(url)
+                            
+                            if performance_monitoring:
+                                update_time = time.time() - update_start_time
+                                performance_metrics['url_status_update_time'] += update_time
+                                if url_metrics:
+                                    url_metrics['update_time'] = f"{update_time:.2f} seconds"
+                            
+                            processed_count += 1
+                            logging.info(f"Processed {processed_count}/{total_urls} URLs")
+                            
+                            if performance_monitoring:
+                                url_total_time = time.time() - url_start_time
+                                if url_metrics:
+                                    url_metrics['total_time'] = f"{url_total_time:.2f} seconds"
+                                    performance_metrics['url_times'].append(url_metrics)
+                            
+                        except Exception as e:
+                            logging.error(f"Error processing URL {url}: {str(e)}")
+                            self.url_manager.update_url_status(url, 'error', str(e))
+                            error_count += 1
+                            processed_count += 1
+                else:
+                    # Use sequential processing (existing code)
+                    for url_data in batch:
+                        url = url_data['url']
+                        
+                        try:
+                            logging.info(f"Processing URL: {url}")
+                            
+                            url_start_time = time.time()
+                            url_metrics = {'url': url} if performance_monitoring else None
+                            
+                            # Scrape the URL for both regular tweets and replies
+                            if performance_monitoring:
+                                scrape_start_time = time.time()
+                                
+                            tweets = self.scraper.scrape_url(url, max_tweets=max_tweets, max_replies=max_replies)
+                            
+                            if performance_monitoring:
+                                scrape_time = time.time() - scrape_start_time
+                                performance_metrics['tweet_scraping_time'] += scrape_time
+                                if url_metrics:
+                                    url_metrics['scrape_time'] = f"{scrape_time:.2f} seconds"
+                            
+                            if tweets:
+                                # Store the tweets in the database
+                                if performance_monitoring:
+                                    db_start_time = time.time()
+                                    
+                                processed_count_url = self.database.store_tweets(tweets, url)
+                                
+                                if performance_monitoring:
+                                    db_time = time.time() - db_start_time
+                                    performance_metrics['db_storage_time'] += db_time
+                                    if url_metrics:
+                                        url_metrics['db_time'] = f"{db_time:.2f} seconds"
+                                
+                                if processed_count_url > 0:
+                                    logging.info(f"Processed {processed_count_url} tweets for URL: {url}")
+                                    success_count += 1
+                                    total_tweets += processed_count_url
+                                else:
+                                    logging.warning(f"No tweets processed for URL: {url}")
+                                    error_count += 1
+                            else:
+                                logging.warning(f"No tweets found for URL: {url}")
+                                error_count += 1
+                            
+                            # Update the URL status
+                            if performance_monitoring:
+                                update_start_time = time.time()
+                                
+                            self.url_manager.update_last_scraped(url)
+                            
+                            if performance_monitoring:
+                                update_time = time.time() - update_start_time
+                                performance_metrics['url_status_update_time'] += update_time
+                                if url_metrics:
+                                    url_metrics['update_time'] = f"{update_time:.2f} seconds"
+                            
+                            processed_count += 1
+                            logging.info(f"Processed {processed_count}/{total_urls} URLs")
+                            
+                            if performance_monitoring:
+                                url_total_time = time.time() - url_start_time
+                                if url_metrics:
+                                    url_metrics['total_time'] = f"{url_total_time:.2f} seconds"
+                                    performance_metrics['url_times'].append(url_metrics)
+                            
+                        except Exception as e:
+                            logging.error(f"Error processing URL {url}: {str(e)}")
+                            self.url_manager.update_url_status(url, 'error', str(e))
+                            error_count += 1
+                            processed_count += 1
                 
                 # Sleep between batches
                 if i + batch_size < len(urls):

@@ -31,6 +31,8 @@ def main():
     parser.add_argument('--limit', type=int, help='Limit the number of URLs to process')
     parser.add_argument('--db-path', type=str, default='data/local_database.db', help='Path to the local database')
     parser.add_argument('--performance', action='store_true', help='Enable detailed performance monitoring')
+    parser.add_argument('--parallel', action='store_true', help='Enable parallel processing of URLs')
+    parser.add_argument('--threads', type=int, default=2, help='Number of threads for parallel processing')
     
     args = parser.parse_args()
     
@@ -50,7 +52,9 @@ def main():
         max_tweets=args.max_tweets,
         max_replies=args.max_replies,
         limit=args.limit,
-        performance_monitoring=args.performance
+        performance_monitoring=args.performance,
+        parallel=args.parallel,
+        num_threads=args.threads
     )
     
     # Calculate total execution time
