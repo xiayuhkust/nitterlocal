@@ -236,7 +236,7 @@ async def sync_database(
     background_tasks: BackgroundTasks,
     file_id: str = Form(...),
     sync_to_mysql: bool = Form(True),
-    test_mode: bool = Form(True)
+    test_mode: bool = Form(False)  # Changed default to False
 ):
     """
     Synchronize database tables after processing an Excel file

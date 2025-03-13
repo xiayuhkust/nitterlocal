@@ -56,6 +56,17 @@ def run_process_excel_script(excel_path: str, db_path: str = DEFAULT_SQLITE_PATH
     try:
         # Make sure the script is executable
         script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scripts', 'database', 'process_excel.py')
+        
+        # Check if the script exists
+        if not os.path.exists(script_path):
+            logging.error(f"Script not found: {script_path}")
+            return {
+                "success": False,
+                "processed_count": 0,
+                "output": "",
+                "errors": f"Script not found: {script_path}"
+            }
+        
         os.chmod(script_path, 0o755)
         
         # Run the script
@@ -113,6 +124,17 @@ def run_sync_kol_character_script(db_path: str = DEFAULT_SQLITE_PATH, limit: Opt
     try:
         # Make sure the script is executable
         script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scripts', 'sync', 'sync_kol_character.py')
+        
+        # Check if the script exists
+        if not os.path.exists(script_path):
+            logging.error(f"Script not found: {script_path}")
+            return {
+                "success": False,
+                "processed_count": 0,
+                "output": "",
+                "errors": f"Script not found: {script_path}"
+            }
+        
         os.chmod(script_path, 0o755)
         
         # Run the script
@@ -258,7 +280,7 @@ def get_sqlite_url_tracking_stats(db_path: str = DEFAULT_SQLITE_PATH) -> Dict[st
             "error": str(e)
         }
 
-def process_excel_and_sync(excel_path: str, db_path: str = DEFAULT_SQLITE_PATH, sync_to_mysql: bool = True, test_mode: bool = True) -> Dict[str, Any]:
+def process_excel_and_sync(excel_path: str, db_path: str = DEFAULT_SQLITE_PATH, sync_to_mysql: bool = True, test_mode: bool = False) -> Dict[str, Any]:
     """Process an Excel file and synchronize data with MySQL"""
     results: Dict[str, Any] = {
         "excel_processing": None,
