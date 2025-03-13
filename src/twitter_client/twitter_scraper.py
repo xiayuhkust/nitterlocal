@@ -214,7 +214,7 @@ class TwitterScraper:
             if os.path.exists(output_file):
                 os.remove(output_file)
     
-    def scrape_urls(self, urls, max_tweets=50, batch_size=10, sleep_between_urls=2):
+    def scrape_urls(self, urls, max_tweets=10, max_replies=5, batch_size=10, sleep_between_urls=2):
         """Scrape tweets from multiple URLs"""
         logging.info(f"Scraping {len(urls)} URLs...")
         
@@ -224,7 +224,7 @@ class TwitterScraper:
             logging.info(f"Scraping URL {i+1}/{len(urls)}: {url}")
             
             # Scrape the URL
-            tweets = self.scrape_url(url, max_tweets)
+            tweets = self.scrape_url(url, max_tweets, max_replies)
             all_tweets.extend(tweets)
             
             # Sleep between URLs
@@ -234,5 +234,64 @@ class TwitterScraper:
                 time.sleep(sleep_between_urls)
         
         logging.info(f"Scraped {len(all_tweets)} tweets from {len(urls)} URLs")
+        
+        return all_tweets
+        
+    def scrape_urls_parallel(self, urls, max_tweets=10, max_replies=5, num_threads=2, sleep_between_urls=2):
+        """Scrape tweets from multiple URLs in parallel using multiple threads"""
+        import concurrent.futures
+        import time
+        
+        logging.info(f"Scraping {len(urls)} URLs in parallel with {num_threads} threads...")
+        
+        all_tweets = []
+        processed_count = 0
+        
+        # Define a worker function for each thread
+        def scrape_worker(url):
+            try:
+                logging.info(f"Thread processing URL: {url}")
+                tweets = self.scrape_url(url, max_tweets=max_tweets, max_replies=max_replies)
+                
+                # Sleep between URLs to avoid rate limiting
+                if sleep_between_urls > 0:
+                    time.sleep(sleep_between_urls)
+                
+                return {
+                    'url': url,
+                    'tweets': tweets,
+                    'success': True,
+                    'error': None
+                }
+            except Exception as e:
+                logging.error(f"Error in thread processing URL {url}: {str(e)}")
+                return {
+                    'url': url,
+                    'tweets': [],
+                    'success': False,
+                    'error': str(e)
+                }
+        
+        # Use ThreadPoolExecutor to process URLs in parallel
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+            # Submit all URLs to the thread pool
+            future_to_url = {executor.submit(scrape_worker, url): url for url in urls}
+            
+            # Process results as they complete
+            for future in concurrent.futures.as_completed(future_to_url):
+                url = future_to_url[future]
+                try:
+                    result = future.result()
+                    processed_count += 1
+                    
+                    if result['success']:
+                        all_tweets.extend(result['tweets'])
+                        logging.info(f"Processed {processed_count}/{len(urls)} URLs. Got {len(result['tweets'])} tweets from {result['url']}")
+                    else:
+                        logging.error(f"Failed to process URL {result['url']}: {result['error']}")
+                except Exception as e:
+                    logging.error(f"Exception occurred while processing URL {url}: {str(e)}")
+        
+        logging.info(f"Parallel scraping completed. Scraped {len(all_tweets)} tweets from {len(urls)} URLs using {num_threads} threads")
         
         return all_tweets

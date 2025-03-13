@@ -1,0 +1,2 @@
+# Run Twitter updates every 15 minutes with parallel processing and monitoring, then sync to MySQL
+*/15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/monitoring/monitor_wrapper.py --max-tweets 10 --max-replies 5 --parallel --threads 3 --performance --since-days 1 --email-alerts >> data/monitoring.log 2>&1
