@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitter URL ID 提取工具</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #1DA1F2;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+        button {
+            background-color: #1DA1F2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0c85d0;
+        }
+        .result {
+            margin-top: 30px;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            display: none;
+        }
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+            display: none;
+        }
+        .success {
+            color: #28a745;
+            margin-top: 10px;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .download-btn {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Twitter URL ID 提取工具</h1>
+    
+    <div class="container">
+        <div class="form-group">
+            <label for="excelFile">上传Excel文件（包含Twitter URL）:</label>
+            <input type="file" id="excelFile" accept=".xlsx, .xls">
+        </div>
+        
+        <button id="uploadBtn">上传并处理</button>
+        
+        <div class="loading" id="loading">
+            <p>正在处理，请稍候...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        <div class="success" id="success"></div>
+        
+        <div class="result" id="result">
+            <h2>处理结果</h2>
+            <p>总URL数: <span id="totalUrls">0</span></p>
+            <p>成功处理: <span id="successUrls">0</span></p>
+            <p>处理失败: <span id="failedUrls">0</span></p>
+            
+            <table id="resultTable">
+                <thead>
+                    <tr>
+                        <th>Twitter URL</th>
+                        <th>用户名</th>
+                        <th>用户ID</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody">
+                </tbody>
+            </table>
+            
+            <div class="download-btn">
+                <button id="downloadBtn">下载处理后的Excel文件</button>
+            </div>
+            
+            <div class="sync-options" style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
+                <h3>数据库同步选项</h3>
+                <div style="margin-bottom: 10px;">
+                    <label style="display: inline;">
+                        <input type="checkbox" id="syncToMysql" checked> 同步到MySQL数据库
+                    </label>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label style="display: inline;">
+                        <input type="checkbox" id="testMode" checked> 测试模式（不实际更新MySQL）
+                    </label>
+                </div>
+                <button id="syncBtn" style="margin-top: 10px;">同步数据库</button>
+            </div>
+            
+            <div class="sync-result" id="syncResult" style="margin-top: 20px; display: none;">
+                <h3>数据库同步结果</h3>
+                
+                <div class="sync-stats">
+                    <h4>Excel处理结果</h4>
+                    <p>处理状态: <span id="excelProcessingStatus">-</span></p>
+                    <p>处理行数: <span id="excelProcessingCount">0</span></p>
+                </div>
+                
+                <div class="sync-stats">
+                    <h4>SQLite kol_character表统计</h4>
+                    <p>表存在: <span id="kolCharacterExists">-</span></p>
+                    <p>记录数: <span id="kolCharacterCount">0</span></p>
+                    <div id="kolCharacterSample"></div>
+                </div>
+                
+                <div class="sync-stats">
+                    <h4>SQLite url_tracking表统计</h4>
+                    <p>表存在: <span id="urlTrackingExists">-</span></p>
+                    <p>记录数: <span id="urlTrackingCount">0</span></p>
+                    <div id="urlTrackingSample"></div>
+                </div>
+                
+                <div class="sync-stats" id="mysqlSyncStats" style="display: none;">
+                    <h4>MySQL同步结果</h4>
+                    <p>同步状态: <span id="mysqlSyncStatus">-</span></p>
+                    <p>同步记录数: <span id="mysqlSyncCount">0</span></p>
+                    <p>测试模式: <span id="mysqlTestMode">-</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadBtn = document.getElementById('uploadBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const excelFile = document.getElementById('excelFile');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const success = document.getElementById('success');
+            const result = document.getElementById('result');
+            const totalUrls = document.getElementById('totalUrls');
+            const successUrls = document.getElementById('successUrls');
+            const failedUrls = document.getElementById('failedUrls');
+            const resultBody = document.getElementById('resultBody');
+            
+            // Database synchronization
+            const syncBtn = document.getElementById('syncBtn');
+            const syncToMysql = document.getElementById('syncToMysql');
+            const testMode = document.getElementById('testMode');
+            const syncResult = document.getElementById('syncResult');
+            const mysqlSyncStats = document.getElementById('mysqlSyncStats');
+            
+            // Excel processing status elements
+            const excelProcessingStatus = document.getElementById('excelProcessingStatus');
+            const excelProcessingCount = document.getElementById('excelProcessingCount');
+            
+            // KOL character table stats elements
+            const kolCharacterExists = document.getElementById('kolCharacterExists');
+            const kolCharacterCount = document.getElementById('kolCharacterCount');
+            const kolCharacterSample = document.getElementById('kolCharacterSample');
+            
+            // URL tracking table stats elements
+            const urlTrackingExists = document.getElementById('urlTrackingExists');
+            const urlTrackingCount = document.getElementById('urlTrackingCount');
+            const urlTrackingSample = document.getElementById('urlTrackingSample');
+            
+            // MySQL sync stats elements
+            const mysqlSyncStatus = document.getElementById('mysqlSyncStatus');
+            const mysqlSyncCount = document.getElementById('mysqlSyncCount');
+            const mysqlTestMode = document.getElementById('mysqlTestMode');
+            
+            let processedFile = '';
+            
+            uploadBtn.addEventListener('click', async function() {
+                if (!excelFile.files.length) {
+                    error.textContent = '请选择一个Excel文件';
+                    error.style.display = 'block';
+                    return;
+                }
+                
+                const file = excelFile.files[0];
+                if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+                    error.textContent = '请选择一个Excel文件 (.xlsx 或 .xls)';
+                    error.style.display = 'block';
+                    return;
+                }
+                
+                // Reset UI
+                error.style.display = 'none';
+                success.style.display = 'none';
+                result.style.display = 'none';
+                loading.style.display = 'block';
+                
+                try {
+                    // Upload the file
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    const uploadResponse = await fetch('/api/upload-excel', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!uploadResponse.ok) {
+                        const errorData = await uploadResponse.json();
+                        throw new Error(errorData.detail || '上传文件失败');
+                    }
+                    
+                    const uploadData = await uploadResponse.json();
+                    
+                    // Process the file
+                    const processFormData = new FormData();
+                    processFormData.append('file_id', uploadData.filename);
+                    
+                    const processResponse = await fetch('/api/process-excel', {
+                        method: 'POST',
+                        body: processFormData
+                    });
+                    
+                    if (!processResponse.ok) {
+                        const errorData = await processResponse.json();
+                        throw new Error(errorData.detail || '处理文件失败');
+                    }
+                    
+                    const processData = await processResponse.json();
+                    
+                    // Update UI with results
+                    processedFile = processData.processed_file;
+                    totalUrls.textContent = processData.results.total_urls;
+                    successUrls.textContent = processData.results.successful;
+                    failedUrls.textContent = processData.results.failed;
+                    
+                    // Clear previous results
+                    resultBody.innerHTML = '';
+                    
+                    // Add results to table
+                    processData.results.processed_urls.forEach(url => {
+                        const row = document.createElement('tr');
+                        
+                        const urlCell = document.createElement('td');
+                        urlCell.textContent = url.url;
+                        row.appendChild(urlCell);
+                        
+                        const handleCell = document.createElement('td');
+                        handleCell.textContent = url.handle || '-';
+                        row.appendChild(handleCell);
+                        
+                        const idCell = document.createElement('td');
+                        idCell.textContent = url.user_id || '-';
+                        row.appendChild(idCell);
+                        
+                        const statusCell = document.createElement('td');
+                        statusCell.textContent = url.status === 'success' ? '成功' : '失败';
+                        statusCell.style.color = url.status === 'success' ? '#28a745' : '#dc3545';
+                        row.appendChild(statusCell);
+                        
+                        resultBody.appendChild(row);
+                    });
+                    
+                    // Show results
+                    loading.style.display = 'none';
+                    success.textContent = '文件处理成功！';
+                    success.style.display = 'block';
+                    result.style.display = 'block';
+                    
+                } catch (err) {
+                    loading.style.display = 'none';
+                    error.textContent = err.message;
+                    error.style.display = 'block';
+                }
+            });
+            
+            downloadBtn.addEventListener('click', function() {
+                if (processedFile) {
+                    window.location.href = `/api/download/${processedFile}`;
+                } else {
+                    error.textContent = '没有可下载的文件';
+                    error.style.display = 'block';
+                }
+            });
+            
+            syncBtn.addEventListener('click', async function() {
+                if (!processedFile) {
+                    error.textContent = '请先处理Excel文件';
+                    error.style.display = 'block';
+                    return;
+                }
+                
+                // Reset UI
+                error.style.display = 'none';
+                syncResult.style.display = 'none';
+                loading.style.display = 'block';
+                
+                try {
+                    // Synchronize database
+                    const syncFormData = new FormData();
+                    // Use the original file name without the _with_ids suffix
+                    // Extract the original filename without the _with_ids suffix
+                    let originalFileName = processedFile.includes('_with_ids') 
+                        ? processedFile.split('_with_ids')[0] 
+                        : processedFile;
+                    
+                    // Encode the filename to handle spaces and special characters
+                    syncFormData.append('file_id', encodeURIComponent(originalFileName));
+                    syncFormData.append('sync_to_mysql', syncToMysql.checked);
+                    syncFormData.append('test_mode', testMode.checked);
+                    
+                    const syncResponse = await fetch('/api/sync-database', {
+                        method: 'POST',
+                        body: syncFormData
+                    });
+                    
+                    if (!syncResponse.ok) {
+                        const errorData = await syncResponse.json();
+                        throw new Error(errorData.detail || '同步数据库失败');
+                    }
+                    
+                    const syncData = await syncResponse.json();
+                    
+                    // Update Excel processing status
+                    if (syncData.excel_processing) {
+                        excelProcessingStatus.textContent = syncData.excel_processing.success ? '成功' : '失败';
+                        excelProcessingStatus.style.color = syncData.excel_processing.success ? '#28a745' : '#dc3545';
+                        excelProcessingCount.textContent = syncData.excel_processing.processed_count;
+                    }
+                    
+                    // Update KOL character table stats
+                    if (syncData.sqlite_kol_character_stats) {
+                        kolCharacterExists.textContent = syncData.sqlite_kol_character_stats.exists ? '是' : '否';
+                        kolCharacterCount.textContent = syncData.sqlite_kol_character_stats.count;
+                        
+                        // Display sample data
+                        kolCharacterSample.innerHTML = '';
+                        if (syncData.sqlite_kol_character_stats.sample_data && syncData.sqlite_kol_character_stats.sample_data.length > 0) {
+                            const sampleTable = document.createElement('table');
+                            sampleTable.style.fontSize = '12px';
+                            
+                            // Create header row
+                            const headerRow = document.createElement('tr');
+                            Object.keys(syncData.sqlite_kol_character_stats.sample_data[0]).forEach(key => {
+                                const th = document.createElement('th');
+                                th.textContent = key;
+                                headerRow.appendChild(th);
+                            });
+                            sampleTable.appendChild(headerRow);
+                            
+                            // Create data rows
+                            syncData.sqlite_kol_character_stats.sample_data.forEach(item => {
+                                const row = document.createElement('tr');
+                                Object.values(item).forEach(value => {
+                                    const td = document.createElement('td');
+                                    td.textContent = value || '-';
+                                    row.appendChild(td);
+                                });
+                                sampleTable.appendChild(row);
+                            });
+                            
+                            kolCharacterSample.appendChild(sampleTable);
+                        }
+                    }
+                    
+                    // Update URL tracking table stats
+                    if (syncData.sqlite_url_tracking_stats) {
+                        urlTrackingExists.textContent = syncData.sqlite_url_tracking_stats.exists ? '是' : '否';
+                        urlTrackingCount.textContent = syncData.sqlite_url_tracking_stats.count;
+                        
+                        // Display sample data
+                        urlTrackingSample.innerHTML = '';
+                        if (syncData.sqlite_url_tracking_stats.sample_data && syncData.sqlite_url_tracking_stats.sample_data.length > 0) {
+                            const sampleTable = document.createElement('table');
+                            sampleTable.style.fontSize = '12px';
+                            
+                            // Create header row
+                            const headerRow = document.createElement('tr');
+                            Object.keys(syncData.sqlite_url_tracking_stats.sample_data[0]).forEach(key => {
+                                const th = document.createElement('th');
+                                th.textContent = key;
+                                headerRow.appendChild(th);
+                            });
+                            sampleTable.appendChild(headerRow);
+                            
+                            // Create data rows
+                            syncData.sqlite_url_tracking_stats.sample_data.forEach(item => {
+                                const row = document.createElement('tr');
+                                Object.values(item).forEach(value => {
+                                    const td = document.createElement('td');
+                                    td.textContent = value || '-';
+                                    row.appendChild(td);
+                                });
+                                sampleTable.appendChild(row);
+                            });
+                            
+                            urlTrackingSample.appendChild(sampleTable);
+                        }
+                    }
+                    
+                    // Update MySQL sync stats
+                    if (syncData.kol_character_sync) {
+                        mysqlSyncStats.style.display = 'block';
+                        mysqlSyncStatus.textContent = syncData.kol_character_sync.success ? '成功' : '失败';
+                        mysqlSyncStatus.style.color = syncData.kol_character_sync.success ? '#28a745' : '#dc3545';
+                        mysqlSyncCount.textContent = syncData.kol_character_sync.processed_count;
+                        mysqlTestMode.textContent = testMode.checked ? '是' : '否';
+                    } else {
+                        mysqlSyncStats.style.display = 'none';
+                    }
+                    
+                    // Show results
+                    loading.style.display = 'none';
+                    success.textContent = '数据库同步成功！';
+                    success.style.display = 'block';
+                    syncResult.style.display = 'block';
+                    
+                } catch (err) {
+                    loading.style.display = 'none';
+                    error.textContent = err.message;
+                    error.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -61,6 +61,33 @@ python scripts/utils/fetch_coinmarketcap_data.py
 
 The system uses a Twitter client to extract tweets directly from Twitter. The client requires authentication credentials to be set in the `.env` file.
 
+## Backend Service
+
+The project includes a FastAPI backend service for processing Excel files with Twitter URLs:
+
+### Installation
+
+```bash
+cd nitterlocal
+pip install -r app/requirements.txt
+```
+
+### Starting the Backend
+
+```bash
+./start_backend.sh
+```
+
+The backend service will be available at http://0.0.0.0:8000
+
+### Features
+
+- Upload Excel files containing Twitter URLs
+- Extract Twitter user IDs from URLs
+- Process and update local database tables (url_tracking and kol_character)
+- Synchronize data with MySQL database
+- Download processed Excel files with extracted IDs
+
 ## Usage
 
 For detailed usage instructions, see [USAGE.md](USAGE.md).
