@@ -13,6 +13,14 @@ import argparse
 from datetime import datetime
 from urllib.parse import urlparse
 
+# Add path to app directory to import Twitter utilities
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'app'))
+try:
+    from twitter_utils import get_user_id_from_twitter_handle
+except ImportError:
+    logging.warning("Could not import twitter_utils, will use fallback method for user IDs")
+    get_user_id_from_twitter_handle = None
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -89,7 +97,7 @@ def create_kol_character_table(db_path):
         logging.error(f"Error creating kol_character table: {str(e)}")
         return False
 
-def add_url_to_tracking(conn, url, user_id=None, type_val="kol", subtype="-"):
+def add_url_to_tracking(conn, url, type_val="kol", subtype="-", user_id=None):
     """Add a URL to the url_tracking table"""
     try:
         cursor = conn.cursor()
@@ -217,22 +225,54 @@ def process_excel_file(excel_path, db_path):
                     logging.warning(f"Skipping row with no Twitter URL: {row}")
                     continue
                 
-                # Add URL to tracking
-                type_val = row.get('first category') if not pd.isna(row.get('first category')) else None
-                subtype = row.get('second_category') if not pd.isna(row.get('second_category')) else None
-                add_url_to_tracking(conn, url, type_val, subtype)
-                
                 # Extract Twitter handle
                 handle = extract_twitter_handle(url)
                 if not handle:
                     logging.warning(f"Could not extract handle from URL: {url}")
                     continue
                 
+                # Try to get user_id using Twitter utility function
+                user_id = None
+                if get_user_id_from_twitter_handle:
+                    try:
+                        user_id = get_user_id_from_twitter_handle(handle)
+                        logging.info(f"Got user_id {user_id} for handle {handle}")
+                    except Exception as e:
+                        logging.error(f"Error getting user_id for handle {handle}: {str(e)}")
+                
+                # Add URL to tracking with the user_id
+                type_val = row.get('first category') if not pd.isna(row.get('first category')) else "kol"
+                subtype = row.get('second_category') if not pd.isna(row.get('second_category')) else "-"
+                add_url_to_tracking(conn, url, type_val, subtype, user_id)
+                
                 # Get user_id from url_tracking if available
                 cursor = conn.cursor()
                 cursor.execute("SELECT user_id FROM url_tracking WHERE url = ?", (url,))
                 result = cursor.fetchone()
-                user_id = result[0] if result and result[0] else handle
+                
+                # If user_id is not in url_tracking, try to get it from Twitter API
+                if result and result[0]:
+                    user_id = result[0]
+                else:
+                    # Try to get user_id using Twitter utility function
+                    if get_user_id_from_twitter_handle:
+                        try:
+                            numeric_id = get_user_id_from_twitter_handle(handle)
+                            if numeric_id:
+                                user_id = numeric_id
+                                # Update url_tracking with the obtained user_id
+                                cursor.execute(
+                                    "UPDATE url_tracking SET user_id = ? WHERE url = ?",
+                                    (user_id, url)
+                                )
+                                logging.info(f"Updated url_tracking with user_id {user_id} for URL {url}")
+                            else:
+                                user_id = handle
+                        except Exception as e:
+                            logging.error(f"Error getting user_id for handle {handle}: {str(e)}")
+                            user_id = handle
+                    else:
+                        user_id = handle
                 
                 # Prepare KOL character data
                 kol_data = {
