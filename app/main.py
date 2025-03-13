@@ -288,4 +288,13 @@ async def sync_database(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    import argparse
+    
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Twitter URL ID Service")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host to bind the server to")
+    parser.add_argument("--port", type=int, default=8000, help="Port to bind the server to")
+    args = parser.parse_args()
+    
+    # Run the server with the specified host and port
+    uvicorn.run("app.main:app", host=args.host, port=args.port, reload=True)
