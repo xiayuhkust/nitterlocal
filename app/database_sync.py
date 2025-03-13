@@ -284,7 +284,7 @@ def process_excel_and_sync(excel_path: str, db_path: str = DEFAULT_SQLITE_PATH, 
     """Process an Excel file and synchronize data with MySQL"""
     results: Dict[str, Any] = {
         "excel_processing": None,
-        "kol_character_sync": None,
+        "mysql_sync": None,
         "sqlite_kol_character_stats": None,
         "sqlite_url_tracking_stats": None
     }
@@ -316,9 +316,43 @@ def process_excel_and_sync(excel_path: str, db_path: str = DEFAULT_SQLITE_PATH, 
     # Synchronize data with MySQL if requested
     if sync_to_mysql:
         try:
-            results["kol_character_sync"] = run_sync_kol_character_script(db_path, test=test_mode)
+            # Run the combined synchronization script
+            script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scripts', 'sync', 'sync_to_mysql_combined.py')
+            
+            # Check if the script exists
+            if not os.path.exists(script_path):
+                logging.error(f"Script not found: {script_path}")
+                results["mysql_sync"] = {"success": False, "processed_count": 0, "output": "", "errors": f"Script not found: {script_path}"}
+            else:
+                # Make sure the script is executable
+                os.chmod(script_path, 0o755)
+                
+                # Run the script
+                cmd = [
+                    'python3',
+                    script_path
+                ]
+                
+                if test_mode:
+                    cmd.append('--test')
+                
+                logging.info(f"Running command: {' '.join(cmd)}")
+                
+                result = subprocess.run(
+                    cmd,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True
+                )
+                
+                results["mysql_sync"] = {
+                    "success": True,
+                    "output": result.stdout,
+                    "errors": result.stderr
+                }
         except Exception as e:
-            logging.error(f"Error syncing kol_character: {str(e)}")
-            results["kol_character_sync"] = {"success": False, "processed_count": 0, "output": "", "errors": str(e)}
+            logging.error(f"Error syncing to MySQL: {str(e)}")
+            results["mysql_sync"] = {"success": False, "output": "", "errors": str(e)}
     
     return results
