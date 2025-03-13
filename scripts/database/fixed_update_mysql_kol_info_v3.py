@@ -194,7 +194,7 @@ def map_to_kol_info(profile_data, url_data):
     kol_info = {
         'kol_id': profile.get('userId'),
         'kol_name': profile.get('name'),
-        'kol_screen_name': "@{}".format(profile.get('username')) if profile.get('username') else None,
+        'kol_screen_name': profile.get('username'),
         'description': profile.get('biography') or description_val,  # Use description from URL if biography is not available
         'followers_count': str(profile.get('followersCount')) if profile.get('followersCount') is not None else None,
         'fast_followers_count': None,  # Not directly available
