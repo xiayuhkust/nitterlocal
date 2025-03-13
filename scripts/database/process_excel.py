@@ -237,7 +237,7 @@ def process_excel_file(excel_path, db_path):
                 # Prepare KOL character data
                 kol_data = {
                     'kol_id': user_id,
-                    'kol_screen_name': f"@{handle}",
+                    'kol_screen_name': handle,  # Remove @ prefix
                     'bio': str(row.get('bio', ''))[:255] if not pd.isna(row.get('bio')) else '',
                     'lore': str(row.get('lore', ''))[:255] if not pd.isna(row.get('lore')) else '',
                     'knowledge': str(row.get('knowledge', ''))[:255] if not pd.isna(row.get('knowledge')) else '',
