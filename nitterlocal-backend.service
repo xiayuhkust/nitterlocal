@@ -1,0 +1,18 @@
+[Unit]
+Description=Nitterlocal Backend Service
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/nitterlocal
+ExecStart=/usr/bin/python3 -m app.main --host 43.132.129.242 --port 8000
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nitterlocal-backend
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

@@ -298,3 +298,8 @@ if __name__ == "__main__":
     
     # Run the server with the specified host and port
     uvicorn.run("app.main:app", host=args.host, port=args.port, reload=True)
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for monitoring"""
+    return {"status": "healthy"}
