@@ -130,6 +130,10 @@
             
             <div class="sync-options" style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
                 <h3>数据库同步选项</h3>
+                <div style="margin-bottom: 10px; color: #0c85d0;">
+                    <p>注意: Excel文件处理后，数据会自动在15分钟内同步到MySQL数据库。</p>
+                    <p>您也可以使用下面的选项手动触发同步。</p>
+                </div>
                 <div style="margin-bottom: 10px;">
                     <label style="display: inline;">
                         <input type="checkbox" id="syncToMysql" checked> 同步到MySQL数据库
@@ -327,32 +331,30 @@
             });
             
             syncBtn.addEventListener('click', async function() {
-                if (!processedFile) {
-                    error.textContent = '请先处理Excel文件';
-                    error.style.display = 'block';
-                    return;
-                }
-                
+                // Allow synchronization without requiring a file
                 // Reset UI
                 error.style.display = 'none';
                 syncResult.style.display = 'none';
                 loading.style.display = 'block';
+                loading.textContent = '正在检查数据库状态...';
                 
                 try {
-                    // Synchronize database
+                    // Prepare form data
                     const syncFormData = new FormData();
-                    // Use the original file name without the _with_ids suffix
-                    // Extract the original filename without the _with_ids suffix
-                    let originalFileName = processedFile.includes('_with_ids') 
-                        ? processedFile.split('_with_ids')[0] 
-                        : processedFile;
-                    
-                    // Encode the filename to handle spaces and special characters
-                    syncFormData.append('file_id', encodeURIComponent(originalFileName));
                     syncFormData.append('sync_to_mysql', syncToMysql.checked);
                     syncFormData.append('test_mode', testMode.checked);
                     
-                    const syncResponse = await fetch('/api/sync-database', {
+                    // If we have a processed file, include it
+                    if (processedFile) {
+                        let originalFileName = processedFile.includes('_with_ids') 
+                            ? processedFile.split('_with_ids')[0] 
+                            : processedFile;
+                        syncFormData.append('file_id', encodeURIComponent(originalFileName));
+                    }
+                    
+                    // Use the appropriate endpoint based on whether we have a file
+                    const endpoint = processedFile ? '/api/sync-database' : '/api/sync-mysql';
+                    const syncResponse = await fetch(endpoint, {
                         method: 'POST',
                         body: syncFormData
                     });
@@ -442,7 +444,14 @@
                     }
                     
                     // Update MySQL sync stats
-                    if (syncData.kol_character_sync) {
+                    if (syncData.mysql_sync) {
+                        mysqlSyncStats.style.display = 'block';
+                        mysqlSyncStatus.textContent = syncData.mysql_sync.success ? '成功' : '失败';
+                        mysqlSyncStatus.style.color = syncData.mysql_sync.success ? '#28a745' : '#dc3545';
+                        mysqlSyncCount.textContent = syncData.mysql_sync.processed_count || '0';
+                        mysqlTestMode.textContent = testMode.checked ? '是' : '否';
+                    } else if (syncData.kol_character_sync) {
+                        // For backward compatibility with older API responses
                         mysqlSyncStats.style.display = 'block';
                         mysqlSyncStatus.textContent = syncData.kol_character_sync.success ? '成功' : '失败';
                         mysqlSyncStatus.style.color = syncData.kol_character_sync.success ? '#28a745' : '#dc3545';
