@@ -128,53 +128,9 @@
                 <button id="downloadBtn">下载处理后的Excel文件</button>
             </div>
             
-            <div class="sync-options" style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
-                <h3>数据库同步选项</h3>
+            <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
                 <div style="margin-bottom: 10px; color: #0c85d0;">
                     <p>注意: Excel文件处理后，数据会自动在15分钟内同步到MySQL数据库。</p>
-                    <p>您也可以使用下面的选项手动触发同步。</p>
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="display: inline;">
-                        <input type="checkbox" id="syncToMysql" checked> 同步到MySQL数据库
-                    </label>
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="display: inline;">
-                        <input type="checkbox" id="testMode" checked> 测试模式（不实际更新MySQL）
-                    </label>
-                </div>
-                <button id="syncBtn" style="margin-top: 10px;">同步数据库</button>
-            </div>
-            
-            <div class="sync-result" id="syncResult" style="margin-top: 20px; display: none;">
-                <h3>数据库同步结果</h3>
-                
-                <div class="sync-stats">
-                    <h4>Excel处理结果</h4>
-                    <p>处理状态: <span id="excelProcessingStatus">-</span></p>
-                    <p>处理行数: <span id="excelProcessingCount">0</span></p>
-                </div>
-                
-                <div class="sync-stats">
-                    <h4>SQLite kol_character表统计</h4>
-                    <p>表存在: <span id="kolCharacterExists">-</span></p>
-                    <p>记录数: <span id="kolCharacterCount">0</span></p>
-                    <div id="kolCharacterSample"></div>
-                </div>
-                
-                <div class="sync-stats">
-                    <h4>SQLite url_tracking表统计</h4>
-                    <p>表存在: <span id="urlTrackingExists">-</span></p>
-                    <p>记录数: <span id="urlTrackingCount">0</span></p>
-                    <div id="urlTrackingSample"></div>
-                </div>
-                
-                <div class="sync-stats" id="mysqlSyncStats" style="display: none;">
-                    <h4>MySQL同步结果</h4>
-                    <p>同步状态: <span id="mysqlSyncStatus">-</span></p>
-                    <p>同步记录数: <span id="mysqlSyncCount">0</span></p>
-                    <p>测试模式: <span id="mysqlTestMode">-</span></p>
                 </div>
             </div>
         </div>
@@ -195,30 +151,14 @@
             const resultBody = document.getElementById('resultBody');
             
             // Database synchronization
-            const syncBtn = document.getElementById('syncBtn');
-            const syncToMysql = document.getElementById('syncToMysql');
-            const testMode = document.getElementById('testMode');
-            const syncResult = document.getElementById('syncResult');
-            const mysqlSyncStats = document.getElementById('mysqlSyncStats');
+            // Removed sync-related elements as they're no longer needed
+            // Database synchronization happens automatically via crontab
             
             // Excel processing status elements
             const excelProcessingStatus = document.getElementById('excelProcessingStatus');
             const excelProcessingCount = document.getElementById('excelProcessingCount');
             
-            // KOL character table stats elements
-            const kolCharacterExists = document.getElementById('kolCharacterExists');
-            const kolCharacterCount = document.getElementById('kolCharacterCount');
-            const kolCharacterSample = document.getElementById('kolCharacterSample');
-            
-            // URL tracking table stats elements
-            const urlTrackingExists = document.getElementById('urlTrackingExists');
-            const urlTrackingCount = document.getElementById('urlTrackingCount');
-            const urlTrackingSample = document.getElementById('urlTrackingSample');
-            
-            // MySQL sync stats elements
-            const mysqlSyncStatus = document.getElementById('mysqlSyncStatus');
-            const mysqlSyncCount = document.getElementById('mysqlSyncCount');
-            const mysqlTestMode = document.getElementById('mysqlTestMode');
+            // Removed database stats elements as they're no longer needed
             
             let processedFile = '';
             
@@ -330,149 +270,8 @@
                 }
             });
             
-            syncBtn.addEventListener('click', async function() {
-                // Allow synchronization without requiring a file
-                // Reset UI
-                error.style.display = 'none';
-                syncResult.style.display = 'none';
-                loading.style.display = 'block';
-                loading.textContent = '正在检查数据库状态...';
-                
-                try {
-                    // Prepare form data
-                    const syncFormData = new FormData();
-                    syncFormData.append('sync_to_mysql', syncToMysql.checked);
-                    syncFormData.append('test_mode', testMode.checked);
-                    
-                    // If we have a processed file, include it
-                    let endpoint = '/api/sync-mysql';
-                    if (processedFile) {
-                        let originalFileName = processedFile.includes('_with_ids') 
-                            ? processedFile.split('_with_ids')[0] 
-                            : processedFile;
-                        syncFormData.append('file_id', encodeURIComponent(originalFileName));
-                        endpoint = '/api/sync-database';
-                    }
-                    
-                    const syncResponse = await fetch(endpoint, {
-                        method: 'POST',
-                        body: syncFormData
-                    });
-                    
-                    if (!syncResponse.ok) {
-                        const errorData = await syncResponse.json();
-                        throw new Error(errorData.detail || '同步数据库失败');
-                    }
-                    
-                    const syncData = await syncResponse.json();
-                    
-                    // Update Excel processing status
-                    if (syncData.excel_processing) {
-                        excelProcessingStatus.textContent = syncData.excel_processing.success ? '成功' : '失败';
-                        excelProcessingStatus.style.color = syncData.excel_processing.success ? '#28a745' : '#dc3545';
-                        excelProcessingCount.textContent = syncData.excel_processing.processed_count;
-                    }
-                    
-                    // Update KOL character table stats
-                    if (syncData.sqlite_kol_character_stats) {
-                        kolCharacterExists.textContent = syncData.sqlite_kol_character_stats.exists ? '是' : '否';
-                        kolCharacterCount.textContent = syncData.sqlite_kol_character_stats.count;
-                        
-                        // Display sample data
-                        kolCharacterSample.innerHTML = '';
-                        if (syncData.sqlite_kol_character_stats.sample_data && syncData.sqlite_kol_character_stats.sample_data.length > 0) {
-                            const sampleTable = document.createElement('table');
-                            sampleTable.style.fontSize = '12px';
-                            
-                            // Create header row
-                            const headerRow = document.createElement('tr');
-                            Object.keys(syncData.sqlite_kol_character_stats.sample_data[0]).forEach(key => {
-                                const th = document.createElement('th');
-                                th.textContent = key;
-                                headerRow.appendChild(th);
-                            });
-                            sampleTable.appendChild(headerRow);
-                            
-                            // Create data rows
-                            syncData.sqlite_kol_character_stats.sample_data.forEach(item => {
-                                const row = document.createElement('tr');
-                                Object.values(item).forEach(value => {
-                                    const td = document.createElement('td');
-                                    td.textContent = value || '-';
-                                    row.appendChild(td);
-                                });
-                                sampleTable.appendChild(row);
-                            });
-                            
-                            kolCharacterSample.appendChild(sampleTable);
-                        }
-                    }
-                    
-                    // Update URL tracking table stats
-                    if (syncData.sqlite_url_tracking_stats) {
-                        urlTrackingExists.textContent = syncData.sqlite_url_tracking_stats.exists ? '是' : '否';
-                        urlTrackingCount.textContent = syncData.sqlite_url_tracking_stats.count;
-                        
-                        // Display sample data
-                        urlTrackingSample.innerHTML = '';
-                        if (syncData.sqlite_url_tracking_stats.sample_data && syncData.sqlite_url_tracking_stats.sample_data.length > 0) {
-                            const sampleTable = document.createElement('table');
-                            sampleTable.style.fontSize = '12px';
-                            
-                            // Create header row
-                            const headerRow = document.createElement('tr');
-                            Object.keys(syncData.sqlite_url_tracking_stats.sample_data[0]).forEach(key => {
-                                const th = document.createElement('th');
-                                th.textContent = key;
-                                headerRow.appendChild(th);
-                            });
-                            sampleTable.appendChild(headerRow);
-                            
-                            // Create data rows
-                            syncData.sqlite_url_tracking_stats.sample_data.forEach(item => {
-                                const row = document.createElement('tr');
-                                Object.values(item).forEach(value => {
-                                    const td = document.createElement('td');
-                                    td.textContent = value || '-';
-                                    row.appendChild(td);
-                                });
-                                sampleTable.appendChild(row);
-                            });
-                            
-                            urlTrackingSample.appendChild(sampleTable);
-                        }
-                    }
-                    
-                    // Update MySQL sync stats
-                    if (syncData.mysql_sync) {
-                        mysqlSyncStats.style.display = 'block';
-                        mysqlSyncStatus.textContent = syncData.mysql_sync.success ? '成功' : '失败';
-                        mysqlSyncStatus.style.color = syncData.mysql_sync.success ? '#28a745' : '#dc3545';
-                        mysqlSyncCount.textContent = syncData.mysql_sync.processed_count || '0';
-                        mysqlTestMode.textContent = testMode.checked ? '是' : '否';
-                    } else if (syncData.kol_character_sync) {
-                        // For backward compatibility with older API responses
-                        mysqlSyncStats.style.display = 'block';
-                        mysqlSyncStatus.textContent = syncData.kol_character_sync.success ? '成功' : '失败';
-                        mysqlSyncStatus.style.color = syncData.kol_character_sync.success ? '#28a745' : '#dc3545';
-                        mysqlSyncCount.textContent = syncData.kol_character_sync.processed_count;
-                        mysqlTestMode.textContent = testMode.checked ? '是' : '否';
-                    } else {
-                        mysqlSyncStats.style.display = 'none';
-                    }
-                    
-                    // Show results
-                    loading.style.display = 'none';
-                    success.textContent = '数据库同步成功！';
-                    success.style.display = 'block';
-                    syncResult.style.display = 'block';
-                    
-                } catch (err) {
-                    loading.style.display = 'none';
-                    error.textContent = err.message;
-                    error.style.display = 'block';
-                }
-            });
+            // Removed sync button event listener as it's no longer needed
+            // Database synchronization happens automatically via crontab
         });
     </script>
 </body>
