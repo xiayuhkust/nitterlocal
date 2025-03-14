@@ -31,11 +31,11 @@ The system extracts tweets from Twitter accounts and stores them in a local data
    TWITTER_USERNAME=your_username
    TWITTER_PASSWORD=your_password
    TWITTER_EMAIL=your_email
-   MYSQL_HOST=43.135.26.222
+   MYSQL_HOST=your_mysql_host
    MYSQL_PORT=3306
-   MYSQL_USER=root
-   MYSQL_PASSWORD=your_password
-   MYSQL_DATABASE=kol_info
+   MYSQL_USER=your_mysql_user
+   MYSQL_PASSWORD=your_mysql_password
+   MYSQL_DATABASE=your_mysql_database
    ```
 
 ## URL Format
