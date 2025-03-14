@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Combined MySQL synchronization script for nitterlocal.
+Fixed MySQL synchronization script for nitterlocal.
 
 This script synchronizes data from the local SQLite database to the MySQL database.
-It handles both kol_character and url_tracking tables.
+It handles both kol_character and url_tracking tables, with proper column mapping.
 """
 
 import os
@@ -183,15 +183,37 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
     try:
         # Get data from SQLite
         sqlite_cursor = sqlite_conn.cursor()
+        
+        # First, check if the url_tracking table exists and has the expected columns
+        sqlite_cursor.execute("PRAGMA table_info(url_tracking)")
+        columns_info = sqlite_cursor.fetchall()
+        column_names = [col[1] for col in columns_info]
+        
+        # Log the column names for debugging
+        logging.info(f"SQLite url_tracking columns: {column_names}")
+        
+        # Check if the table has the required columns
+        required_columns = ['user_id', 'url']
+        for col in required_columns:
+            if col not in column_names:
+                logging.error(f"Required column '{col}' not found in url_tracking table")
+                return 0
+        
+        # Get the MySQL kol_info table structure
+        mysql_cursor = mysql_conn.cursor()
+        mysql_cursor.execute("DESCRIBE kol_info")
+        mysql_columns = [col[0] for col in mysql_cursor.fetchall()]
+        
+        # Log the MySQL column names for debugging
+        logging.info(f"MySQL kol_info columns: {mysql_columns}")
+        
+        # Get data from SQLite
         sqlite_cursor.execute("SELECT * FROM url_tracking")
         rows = sqlite_cursor.fetchall()
         
         if not rows:
             logging.info("No url_tracking data to synchronize")
             return 0
-        
-        # Prepare MySQL cursor
-        mysql_cursor = mysql_conn.cursor()
         
         # Get column names from SQLite
         columns = [column[0] for column in sqlite_cursor.description]
@@ -209,15 +231,7 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
                 logging.warning(f"Skipping row with no user_id: {row_dict.get('url', 'unknown')}")
                 continue
             
-            # Check if record already exists in MySQL
-            # Note: MySQL uses kol_id column while SQLite uses user_id
-            mysql_cursor.execute(
-                "SELECT COUNT(*) FROM kol_info WHERE kol_id = %s",
-                (row_dict['user_id'],)  # Use user_id from SQLite as kol_id in MySQL
-            )
-            count = mysql_cursor.fetchone()[0]
-            
-            # Get Twitter handle from URL if available
+            # Extract Twitter handle from URL if available
             twitter_handle = None
             url = row_dict.get('url', '')
             if url and 'twitter.com/' in url:
@@ -225,43 +239,85 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
                 if len(parts) > 1:
                     twitter_handle = parts[1].split('/')[0].split('?')[0]
             
-            if count > 0:
-                # Update existing record
-                update_query = f"""
-                UPDATE kol_info SET
-                    kol_screen_name = %s,
-                    updated_at = %s
-                WHERE kol_id = %s
-                """
+            # Check if record already exists in MySQL
+            mysql_cursor.execute(
+                "SELECT COUNT(*) FROM kol_info WHERE kol_id = %s",
+                (row_dict['user_id'],)
+            )
+            count = mysql_cursor.fetchone()[0]
+            
+            # Prepare minimal update/insert based on available MySQL columns
+            if 'kol_screen_name' in mysql_columns:
+                screen_name_col = 'kol_screen_name'
+            else:
+                screen_name_col = None
                 
-                update_params = (
-                    twitter_handle or '',
-                    datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    row_dict['user_id']
-                )
+            if count > 0:
+                # Update existing record with minimal fields
+                if screen_name_col:
+                    update_query = f"""
+                    UPDATE kol_info SET
+                        {screen_name_col} = %s,
+                        updated_at = %s
+                    WHERE kol_id = %s
+                    """
+                    
+                    update_params = (
+                        twitter_handle or '',
+                        datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        row_dict['user_id']
+                    )
+                else:
+                    update_query = f"""
+                    UPDATE kol_info SET
+                        updated_at = %s
+                    WHERE kol_id = %s
+                    """
+                    
+                    update_params = (
+                        datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                        row_dict['user_id']
+                    )
                 
                 if not test_mode:
                     mysql_cursor.execute(update_query, update_params)
                 
                 logging.info(f"Updated kol_info record for kol_id: {row_dict['user_id']}")
             else:
-                # Insert new record
-                insert_query = f"""
-                INSERT INTO kol_info (
-                    kol_id, kol_screen_name, created_at, updated_at
-                ) VALUES (
-                    %s, %s, %s, %s
-                )
-                """
-                
-                current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                
-                insert_params = (
-                    row_dict['user_id'],
-                    twitter_handle or '',
-                    current_time,
-                    current_time
-                )
+                # Insert new record with minimal fields
+                if screen_name_col:
+                    insert_query = f"""
+                    INSERT INTO kol_info (
+                        kol_id, {screen_name_col}, created_at, updated_at
+                    ) VALUES (
+                        %s, %s, %s, %s
+                    )
+                    """
+                    
+                    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    insert_params = (
+                        row_dict['user_id'],
+                        twitter_handle or '',
+                        current_time,
+                        current_time
+                    )
+                else:
+                    insert_query = f"""
+                    INSERT INTO kol_info (
+                        kol_id, created_at, updated_at
+                    ) VALUES (
+                        %s, %s, %s
+                    )
+                    """
+                    
+                    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    insert_params = (
+                        row_dict['user_id'],
+                        current_time,
+                        current_time
+                    )
                 
                 if not test_mode:
                     mysql_cursor.execute(insert_query, insert_params)
@@ -290,6 +346,8 @@ def main():
     parser.add_argument('--db-path', type=str, default='/home/ubuntu/nitterlocal/data/local_database.db',
                         help='Path to SQLite database')
     parser.add_argument('--since-days', type=int, default=1, help='Synchronize data from the last N days')
+    parser.add_argument('--only-kol-character', action='store_true', help='Only synchronize kol_character table')
+    parser.add_argument('--only-url-tracking', action='store_true', help='Only synchronize url_tracking table')
     args = parser.parse_args()
     
     try:
@@ -298,8 +356,14 @@ def main():
         mysql_conn = get_mysql_connection()
         
         # Synchronize data
-        kol_character_count = sync_kol_character(sqlite_conn, mysql_conn, args.test)
-        url_tracking_count = sync_url_tracking(sqlite_conn, mysql_conn, args.test)
+        kol_character_count = 0
+        url_tracking_count = 0
+        
+        if not args.only_url_tracking:
+            kol_character_count = sync_kol_character(sqlite_conn, mysql_conn, args.test)
+        
+        if not args.only_kol_character:
+            url_tracking_count = sync_url_tracking(sqlite_conn, mysql_conn, args.test)
         
         # Close connections
         sqlite_conn.close()
