@@ -3,7 +3,8 @@
 Combined MySQL synchronization script for nitterlocal.
 
 This script synchronizes data from the local SQLite database to the MySQL database.
-It handles both kol_character and url_tracking tables.
+It handles kol_character, url_tracking, and tweets tables.
+Includes a lock mechanism to prevent overlapping executions.
 """
 
 import os
@@ -16,6 +17,32 @@ import mysql.connector
 import subprocess
 from datetime import datetime
 import dotenv
+
+# Add the project root directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+# Import the sync lock
+try:
+    from scripts.sync.sync_lock import SyncLock
+except ImportError:
+    # Define a fallback SyncLock class if the module is not available
+    class SyncLock:
+        def __init__(self, lock_file=None, timeout=None):
+            self.locked = False
+        
+        def acquire(self):
+            self.locked = True
+            return True
+        
+        def release(self):
+            self.locked = False
+        
+        def __enter__(self):
+            self.acquire()
+            return self
+        
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.release()
 
 # Configure logging
 logging.basicConfig(
@@ -329,52 +356,77 @@ def main():
                         help='Path to SQLite database')
     parser.add_argument('--since-days', type=int, default=1, help='Synchronize data from the last N days')
     parser.add_argument('--tweets-only', action='store_true', help='Only synchronize tweets')
+    parser.add_argument('--no-lock', action='store_true', help='Disable the lock mechanism')
+    parser.add_argument('--lock-timeout', type=int, default=30, help='Lock timeout in seconds')
     args = parser.parse_args()
     
-    try:
-        # Connect to databases
-        sqlite_conn = get_sqlite_connection(args.db_path)
-        
-        # Try to connect to MySQL, but continue with test mode if it fails
-        mysql_conn = None
-        try:
-            mysql_conn = get_mysql_connection()
-        except Exception as e:
-            if not args.test:
-                logging.error(f"Error connecting to MySQL: {str(e)}")
-                return 1
-            else:
-                logging.warning(f"MySQL connection failed, but continuing in test mode: {str(e)}")
-        
-        # Initialize counters
-        kol_character_count = 0
-        url_tracking_count = 0
-        tweets_synced = False
-        
-        # Synchronize data (skip if tweets-only is specified)
-        if not args.tweets_only and mysql_conn:
-            kol_character_count = sync_kol_character(sqlite_conn, mysql_conn, args.test)
-            url_tracking_count = sync_url_tracking(sqlite_conn, mysql_conn, args.test)
-        
-        # Synchronize tweets (always do this)
-        tweets_synced = sync_tweets(sqlite_conn, mysql_conn, args.test, args.since_days)
-        
-        # Close connections
-        sqlite_conn.close()
-        if mysql_conn:
-            mysql_conn.close()
-        
-        logging.info(f"Synchronization completed")
-        if not args.tweets_only:
-            logging.info(f"Synchronized {kol_character_count} kol_character records")
-            logging.info(f"Synchronized {url_tracking_count} url_tracking records")
-        logging.info(f"Tweets synchronization {'succeeded' if tweets_synced else 'failed'}")
-        
-        return 0
+    # Use a lock to prevent overlapping executions
+    lock_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 
+                            'data/sync_lock.pid')
     
-    except Exception as e:
-        logging.error(f"Error in synchronization: {str(e)}")
-        return 1
+    # Skip the lock if requested
+    if args.no_lock:
+        lock = type('DummyLock', (), {'__enter__': lambda x: x, '__exit__': lambda x, *args: None})()
+        logging.info("Lock mechanism disabled")
+    else:
+        lock = SyncLock(lock_file, args.lock_timeout)
+    
+    with lock:
+        # If we couldn't acquire the lock, exit
+        if not getattr(lock, 'locked', True):
+            logging.warning("Could not acquire lock, another synchronization process is running")
+            return 0
+        
+        try:
+            start_time = time.time()
+            logging.info(f"Starting synchronization at {datetime.now().isoformat()}")
+            
+            # Connect to databases
+            sqlite_conn = get_sqlite_connection(args.db_path)
+            
+            # Try to connect to MySQL, but continue with test mode if it fails
+            mysql_conn = None
+            try:
+                mysql_conn = get_mysql_connection()
+            except Exception as e:
+                if not args.test:
+                    logging.error(f"Error connecting to MySQL: {str(e)}")
+                    return 1
+                else:
+                    logging.warning(f"MySQL connection failed, but continuing in test mode: {str(e)}")
+            
+            # Initialize counters
+            kol_character_count = 0
+            url_tracking_count = 0
+            tweets_synced = False
+            
+            # Synchronize data (skip if tweets-only is specified)
+            if not args.tweets_only and mysql_conn:
+                kol_character_count = sync_kol_character(sqlite_conn, mysql_conn, args.test)
+                url_tracking_count = sync_url_tracking(sqlite_conn, mysql_conn, args.test)
+            
+            # Synchronize tweets (always do this)
+            tweets_synced = sync_tweets(sqlite_conn, mysql_conn, args.test, args.since_days)
+            
+            # Close connections
+            sqlite_conn.close()
+            if mysql_conn:
+                mysql_conn.close()
+            
+            # Calculate duration
+            duration = time.time() - start_time
+            
+            logging.info(f"Synchronization completed in {duration:.2f} seconds")
+            if not args.tweets_only:
+                logging.info(f"Synchronized {kol_character_count} kol_character records")
+                logging.info(f"Synchronized {url_tracking_count} url_tracking records")
+            logging.info(f"Tweets synchronization {'succeeded' if tweets_synced else 'failed'}")
+            
+            return 0
+        
+        except Exception as e:
+            logging.error(f"Error in synchronization: {str(e)}")
+            return 1
 
 if __name__ == "__main__":
     sys.exit(main())
