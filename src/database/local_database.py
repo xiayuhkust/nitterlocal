@@ -11,6 +11,14 @@ import sqlite3
 import json
 from datetime import datetime
 
+# Import the detailed logger
+try:
+    from src.utils.detailed_logger import log_data_operation
+except ImportError:
+    # Define a fallback function if the module is not available
+    def log_data_operation(operation_type, table_name, record_count, details=None):
+        logging.info(f"{operation_type}: {record_count} records in {table_name}")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -178,6 +186,7 @@ class LocalDatabase:
             
             stored_count = 0
             updated_count = 0
+            hashtag_count = 0
             
             for tweet in tweets:
                 try:
@@ -238,6 +247,7 @@ class LocalDatabase:
                             INSERT INTO hashtags (tweet_id, hashtag)
                             VALUES (?, ?)
                             ''', (tweet['tweet_id'], hashtag))
+                            hashtag_count += 1
                         
                 except Exception as e:
                     logging.warning(f"Error storing/updating tweet {tweet['tweet_id']}: {str(e)}")
@@ -257,6 +267,19 @@ class LocalDatabase:
             conn.close()
             
             logging.info(f"Stored {stored_count} new tweets and updated {updated_count} existing tweets for URL: {source_url}")
+            
+            # Log detailed information
+            log_data_operation(
+                'store_tweets', 
+                'tweets', 
+                stored_count + updated_count,
+                {
+                    'source_url': source_url,
+                    'new_tweets': stored_count,
+                    'updated_tweets': updated_count,
+                    'hashtags': hashtag_count
+                }
+            )
             
             return stored_count + updated_count
             
