@@ -209,18 +209,18 @@ The system uses crontab to schedule regular tasks:
 # Every 15 minutes, run dynamic updates
 */15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/activity/dynamic_update.py --parallel --threads 3 --performance >> data/dynamic_update.log 2>&1
 
-# Every 15 minutes, synchronize to MySQL
-*/15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/sync/sync_to_mysql_combined.py --since-days 1 >> data/sync_cron.log 2>&1
+# Every 15 minutes, synchronize to MySQL with lock mechanism
+*/15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/sync/sync_to_mysql_combined.py --since-days 1 --lock-timeout 60 >> data/sync_cron.log 2>&1
 ```
 
 To update the crontab configuration:
 ```bash
-./update_crontab.sh
+./scripts/sync/setup_lock_crontab.sh
 ```
 
 ## MySQL Synchronization
 
-The system synchronizes data from the local SQLite database to a MySQL database. The synchronization process handles both the `kol_character` and `url_tracking` tables.
+The system synchronizes data from the local SQLite database to a MySQL database. The synchronization process handles the `kol_character`, `url_tracking`, and `tweets` tables.
 
 ### Synchronization Script
 
@@ -229,7 +229,19 @@ The main synchronization script is `scripts/sync/sync_to_mysql_combined.py`. Thi
 1. Connects to both the local SQLite database and the remote MySQL database
 2. Synchronizes the `kol_character` table
 3. Synchronizes the `url_tracking` table to the `kol_info` table in MySQL
-4. Handles column name differences between SQLite and MySQL
+4. Synchronizes the `tweets` table to the `kol_tweet` table in MySQL
+5. Handles column name differences between SQLite and MySQL
+6. Uses a lock mechanism to prevent overlapping executions
+
+### Lock Mechanism
+
+The synchronization process uses a file-based lock mechanism to prevent multiple synchronization jobs from running simultaneously. This is especially important as data volume grows and synchronization takes longer than the cron interval.
+
+Key features of the lock mechanism:
+- Uses file locking with `fcntl` to prevent overlapping executions
+- Includes timeout functionality to prevent indefinite waiting
+- Stores the process ID (PID) in the lock file for debugging
+- Gracefully handles lock acquisition failures
 
 ### Manual Synchronization
 
@@ -243,6 +255,37 @@ To run in test mode (no actual changes):
 python scripts/sync/sync_to_mysql_combined.py --test
 ```
 
+To only synchronize tweets:
+```bash
+python scripts/sync/sync_to_mysql_combined.py --tweets-only
+```
+
+To disable the lock mechanism:
+```bash
+python scripts/sync/sync_to_mysql_combined.py --no-lock
+```
+
+To set a custom lock timeout (in seconds):
+```bash
+python scripts/sync/sync_to_mysql_combined.py --lock-timeout 120
+```
+
+### Database Check Tools
+
+The system includes tools to check the status of both the local SQLite database and the remote MySQL database:
+
+To check the latest tweets in the local SQLite database:
+```bash
+python scripts/sync/check_local_tweets.py
+```
+
+To check the latest tweets in the MySQL database:
+```bash
+python scripts/sync/check_mysql_tweets.py
+```
+
+These tools help diagnose synchronization issues by showing the most recent tweets, total tweet counts, and tweet distribution by date.
+
 ### Troubleshooting
 
 If you encounter synchronization issues:
@@ -250,7 +293,9 @@ If you encounter synchronization issues:
 1. Check the MySQL connection parameters in the `.env` file
 2. Verify that the MySQL server is accessible
 3. Check the column names in both databases
-4. Review the synchronization logs
+4. Review the synchronization logs in `data/sync_cron.log`
+5. Check if a lock file exists at `data/sync_lock.pid`
+6. Use the database check tools to compare local and remote data
 
 ## URL Table Regeneration
 
