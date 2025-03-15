@@ -89,11 +89,60 @@ To set up automated synchronization, add a cron job:
 crontab -e
 ```
 
-Add the following line to run synchronization every hour:
+Add the following line to run synchronization every 15 minutes with lock mechanism:
 
 ```
-0 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/sync/sync_to_mysql.py --since-days 1 >> data/sync_cron.log 2>&1
+*/15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/sync/sync_to_mysql_combined.py --since-days 1 --lock-timeout 60 >> data/sync_cron.log 2>&1
 ```
+
+Or use the provided setup script:
+
+```bash
+./scripts/sync/setup_lock_crontab.sh
+```
+
+## Lock Mechanism
+
+The synchronization process uses a file-based lock mechanism to prevent multiple synchronization jobs from running simultaneously. This is especially important as data volume grows and synchronization takes longer than the cron interval.
+
+### Key Features
+
+- Uses file locking with `fcntl` to prevent overlapping executions
+- Includes timeout functionality to prevent indefinite waiting
+- Stores the process ID (PID) in the lock file for debugging
+- Gracefully handles lock acquisition failures
+
+### Usage
+
+To use the lock mechanism:
+
+```bash
+python3 scripts/sync/sync_to_mysql_combined.py --lock-timeout 60
+```
+
+To disable the lock mechanism:
+
+```bash
+python3 scripts/sync/sync_to_mysql_combined.py --no-lock
+```
+
+## Database Check Tools
+
+The system includes tools to check the status of both the local SQLite database and the remote MySQL database:
+
+### Check Local SQLite Database
+
+```bash
+python3 scripts/sync/check_local_tweets.py
+```
+
+### Check MySQL Database
+
+```bash
+python3 scripts/sync/check_mysql_tweets.py
+```
+
+These tools help diagnose synchronization issues by showing the most recent tweets, total tweet counts, and tweet distribution by date.
 
 ## Troubleshooting
 
@@ -107,13 +156,15 @@ If you encounter connection issues:
 1. Verify that the MySQL server is running on the CentOS server
 2. Check that the MySQL user has appropriate permissions
 3. Ensure that the firewall allows connections from the Ubuntu server to the MySQL port on the CentOS server
+4. Check if a lock file exists at `data/sync_lock.pid` and remove it if no synchronization is running
 
 ### Script Errors
 
 If you encounter script errors:
-1. Check the log file at `data/sync_log.log` for detailed error messages
-2. Verify that all required Python packages are installed
-3. Ensure that the `.env` file contains the correct MySQL connection parameters
+1. Check the log file at `data/sync_cron.log` for detailed error messages
+2. Check the detailed log at `data/logs/sync_details.log` for operation-specific information
+3. Verify that all required Python packages are installed
+4. Ensure that the `.env` file contains the correct MySQL connection parameters
 
 ## Implementation Details
 
