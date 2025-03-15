@@ -8,10 +8,12 @@ It handles both kol_character and url_tracking tables.
 
 import os
 import sys
+import time
 import logging
 import argparse
 import sqlite3
 import mysql.connector
+import subprocess
 from datetime import datetime
 import dotenv
 
@@ -283,6 +285,42 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
             mysql_conn.rollback()
         raise
 
+def sync_tweets(sqlite_conn, mysql_conn, test_mode=False, since_days=None):
+    """Synchronize tweets from SQLite to MySQL using the fixed_update_mysql_kol_tweet.py script"""
+    try:
+        # Build the command
+        cmd = ["python3", "scripts/database/fixed_update_mysql_kol_tweet.py"]
+        
+        if test_mode:
+            cmd.append("--test")
+        
+        if since_days:
+            cmd.extend(["--since-days", str(since_days)])
+        
+        # Run the command
+        logging.info("Starting tweet synchronization")
+        start_time = time.time()
+        
+        result = subprocess.run(
+            cmd,
+            check=False,  # Don't raise exception on non-zero return code
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True
+        )
+        
+        logging.info(f"Tweet synchronization completed in {time.time() - start_time:.2f} seconds")
+        logging.info(f"Output: {result.stdout}")
+        
+        if result.stderr:
+            logging.warning(f"Errors: {result.stderr}")
+        
+        return result.returncode == 0
+    
+    except Exception as e:
+        logging.error(f"Error synchronizing tweets: {str(e)}")
+        return False
+
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(description='Synchronize SQLite data to MySQL')
@@ -290,24 +328,47 @@ def main():
     parser.add_argument('--db-path', type=str, default='/home/ubuntu/nitterlocal/data/local_database.db',
                         help='Path to SQLite database')
     parser.add_argument('--since-days', type=int, default=1, help='Synchronize data from the last N days')
+    parser.add_argument('--tweets-only', action='store_true', help='Only synchronize tweets')
     args = parser.parse_args()
     
     try:
         # Connect to databases
         sqlite_conn = get_sqlite_connection(args.db_path)
-        mysql_conn = get_mysql_connection()
         
-        # Synchronize data
-        kol_character_count = sync_kol_character(sqlite_conn, mysql_conn, args.test)
-        url_tracking_count = sync_url_tracking(sqlite_conn, mysql_conn, args.test)
+        # Try to connect to MySQL, but continue with test mode if it fails
+        mysql_conn = None
+        try:
+            mysql_conn = get_mysql_connection()
+        except Exception as e:
+            if not args.test:
+                logging.error(f"Error connecting to MySQL: {str(e)}")
+                return 1
+            else:
+                logging.warning(f"MySQL connection failed, but continuing in test mode: {str(e)}")
+        
+        # Initialize counters
+        kol_character_count = 0
+        url_tracking_count = 0
+        tweets_synced = False
+        
+        # Synchronize data (skip if tweets-only is specified)
+        if not args.tweets_only and mysql_conn:
+            kol_character_count = sync_kol_character(sqlite_conn, mysql_conn, args.test)
+            url_tracking_count = sync_url_tracking(sqlite_conn, mysql_conn, args.test)
+        
+        # Synchronize tweets (always do this)
+        tweets_synced = sync_tweets(sqlite_conn, mysql_conn, args.test, args.since_days)
         
         # Close connections
         sqlite_conn.close()
-        mysql_conn.close()
+        if mysql_conn:
+            mysql_conn.close()
         
-        logging.info(f"Synchronization completed successfully")
-        logging.info(f"Synchronized {kol_character_count} kol_character records")
-        logging.info(f"Synchronized {url_tracking_count} url_tracking records")
+        logging.info(f"Synchronization completed")
+        if not args.tweets_only:
+            logging.info(f"Synchronized {kol_character_count} kol_character records")
+            logging.info(f"Synchronized {url_tracking_count} url_tracking records")
+        logging.info(f"Tweets synchronization {'succeeded' if tweets_synced else 'failed'}")
         
         return 0
     

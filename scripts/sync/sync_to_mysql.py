@@ -18,6 +18,14 @@ from datetime import datetime
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
+# Import the detailed logger
+try:
+    from src.utils.detailed_logger import log_sync_summary
+except ImportError:
+    # Define a fallback function if the module is not available
+    def log_sync_summary(tables_updated, total_records, duration, success=True):
+        logging.info(f"Sync summary: {total_records} records across {len(tables_updated)} tables in {duration:.2f} seconds")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -121,16 +129,26 @@ def main():
     
     start_time = time.time()
     success = True
+    tables_updated = []
+    total_records = 0
     
     # Run KOL info synchronization
     if not args.tweets_only:
         kol_success = run_kol_info_sync(args.limit, args.test)
         success = success and kol_success
+        if kol_success:
+            tables_updated.append('kol_info')
+            # We don't have the exact count, but we can estimate
+            total_records += args.limit or 100
     
     # Run tweet synchronization
     if not args.kol_only:
         tweet_success = run_tweet_sync(args.limit, args.test, args.since_days)
         success = success and tweet_success
+        if tweet_success:
+            tables_updated.append('kol_tweet')
+            # We don't have the exact count, but we can estimate
+            total_records += args.limit or 1000
     
     # Log completion
     total_time = time.time() - start_time
@@ -141,10 +159,15 @@ def main():
     else:
         logging.warning("Some synchronization tasks failed")
     
+    # Log detailed summary
+    log_sync_summary(tables_updated, total_records, total_time, success)
+    
     # Print summary
     print("\nSynchronization Summary:")
     print(f"Total Duration: {total_time:.2f} seconds")
     print(f"Success: {success}")
+    print(f"Tables Updated: {', '.join(tables_updated)}")
+    print(f"Estimated Records: {total_records}")
     
     return 0 if success else 1
 

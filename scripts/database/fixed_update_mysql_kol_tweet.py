@@ -13,7 +13,22 @@ import logging
 import sqlite3
 import argparse
 import re
+import time
 from datetime import datetime, timedelta
+
+# Add the project root directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+# Import the detailed logger
+try:
+    from src.utils.detailed_logger import log_data_operation, log_sync_summary
+except ImportError:
+    # Define fallback functions if the module is not available
+    def log_data_operation(operation_type, table_name, record_count, details=None):
+        logging.info(f"{operation_type}: {record_count} records in {table_name}")
+    
+    def log_sync_summary(tables_updated, total_records, duration, success=True):
+        logging.info(f"Sync summary: {total_records} records across {len(tables_updated)} tables in {duration:.2f} seconds")
 
 # Configure logging
 logging.basicConfig(
@@ -301,6 +316,8 @@ def main():
     print("Starting MySQL update script for tweets")
     logging.info("Starting MySQL update script for tweets")
     
+    start_time = time.time()
+    
     # Print environment variables (without password)
     print("MySQL Host: {}".format(MYSQL_HOST))
     print("MySQL Port: {}".format(MYSQL_PORT))
@@ -323,6 +340,10 @@ def main():
     
     # Process each tweet
     processed_count = 0
+    insert_count = 0
+    update_count = 0
+    error_count = 0
+    
     try:
         for tweet_data in tweets:
             tweet_id = tweet_data[0]
@@ -332,8 +353,27 @@ def main():
             kol_id = extract_handle_from_author(author)
             
             # Insert or update record in MySQL
-            if not args.test:
-                insert_or_update_kol_tweet(mysql_conn, tweet_data)
+            if not args.test and mysql_conn:
+                try:
+                    # Check if record exists
+                    cursor = mysql_conn.cursor()
+                    cursor.execute("SELECT id FROM kol_tweet WHERE tweet_id = %s", (tweet_id,))
+                    exists = cursor.fetchone()
+                    cursor.close()
+                    
+                    # Track if this is an insert or update
+                    is_update = exists is not None
+                    
+                    # Perform the operation
+                    insert_or_update_kol_tweet(mysql_conn, tweet_data)
+                    
+                    if is_update:
+                        update_count += 1
+                    else:
+                        insert_count += 1
+                except Exception as e:
+                    logging.error(f"Error processing tweet {tweet_id}: {str(e)}")
+                    error_count += 1
             else:
                 print("Test mode - would insert or update record for kol_id: {}, tweet_id: {}".format(kol_id, tweet_id))
                 logging.info("Test mode - would insert or update record for kol_id: {}, tweet_id: {}".format(kol_id, tweet_id))
@@ -347,10 +387,34 @@ def main():
             mysql_conn.close()
             logging.info("Closed MySQL connection")
     
+    duration = time.time() - start_time
+    
     print("Processed {} tweets".format(processed_count))
     logging.info("Processed {} tweets".format(processed_count))
     logging.info("MySQL update script for tweets completed")
     print("MySQL update script for tweets completed")
+    
+    # Log detailed summary
+    if not args.test:
+        log_sync_summary(
+            ['kol_tweet'], 
+            processed_count,
+            duration,
+            success=(error_count == 0)
+        )
+        
+        # Log detailed operation counts
+        log_data_operation(
+            'sync_to_mysql', 
+            'kol_tweet', 
+            processed_count,
+            {
+                'inserted': insert_count,
+                'updated': update_count,
+                'errors': error_count,
+                'duration_seconds': duration
+            }
+        )
 
 if __name__ == "__main__":
     main()
