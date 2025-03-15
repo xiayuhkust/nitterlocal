@@ -38,11 +38,11 @@ app.add_middleware(
 )
 
 # Create uploads directory in nitterlocal to share files between projects
-UPLOAD_DIR = '/home/ubuntu/nitterlocal/uploads'
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Create temporary directory for processed files in nitterlocal
-TEMP_DIR = '/home/ubuntu/nitterlocal/temp'
+TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'temp')
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 # Create static directory
@@ -175,9 +175,10 @@ async def process_excel(background_tasks: BackgroundTasks, file_id: str = Form(.
         from app.database_sync import process_excel_and_sync
         
         # Update the local database (without MySQL synchronization)
+        db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'local_database.db')
         db_results = process_excel_and_sync(
             excel_path=file_path,
-            db_path='/home/ubuntu/nitterlocal/data/local_database.db',
+            db_path=db_path,
             sync_to_mysql=False,  # Don't sync to MySQL immediately
             test_mode=False
         )
@@ -283,9 +284,10 @@ async def sync_database(
         from app.database_sync import process_excel_and_sync, get_sqlite_kol_character_stats, get_sqlite_url_tracking_stats
         
         # Process the Excel file and synchronize data
+        db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'local_database.db')
         results = process_excel_and_sync(
             excel_path=file_path,
-            db_path='/home/ubuntu/nitterlocal/data/local_database.db',
+            db_path=db_path,
             sync_to_mysql=False,  # Don't sync to MySQL immediately
             test_mode=test_mode
         )
@@ -329,8 +331,8 @@ async def sync_mysql_only(
         result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         
         return {
-            "sqlite_kol_character_stats": get_sqlite_kol_character_stats('/home/ubuntu/nitterlocal/data/local_database.db'),
-            "sqlite_url_tracking_stats": get_sqlite_url_tracking_stats('/home/ubuntu/nitterlocal/data/local_database.db'),
+            "sqlite_kol_character_stats": get_sqlite_kol_character_stats(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'local_database.db')),
+            "sqlite_url_tracking_stats": get_sqlite_url_tracking_stats(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'local_database.db')),
             "mysql_sync": {"success": True, "processed_count": 0, "output": result.stdout, "errors": result.stderr}
         }
     
