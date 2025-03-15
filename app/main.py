@@ -171,6 +171,17 @@ async def process_excel(background_tasks: BackgroundTasks, file_id: str = Form(.
         # Add the IDs to the Excel file
         processed_file_path = processor.add_ids_to_excel(file_path, results["processed_urls"])
         
+        # Import the database_sync module
+        from app.database_sync import process_excel_and_sync
+        
+        # Update the local database (without MySQL synchronization)
+        db_results = process_excel_and_sync(
+            excel_path=file_path,
+            db_path='/home/ubuntu/nitterlocal/data/local_database.db',
+            sync_to_mysql=False,  # Don't sync to MySQL immediately
+            test_mode=False
+        )
+        
         # Schedule the temporary files for deletion after 1 hour
         def cleanup_temp_files():
             try:
