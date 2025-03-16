@@ -29,27 +29,34 @@ DEFAULT_EXCEL_PATH = '/tmp/uploaded_excel.xlsx'
 # Ensure the database directory exists
 os.makedirs(os.path.dirname(DEFAULT_SQLITE_PATH), exist_ok=True)
 
-def extract_twitter_handle(url: str) -> Optional[str]:
-    """Extract Twitter handle from a URL (works with both twitter.com and x.com)"""
-    if not url:
-        return None
+# Import the Twitter API utilities
+try:
+    from .twitter_api_utils import extract_twitter_handle
+    logging.info("Successfully imported twitter_api_utils.extract_twitter_handle in database_sync")
+except ImportError:
+    logging.warning("Could not import twitter_api_utils, using fallback extract_twitter_handle")
     
-    try:
-        # Remove trailing slash if present
-        if url.endswith('/'):
-            url = url[:-1]
-        
-        # Extract the handle from the URL
-        parts = url.split('/')
-        if len(parts) < 4:
-            logging.warning(f"Invalid URL format: {url}")
+    def extract_twitter_handle(url: str) -> Optional[str]:
+        """Extract Twitter handle from a URL (works with both twitter.com and x.com)"""
+        if not url:
             return None
         
-        handle = parts[-1]
-        return handle.lower()
-    except Exception as e:
-        logging.error(f"Error extracting Twitter handle from {url}: {str(e)}")
-        return None
+        try:
+            # Remove trailing slash if present
+            if url.endswith('/'):
+                url = url[:-1]
+            
+            # Extract the handle from the URL
+            parts = url.split('/')
+            if len(parts) < 4:
+                logging.warning(f"Invalid URL format: {url}")
+                return None
+            
+            handle = parts[-1]
+            return handle.lower()
+        except Exception as e:
+            logging.error(f"Error extracting Twitter handle from {url}: {str(e)}")
+            return None
 
 def run_process_excel_script(excel_path: str, db_path: str = DEFAULT_SQLITE_PATH) -> Dict[str, Any]:
     """Run the process_excel.py script to process an Excel file"""

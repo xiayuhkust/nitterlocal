@@ -1,85 +1,35 @@
 #!/usr/bin/env python3
 """
-Script to process Excel files with KOL character data and store in SQLite database.
-This script adds a kol_character table to the SQLite database and processes Excel data.
+Integrated script to process Excel data using both scraper and profile methods,
+outputting updated url_tracking and kol_character tables.
 """
 
 import os
 import sys
 import logging
+import argparse
 import pandas as pd
 import sqlite3
-import argparse
+import json
+import tempfile
+import subprocess
 from datetime import datetime
-from urllib.parse import urlparse
 
-# Add path to app directory to import Twitter utilities
-sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'app'))
+# Add the project root directory to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-# Import the new Twitter API utilities
+# Import required modules
 try:
-    from twitter_api_utils import (
+    from app.twitter_api_utils import (
         extract_twitter_handle,
         get_user_id_from_twitter_api,
         get_user_id_from_direct_client_call
     )
-    logging.info("Successfully imported twitter_api_utils")
-except ImportError:
-    logging.warning("Could not import twitter_api_utils, will use fallback methods")
-    
-    # Fallback Twitter handle extraction function
-    def extract_twitter_handle(url):
-        """Fallback Twitter handle extraction function"""
-        if not url:
-            return None
-        
-        try:
-            # Parse the URL
-            parsed_url = urlparse(url)
-            
-            # Check if it's a Twitter URL
-            if 'twitter.com' in parsed_url.netloc:
-                domain = 'twitter.com'
-            elif 'x.com' in parsed_url.netloc:
-                domain = 'x.com'
-            else:
-                return None
-            
-            # Extract the handle from the path
-            path_parts = parsed_url.path.strip('/').split('/')
-            if not path_parts:
-                return None
-            
-            handle = path_parts[0]
-            return handle.lower()
-        except Exception as e:
-            logging.error(f"Error extracting Twitter handle from {url}: {str(e)}")
-            return None
-    
-    # Fallback user ID function
-    def get_user_id_from_twitter_api(handle):
-        """Fallback method to generate a user ID from a handle"""
-        if not handle:
-            return None
-        
-        try:
-            import hashlib
-            
-            # Create a numeric ID by hashing the handle
-            hash_object = hashlib.md5(handle.encode())
-            hash_hex = hash_object.hexdigest()
-            numeric_id = int(hash_hex, 16) % (10**15)
-            
-            logging.warning(f"Generated fallback numeric ID for {handle}: {numeric_id}")
-            return str(numeric_id)
-        except Exception as e:
-            logging.error(f"Error generating fallback ID for {handle}: {str(e)}")
-            return None
-    
-    # Fallback direct client call function
-    def get_user_id_from_direct_client_call(handle):
-        """Fallback for direct client call"""
-        return get_user_id_from_twitter_api(handle)
+    from scripts.profile.update_profile_data import ProfileUpdater
+    logging.info("Successfully imported required modules")
+except ImportError as e:
+    logging.error(f"Could not import required modules: {str(e)}")
+    sys.exit(1)
 
 # Configure logging
 logging.basicConfig(
@@ -140,9 +90,6 @@ def create_kol_character_table(db_path):
                     CREATE INDEX IF NOT EXISTS idx_kol_character_url_tracking_id ON kol_character (url_tracking_id)
                     ''')
                     
-                    # Note: SQLite doesn't support ALTER TABLE ADD CONSTRAINT
-                    # We would need to recreate the table to add a proper foreign key
-                    # For now, we'll just add the index and handle the relationship in code
                     logging.info("Added index on url_tracking_id column")
                 else:
                     logging.warning("url_tracking_id column not found in kol_character table")
@@ -253,7 +200,7 @@ def add_kol_character(conn, kol_data, url_tracking_id=None):
         return False
 
 def process_excel_file(excel_path, db_path):
-    """Process an Excel file with KOL character data"""
+    """Process an Excel file with KOL character data using both scraper and profile methods"""
     try:
         # Read the Excel file
         df = pd.read_excel(excel_path)
@@ -264,12 +211,15 @@ def process_excel_file(excel_path, db_path):
         # Enable foreign keys
         conn.execute("PRAGMA foreign_keys = ON")
         
+        # Create profile updater
+        profile_updater = ProfileUpdater(db_path=db_path)
+        
         # Process each row
         processed_count = 0
-        for _, row in df.iterrows():
+        for _, row in enumerate(df.iterrows()):
             try:
                 # Get Twitter URL
-                url = row.get('Twitter url')
+                url = row[1].get('Twitter url')
                 if pd.isna(url) or not url:
                     logging.warning(f"Skipping row with no Twitter URL: {row}")
                     continue
@@ -295,8 +245,8 @@ def process_excel_file(excel_path, db_path):
                     user_id = None
                 
                 # Add URL to tracking with the user_id
-                type_val = str(row.get('first category')) if not pd.isna(row.get('first category')) else "kol"
-                subtype = str(row.get('second_category')) if not pd.isna(row.get('second_category')) else "-"
+                type_val = str(row[1].get('first category')) if not pd.isna(row[1].get('first category')) else "kol"
+                subtype = str(row[1].get('second_category')) if not pd.isna(row[1].get('second_category')) else "-"
                 add_url_to_tracking(conn, url, type_val, subtype, user_id)
                 
                 # Get url_tracking record ID and user_id
@@ -332,22 +282,32 @@ def process_excel_file(excel_path, db_path):
                 # Prepare KOL character data
                 kol_data = {
                     'kol_id': user_id,
-                    'kol_screen_name': handle,  # Remove @ prefix
-                    'bio': str(row.get('bio', ''))[:255] if not pd.isna(row.get('bio')) else '',
-                    'lore': str(row.get('lore', ''))[:255] if not pd.isna(row.get('lore')) else '',
-                    'knowledge': str(row.get('knowledge', ''))[:255] if not pd.isna(row.get('knowledge')) else '',
-                    'postExamples': str(row.get('postExamples', ''))[:255] if not pd.isna(row.get('postExamples')) else '',
-                    'topics': str(row.get('topics', ''))[:255] if not pd.isna(row.get('topics')) else '',
-                    'style_all': str(row.get('style_all', ''))[:255] if not pd.isna(row.get('style_all')) else '',
-                    'style_chat': str(row.get('style_chat', ''))[:255] if not pd.isna(row.get('style_chat')) else '',
-                    'style_post': str(row.get('style_post', ''))[:255] if not pd.isna(row.get('style_post')) else '',
-                    'adjectives': str(row.get('adjectives', ''))[:255] if not pd.isna(row.get('adjectives')) else ''
+                    'kol_screen_name': handle,
+                    'bio': str(row[1].get('bio', ''))[:255] if not pd.isna(row[1].get('bio')) else '',
+                    'lore': str(row[1].get('lore', ''))[:255] if not pd.isna(row[1].get('lore')) else '',
+                    'knowledge': str(row[1].get('knowledge', ''))[:255] if not pd.isna(row[1].get('knowledge')) else '',
+                    'postExamples': str(row[1].get('postExamples', ''))[:255] if not pd.isna(row[1].get('postExamples')) else '',
+                    'topics': str(row[1].get('topics', ''))[:255] if not pd.isna(row[1].get('topics')) else '',
+                    'style_all': str(row[1].get('style_all', ''))[:255] if not pd.isna(row[1].get('style_all')) else '',
+                    'style_chat': str(row[1].get('style_chat', ''))[:255] if not pd.isna(row[1].get('style_chat')) else '',
+                    'style_post': str(row[1].get('style_post', ''))[:255] if not pd.isna(row[1].get('style_post')) else '',
+                    'adjectives': str(row[1].get('adjectives', ''))[:255] if not pd.isna(row[1].get('adjectives')) else ''
                 }
                 
                 # Add KOL character with url_tracking relationship
                 add_kol_character(conn, kol_data, url_tracking_id)
                 
+                # Get profile data using profile method
+                profile_data = profile_updater.get_profile_data(handle)
+                if profile_data:
+                    # Update profile data in url_tracking table
+                    profile_updater.update_profile_in_db(url, profile_data)
+                    logging.info(f"Updated profile data for URL: {url}")
+                else:
+                    logging.warning(f"Could not get profile data for handle: {handle}")
+                
                 processed_count += 1
+                
             except Exception as e:
                 logging.error(f"Error processing row: {str(e)}")
                 continue
@@ -362,11 +322,67 @@ def process_excel_file(excel_path, db_path):
         logging.error(f"Error processing Excel file: {str(e)}")
         return 0
 
+def display_results(db_path, handle):
+    """Display the results of Excel processing for a specific handle"""
+    try:
+        # Connect to the database
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # Get data from url_tracking table
+        cursor.execute("SELECT * FROM url_tracking WHERE screen_name = ?", (handle,))
+        url_record = cursor.fetchone()
+        
+        if url_record:
+            url_data = dict(url_record)
+            
+            print(f"\n=== Data for {handle} in url_tracking table ===")
+            
+            # Display basic fields
+            basic_fields = ['id', 'url', 'user_id', 'status', 'type', 'subtype', 'screen_name']
+            for field in basic_fields:
+                if field in url_data:
+                    print(f"{field}: {url_data[field]}")
+            
+            # Display profile fields
+            print("\n=== Profile Data in url_tracking table ===")
+            profile_fields = [
+                'followers_count', 'following_count', 'tweet_count',
+                'profile_image_url', 'profile_banner_url', 'verified',
+                'location', 'description', 'created_at', 'profile_updated_at'
+            ]
+            for field in profile_fields:
+                if field in url_data and url_data[field] is not None:
+                    print(f"{field}: {url_data[field]}")
+            
+            # Get data from kol_character table
+            if 'id' in url_data:
+                cursor.execute("SELECT * FROM kol_character WHERE url_tracking_id = ?", (url_data['id'],))
+                kol_record = cursor.fetchone()
+                
+                if kol_record:
+                    print(f"\n=== Data for {handle} in kol_character table ===")
+                    kol_data = dict(kol_record)
+                    for key, value in kol_data.items():
+                        print(f"{key}: {value}")
+                else:
+                    print("\nNo corresponding record found in kol_character table")
+        else:
+            print(f"\nTarget handle not found in url_tracking table: {handle}")
+            
+    except Exception as e:
+        logging.error(f"Error displaying results: {str(e)}")
+    finally:
+        if 'conn' in locals():
+            conn.close()
+
 def main():
     """Main function"""
-    parser = argparse.ArgumentParser(description='Process Excel files with KOL character data')
+    parser = argparse.ArgumentParser(description='Process Excel files with KOL character data using both scraper and profile methods')
     parser.add_argument('--excel', type=str, required=True, help='Path to the Excel file')
     parser.add_argument('--db-path', type=str, default='/home/ubuntu/nitterlocal/data/local_database.db', help='Path to the SQLite database')
+    parser.add_argument('--display', type=str, help='Display results for a specific handle')
     
     args = parser.parse_args()
     
@@ -375,6 +391,10 @@ def main():
     
     # Process the Excel file
     process_excel_file(args.excel, args.db_path)
+    
+    # Display results if requested
+    if args.display:
+        display_results(args.db_path, args.display)
 
 if __name__ == "__main__":
     main()

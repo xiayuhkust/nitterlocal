@@ -271,6 +271,35 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                     if 'created_at' in mysql_columns:
                         insert_columns.append('created_at')
                         insert_values.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                
+                # Add profile columns if they exist in MySQL
+                if 'followers_count' in mysql_columns and 'followers_count' in row_dict and row_dict['followers_count']:
+                    insert_columns.append('followers_count')
+                    insert_values.append(row_dict['followers_count'])
+                if 'following_count' in mysql_columns and 'following_count' in row_dict and row_dict['following_count']:
+                    insert_columns.append('following_count')
+                    insert_values.append(row_dict['following_count'])
+                if 'tweet_count' in mysql_columns and 'tweet_count' in row_dict and row_dict['tweet_count']:
+                    insert_columns.append('tweet_count')
+                    insert_values.append(row_dict['tweet_count'])
+                if 'profile_image_url' in mysql_columns and 'profile_image_url' in row_dict and row_dict['profile_image_url']:
+                    insert_columns.append('profile_image_url')
+                    insert_values.append(row_dict['profile_image_url'])
+                if 'profile_banner_url' in mysql_columns and 'profile_banner_url' in row_dict and row_dict['profile_banner_url']:
+                    insert_columns.append('profile_banner_url')
+                    insert_values.append(row_dict['profile_banner_url'])
+                if 'verified' in mysql_columns and 'verified' in row_dict and row_dict['verified']:
+                    insert_columns.append('verified')
+                    insert_values.append(row_dict['verified'])
+                if 'location' in mysql_columns and 'location' in row_dict and row_dict['location']:
+                    insert_columns.append('location')
+                    insert_values.append(row_dict['location'])
+                if 'created_at' in mysql_columns and 'created_at' in row_dict and row_dict['created_at']:
+                    insert_columns.append('created_at')
+                    insert_values.append(row_dict['created_at'])
+                if 'profile_updated_at' in mysql_columns and 'profile_updated_at' in row_dict and row_dict['profile_updated_at']:
+                    insert_columns.append('profile_updated_at')
+                    insert_values.append(row_dict['profile_updated_at'])
                     
                     # This section is now handled above in the kol_screen_name section
                     
