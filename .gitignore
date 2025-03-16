@@ -1,7 +1,7 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
+*.class
 *.so
 .Python
 env/
@@ -32,10 +32,11 @@ var/
 # Logs
 *.log
 
-# DO NOT ignore database files
-# !data/local_database.db
-# !data/*.db
-
-# Keep all JSON files
-# !data/*.json
+# Data files
 data/local_database.db
+data/local_stats.json
+data/*.json
+data/*.pid
+
+# Keep specific files (uncomment if needed)
+# !data/important.json
