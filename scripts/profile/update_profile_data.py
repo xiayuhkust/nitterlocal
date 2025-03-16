@@ -61,40 +61,85 @@ class ProfileUpdater:
             output_file = temp_file.name
         
         try:
-            # Run the Twitter client to get profile data
-            logging.info(f"Running Twitter client to get profile data for {handle}...")
-            process = subprocess.run(
-                ['node', self.client_path, handle, '1', '0', output_file],
-                cwd=self.client_dir,
-                check=True,
-                capture_output=True,
-                text=True
-            )
+            # Use the profile client instead of the regular client
+            profile_client_path = os.path.join(self.client_dir, 'twitter_profile_client.js')
             
-            # Check if the output file exists
-            if not os.path.exists(output_file):
-                logging.error(f"Output file {output_file} does not exist")
-                return None
-            
-            # Load the result from the output file
-            with open(output_file, 'r') as f:
-                result = json.load(f)
-            
-            # Extract profile data
-            profile_data = {
-                'user_id': result.get('userId'),
-                'screen_name': handle,
-                'followers_count': result.get('followersCount', 0),
-                'following_count': result.get('followingCount', 0),
-                'tweet_count': result.get('statusesCount', 0),
-                'profile_image_url': result.get('profileImageUrl', ''),
-                'profile_banner_url': result.get('profileBannerUrl', ''),
-                'verified': 1 if result.get('verified', False) else 0,
-                'location': result.get('location', ''),
-                'description': result.get('description', ''),
-                'created_at': result.get('createdAt', ''),
-                'profile_updated_at': datetime.now().isoformat()
-            }
+            # Check if the profile client exists, if not, fall back to regular client
+            if not os.path.exists(profile_client_path):
+                logging.warning(f"Profile client {profile_client_path} does not exist, falling back to regular client")
+                profile_client_path = self.client_path
+                
+                # Run the Twitter client to get profile data
+                logging.info(f"Running Twitter client to get profile data for {handle}...")
+                process = subprocess.run(
+                    ['node', profile_client_path, handle, '1', '0', output_file],
+                    cwd=self.client_dir,
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+                
+                # Check if the output file exists
+                if not os.path.exists(output_file):
+                    logging.error(f"Output file {output_file} does not exist")
+                    return None
+                
+                # Load the result from the output file
+                with open(output_file, 'r') as f:
+                    result = json.load(f)
+                
+                # Extract profile data from regular client
+                profile_data = {
+                    'user_id': result.get('userId'),
+                    'screen_name': handle,
+                    'followers_count': result.get('followersCount', 0),
+                    'following_count': result.get('followingCount', 0),
+                    'tweet_count': result.get('statusesCount', 0),
+                    'profile_image_url': result.get('profileImageUrl', ''),
+                    'profile_banner_url': result.get('profileBannerUrl', ''),
+                    'verified': 1 if result.get('verified', False) else 0,
+                    'location': result.get('location', ''),
+                    'description': result.get('description', ''),
+                    'created_at': result.get('createdAt', ''),
+                    'profile_updated_at': datetime.now().isoformat()
+                }
+            else:
+                # Run the Twitter profile client to get profile data
+                logging.info(f"Running Twitter profile client for {handle}...")
+                process = subprocess.run(
+                    ['node', profile_client_path, handle, output_file],
+                    cwd=self.client_dir,
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+                
+                # Check if the output file exists
+                if not os.path.exists(output_file):
+                    logging.error(f"Output file {output_file} does not exist")
+                    return None
+                
+                # Load the result from the output file
+                with open(output_file, 'r') as f:
+                    result = json.load(f)
+                
+                # Extract profile data from profile client
+                profile = result.get('profile', {})
+                
+                profile_data = {
+                    'user_id': result.get('userId'),
+                    'screen_name': handle,
+                    'followers_count': profile.get('followersCount', 0),
+                    'following_count': profile.get('followingCount', 0) or profile.get('friendsCount', 0),
+                    'tweet_count': profile.get('tweetsCount', 0) or profile.get('statusesCount', 0),
+                    'profile_image_url': profile.get('avatar', ''),
+                    'profile_banner_url': profile.get('banner', ''),
+                    'verified': 1 if profile.get('verified', False) or profile.get('isVerified', False) or profile.get('isBlueVerified', False) else 0,
+                    'location': profile.get('location', ''),
+                    'description': profile.get('biography', ''),
+                    'created_at': profile.get('joined', ''),
+                    'profile_updated_at': datetime.now().isoformat()
+                }
             
             logging.info(f"Got profile data for {handle}: {profile_data}")
             return profile_data
