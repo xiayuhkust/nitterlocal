@@ -13,7 +13,7 @@ from datetime import datetime
 MYSQL_HOST = os.environ.get("MYSQL_HOST", "43.135.26.222")
 MYSQL_PORT = int(os.environ.get("MYSQL_PORT", "3306"))
 MYSQL_USER = os.environ.get("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "")
+MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "z1050493759")
 MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE", "kol_info")
 
 def get_mysql_connection():

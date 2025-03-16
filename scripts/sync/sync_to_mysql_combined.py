@@ -15,7 +15,7 @@ import argparse
 import sqlite3
 import mysql.connector
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 import dotenv
 
 # Add the project root directory to the Python path
@@ -107,7 +107,15 @@ def sync_kol_character(sqlite_conn, mysql_conn, test_mode=False):
         mysql_cursor = mysql_conn.cursor()
         
         # Get column names from SQLite
-        columns = [column[0] for column in sqlite_cursor.description]
+        sqlite_columns = [column[0] for column in sqlite_cursor.description]
+        
+        # Get column names from MySQL
+        mysql_columns = get_mysql_table_columns(mysql_conn, "kol_character")
+        logging.info(f"MySQL kol_character columns: {mysql_columns}")
+        
+        # Find common columns (only synchronize columns that exist in both tables)
+        common_columns = [col for col in sqlite_columns if col in mysql_columns]
+        logging.info(f"Common columns for kol_character: {common_columns}")
         
         # Count of processed records
         processed_count = 0
@@ -115,7 +123,7 @@ def sync_kol_character(sqlite_conn, mysql_conn, test_mode=False):
         # Process each row
         for row in rows:
             # Convert row to dict
-            row_dict = dict(zip(columns, row))
+            row_dict = dict(zip(sqlite_columns, row))
             
             # Check if record already exists in MySQL
             mysql_cursor.execute(
@@ -125,69 +133,43 @@ def sync_kol_character(sqlite_conn, mysql_conn, test_mode=False):
             count = mysql_cursor.fetchone()[0]
             
             if count > 0:
-                # Update existing record
-                update_query = f"""
-                UPDATE kol_character SET
-                    kol_screen_name = %s,
-                    bio = %s,
-                    lore = %s,
-                    knowledge = %s,
-                    postExamples = %s,
-                    topics = %s,
-                    style_all = %s,
-                    style_chat = %s,
-                    style_post = %s,
-                    adjectives = %s
-                WHERE kol_id = %s
-                """
+                # Update existing record - only include columns that exist in MySQL
+                set_clauses = []
+                update_params = []
                 
-                update_params = (
-                    row_dict['kol_screen_name'],
-                    row_dict['bio'],
-                    row_dict['lore'],
-                    row_dict['knowledge'],
-                    row_dict['postExamples'],
-                    row_dict['topics'],
-                    row_dict['style_all'],
-                    row_dict['style_chat'],
-                    row_dict['style_post'],
-                    row_dict['adjectives'],
-                    row_dict['kol_id']
-                )
+                for col in common_columns:
+                    if col != 'kol_id':  # Skip the primary key
+                        set_clauses.append(f"{col} = %s")
+                        update_params.append(row_dict[col])
                 
-                if not test_mode:
-                    mysql_cursor.execute(update_query, update_params)
-                
-                logging.info(f"Updated kol_character record for kol_id: {row_dict['kol_id']}")
+                # Only proceed if there are columns to update
+                if set_clauses:
+                    set_clause = ", ".join(set_clauses)
+                    update_query = f"UPDATE kol_character SET {set_clause} WHERE kol_id = %s"
+                    update_params.append(row_dict['kol_id'])
+                    
+                    if not test_mode:
+                        mysql_cursor.execute(update_query, update_params)
+                    
+                    logging.info(f"Updated kol_character record for kol_id: {row_dict['kol_id']}")
+                    logging.info(f"Used columns: {[col for col in common_columns if col != 'kol_id']}")
+                else:
+                    logging.info(f"No columns to update for kol_id: {row_dict['kol_id']}")
             else:
-                # Insert new record
-                insert_query = f"""
-                INSERT INTO kol_character (
-                    kol_id, kol_screen_name, bio, lore, knowledge, postExamples,
-                    topics, style_all, style_chat, style_post, adjectives
-                ) VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                )
-                """
+                # Insert new record - only include columns that exist in MySQL
+                insert_columns = common_columns
+                insert_values = [row_dict[col] for col in common_columns]
                 
-                insert_params = (
-                    row_dict['kol_id'],
-                    row_dict['kol_screen_name'],
-                    row_dict['bio'],
-                    row_dict['lore'],
-                    row_dict['knowledge'],
-                    row_dict['postExamples'],
-                    row_dict['topics'],
-                    row_dict['style_all'],
-                    row_dict['style_chat'],
-                    row_dict['style_post'],
-                    row_dict['adjectives']
-                )
+                # Build the query
+                columns_str = ", ".join(insert_columns)
+                placeholders = ", ".join(["%s"] * len(insert_columns))
+                insert_query = f"INSERT INTO kol_character ({columns_str}) VALUES ({placeholders})"
                 
                 if not test_mode:
-                    mysql_cursor.execute(insert_query, insert_params)
+                    mysql_cursor.execute(insert_query, insert_values)
                 
                 logging.info(f"Inserted new kol_character record for kol_id: {row_dict['kol_id']}")
+                logging.info(f"Used columns: {insert_columns}")
             
             processed_count += 1
         
@@ -203,6 +185,14 @@ def sync_kol_character(sqlite_conn, mysql_conn, test_mode=False):
         if not test_mode:
             mysql_conn.rollback()
         raise
+
+def get_mysql_table_columns(mysql_conn, table_name):
+    """Get the column names for a MySQL table"""
+    cursor = mysql_conn.cursor()
+    cursor.execute(f"DESCRIBE {table_name}")
+    columns = [row[0] for row in cursor.fetchall()]
+    cursor.close()
+    return columns
 
 def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
     """Synchronize url_tracking table from SQLite to MySQL (kol_info table)
@@ -223,7 +213,11 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
         mysql_cursor = mysql_conn.cursor()
         
         # Get column names from SQLite
-        columns = [column[0] for column in sqlite_cursor.description]
+        sqlite_columns = [column[0] for column in sqlite_cursor.description]
+        
+        # Get column names from MySQL
+        mysql_columns = get_mysql_table_columns(mysql_conn, "kol_info")
+        logging.info(f"MySQL kol_info columns: {mysql_columns}")
         
         # Count of processed records
         processed_count = 0
@@ -231,7 +225,7 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
         # Process each row
         for row in rows:
             # Convert row to dict
-            row_dict = dict(zip(columns, row))
+            row_dict = dict(zip(sqlite_columns, row))
             
             # Skip rows with no user_id
             if not row_dict.get('user_id'):
@@ -255,47 +249,52 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
                     twitter_handle = parts[1].split('/')[0].split('?')[0]
             
             if count > 0:
-                # Update existing record
-                update_query = f"""
-                UPDATE kol_info SET
-                    kol_screen_name = %s,
-                    updated_at = %s
-                WHERE kol_id = %s
-                """
+                # Update existing record - only include columns that exist in MySQL
+                set_clauses = []
+                update_params = []
                 
-                update_params = (
-                    twitter_handle or '',
-                    datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    row_dict['user_id']
-                )
+                # Add kol_screen_name if it exists in MySQL
+                if 'kol_screen_name' in mysql_columns:
+                    set_clauses.append("kol_screen_name = %s")
+                    update_params.append(twitter_handle or '')
                 
-                if not test_mode:
-                    mysql_cursor.execute(update_query, update_params)
-                
-                logging.info(f"Updated kol_info record for kol_id: {row_dict['user_id']}")
+                # Only proceed if there are columns to update
+                if set_clauses:
+                    set_clause = ", ".join(set_clauses)
+                    update_query = f"UPDATE kol_info SET {set_clause} WHERE kol_id = %s"
+                    update_params.append(row_dict['user_id'])
+                    
+                    if not test_mode:
+                        mysql_cursor.execute(update_query, update_params)
+                    
+                    logging.info(f"Updated kol_info record for kol_id: {row_dict['user_id']}")
+                else:
+                    logging.info(f"No columns to update for kol_id: {row_dict['user_id']}")
             else:
-                # Insert new record
-                insert_query = f"""
-                INSERT INTO kol_info (
-                    kol_id, kol_screen_name, created_at, updated_at
-                ) VALUES (
-                    %s, %s, %s, %s
-                )
-                """
+                # Insert new record - only include columns that exist in MySQL
+                insert_columns = ['kol_id']
+                insert_values = [row_dict['user_id']]
                 
-                current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                # Add kol_screen_name if it exists in MySQL
+                if 'kol_screen_name' in mysql_columns:
+                    insert_columns.append('kol_screen_name')
+                    insert_values.append(twitter_handle or '')
                 
-                insert_params = (
-                    row_dict['user_id'],
-                    twitter_handle or '',
-                    current_time,
-                    current_time
-                )
+                # Add created_at if it exists in MySQL
+                if 'created_at' in mysql_columns:
+                    insert_columns.append('created_at')
+                    insert_values.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                
+                # Build the query
+                columns_str = ", ".join(insert_columns)
+                placeholders = ", ".join(["%s"] * len(insert_columns))
+                insert_query = f"INSERT INTO kol_info ({columns_str}) VALUES ({placeholders})"
                 
                 if not test_mode:
-                    mysql_cursor.execute(insert_query, insert_params)
+                    mysql_cursor.execute(insert_query, insert_values)
                 
                 logging.info(f"Inserted new kol_info record for kol_id: {row_dict['user_id']}")
+                logging.info(f"Used columns: {insert_columns}")
             
             processed_count += 1
         
@@ -312,40 +311,214 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
             mysql_conn.rollback()
         raise
 
-def sync_tweets(sqlite_conn, mysql_conn, test_mode=False, since_days=None):
-    """Synchronize tweets from SQLite to MySQL using the fixed_update_mysql_kol_tweet.py script"""
+def sync_tweets(sqlite_conn, mysql_conn, since_days=1, test_mode=False, batch_size=100):
+    """Synchronize tweets from SQLite to MySQL with dynamic column mapping"""
     try:
-        # Build the command
-        cmd = ["python3", "scripts/database/fixed_update_mysql_kol_tweet.py"]
-        
-        if test_mode:
-            cmd.append("--test")
-        
-        if since_days:
-            cmd.extend(["--since-days", str(since_days)])
-        
-        # Run the command
-        logging.info("Starting tweet synchronization")
         start_time = time.time()
         
-        result = subprocess.run(
-            cmd,
-            check=False,  # Don't raise exception on non-zero return code
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True
-        )
+        # Calculate the date threshold
+        threshold_date = (datetime.now() - timedelta(days=since_days)).strftime('%Y-%m-%d')
         
-        logging.info(f"Tweet synchronization completed in {time.time() - start_time:.2f} seconds")
-        logging.info(f"Output: {result.stdout}")
+        # Get tweets from SQLite
+        sqlite_cursor = sqlite_conn.cursor()
+        sqlite_cursor.execute("""
+            SELECT t.* 
+            FROM tweets t
+            WHERE t.created_at >= ?
+            ORDER BY t.created_at DESC
+        """, (threshold_date,))
         
-        if result.stderr:
-            logging.warning(f"Errors: {result.stderr}")
+        rows = sqlite_cursor.fetchall()
         
-        return result.returncode == 0
+        if not rows:
+            logging.info(f"No tweets found since {threshold_date}")
+            return True
+        
+        total_rows = len(rows)
+        logging.info(f"Found {total_rows} tweets since {threshold_date}")
+        
+        # Get column names from SQLite
+        sqlite_columns = [column[0] for column in sqlite_cursor.description]
+        
+        # Get column names from MySQL
+        mysql_columns = get_mysql_table_columns(mysql_conn, "kol_tweet")
+        logging.info(f"MySQL kol_tweet columns: {mysql_columns}")
+        
+        # Map SQLite columns to MySQL columns
+        column_mapping = {
+            'tweet_id': 'tweet_id',
+            'content': 'tweet_text',
+            'created_at': 'created_at',
+            'likes': 'favorite_count',
+            'retweets': 'retweet_count',
+            'replies': 'reply_count',
+            'views': 'view_count'
+        }
+        
+        # Process each tweet
+        processed_count = 0
+        insert_count = 0
+        update_count = 0
+        error_count = 0
+        
+        for i, row in enumerate(rows):
+            try:
+                # Convert row to dict
+                row_dict = dict(zip(sqlite_columns, row))
+                
+                # Get user_id from the tweet
+                user_id = row_dict.get('user_id')
+                if not user_id:
+                    logging.warning(f"Tweet {row_dict.get('tweet_id', 'unknown')} has no user_id, skipping")
+                    continue
+                
+                # Get the author from tweets as screen_name
+                screen_name = row_dict.get('author')
+                if not screen_name:
+                    logging.warning(f"Tweet {row_dict.get('tweet_id', 'unknown')} has no author field for user_id: {user_id}, skipping")
+                    continue
+                
+                # Get the kol_id from the screen_name
+                try:
+                    from scripts.sync.get_numeric_id import get_numeric_id_for_handle
+                    kol_id = get_numeric_id_for_handle(mysql_conn, screen_name)
+                except ImportError:
+                    # Fallback implementation if module not available
+                    cursor = mysql_conn.cursor()
+                    cursor.execute(
+                        "SELECT kol_id FROM kol_info WHERE kol_screen_name = %s",
+                        (screen_name,)
+                    )
+                    result = cursor.fetchone()
+                    cursor.close()
+                    kol_id = result[0] if result else None
+                
+                if not kol_id:
+                    # Try to use the user_id directly if numeric ID lookup fails
+                    kol_id = user_id
+                    logging.warning(f"Could not find kol_id for screen_name: {screen_name}, using user_id: {user_id}")
+                
+                # Create a new dict with MySQL column names
+                mysql_data = {
+                    'kol_id': kol_id
+                }
+                
+                for sqlite_col, mysql_col in column_mapping.items():
+                    if sqlite_col in row_dict and mysql_col in mysql_columns:
+                        # Handle date format conversion for created_at
+                        if sqlite_col == 'created_at':
+                            # Convert ISO format to MySQL datetime format
+                            created_at = row_dict[sqlite_col]
+                            if created_at.endswith('Z'):
+                                created_at = created_at[:-1]  # Remove the 'Z' at the end
+                            mysql_data[mysql_col] = created_at.replace('T', ' ')
+                        else:
+                            mysql_data[mysql_col] = row_dict[sqlite_col]
+                
+                # Add language if available in MySQL schema
+                if 'lang' in mysql_columns:
+                    mysql_data['lang'] = 'en'  # Default to English if not available
+                
+                # Check if tweet already exists in MySQL
+                mysql_cursor = mysql_conn.cursor()
+                mysql_cursor.execute(
+                    "SELECT COUNT(*) FROM kol_tweet WHERE tweet_id = %s",
+                    (mysql_data['tweet_id'],)
+                )
+                count = mysql_cursor.fetchone()[0]
+                
+                # Filter columns to only include those that exist in MySQL
+                common_columns = [col for col in mysql_data.keys() if col in mysql_columns]
+                
+                if count > 0:
+                    # Update existing record
+                    set_clause = ", ".join([f"{col} = %s" for col in common_columns if col != 'tweet_id'])
+                    update_query = f"UPDATE kol_tweet SET {set_clause} WHERE tweet_id = %s"
+                    
+                    # Prepare parameters (all values except tweet_id, then tweet_id at the end)
+                    update_params = [mysql_data[col] for col in common_columns if col != 'tweet_id']
+                    update_params.append(mysql_data['tweet_id'])
+                    
+                    if not test_mode:
+                        mysql_cursor.execute(update_query, update_params)
+                    
+                    update_count += 1
+                else:
+                    # Insert new record
+                    columns_str = ", ".join(common_columns)
+                    placeholders = ", ".join(["%s"] * len(common_columns))
+                    insert_query = f"INSERT INTO kol_tweet ({columns_str}) VALUES ({placeholders})"
+                    
+                    # Prepare parameters
+                    insert_params = [mysql_data[col] for col in common_columns]
+                    
+                    if not test_mode:
+                        mysql_cursor.execute(insert_query, insert_params)
+                    
+                    insert_count += 1
+                
+                processed_count += 1
+                
+                # Commit every batch_size records to avoid large transactions
+                if processed_count % batch_size == 0 and not test_mode:
+                    mysql_conn.commit()
+                    logging.info(f"Processed {processed_count}/{total_rows} tweets ({insert_count} inserts, {update_count} updates)")
+                
+                # Ensure all results are consumed to prevent "Unread result found" errors
+                while mysql_conn.unread_result:
+                    cursor = mysql_conn.cursor()
+                    cursor.fetchall()
+                    cursor.close()
+                
+            except Exception as e:
+                logging.error(f"Error processing tweet {row_dict.get('tweet_id', 'unknown')}: {str(e)}")
+                error_count += 1
+        
+        # Final commit
+        if not test_mode:
+            mysql_conn.commit()
+        
+        # Calculate duration
+        duration = time.time() - start_time
+        
+        # Log summary
+        logging.info(f"Tweet synchronization completed in {duration:.2f} seconds")
+        logging.info(f"Processed {processed_count} tweets ({insert_count} inserts, {update_count} updates, {error_count} errors)")
+        
+        # Try to log detailed summary if the module is available
+        try:
+            from src.utils.detailed_logger import log_sync_summary, log_data_operation
+            
+            # Log detailed summary
+            log_sync_summary(
+                ['kol_tweet'], 
+                processed_count,
+                duration,
+                success=(error_count == 0)
+            )
+            
+            # Log detailed operation counts
+            log_data_operation(
+                'sync_to_mysql', 
+                'kol_tweet', 
+                processed_count,
+                {
+                    'inserted': insert_count,
+                    'updated': update_count,
+                    'errors': error_count,
+                    'duration_seconds': duration
+                }
+            )
+        except ImportError:
+            # Detailed logging not available, continue without it
+            pass
+        
+        return True
     
     except Exception as e:
         logging.error(f"Error synchronizing tweets: {str(e)}")
+        if not test_mode:
+            mysql_conn.rollback()
         return False
 
 def main():
@@ -402,11 +575,24 @@ def main():
             
             # Synchronize data (skip if tweets-only is specified)
             if not args.tweets_only and mysql_conn:
-                kol_character_count = sync_kol_character(sqlite_conn, mysql_conn, args.test)
-                url_tracking_count = sync_url_tracking(sqlite_conn, mysql_conn, args.test)
+                try:
+                    kol_character_count = sync_kol_character(sqlite_conn, mysql_conn, args.test)
+                except Exception as e:
+                    logging.warning(f"Error synchronizing kol_character (skipping): {str(e)}")
+                    kol_character_count = 0
+                
+                try:
+                    url_tracking_count = sync_url_tracking(sqlite_conn, mysql_conn, args.test)
+                except Exception as e:
+                    logging.warning(f"Error synchronizing url_tracking (skipping): {str(e)}")
+                    url_tracking_count = 0
             
             # Synchronize tweets (always do this)
-            tweets_synced = sync_tweets(sqlite_conn, mysql_conn, args.test, args.since_days)
+            try:
+                tweets_synced = sync_tweets(sqlite_conn, mysql_conn, args.since_days, args.test, batch_size=100)
+            except Exception as e:
+                logging.error(f"Error synchronizing tweets: {str(e)}")
+                tweets_synced = False
             
             # Close connections
             sqlite_conn.close()
