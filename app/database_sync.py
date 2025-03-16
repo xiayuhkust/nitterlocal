@@ -256,20 +256,48 @@ def get_sqlite_url_tracking_stats(db_path: str = DEFAULT_SQLITE_PATH) -> Dict[st
         cursor.execute("SELECT COUNT(*) FROM url_tracking")
         count = cursor.fetchone()[0]
         
+        # Check if screen_name column exists
+        cursor.execute("PRAGMA table_info(url_tracking)")
+        columns_info = cursor.fetchall()
+        columns = [column[1] for column in columns_info]
+        has_screen_name = 'screen_name' in columns
+        
         # Get a sample of the data
-        cursor.execute("SELECT url, type, subtype, user_id FROM url_tracking LIMIT 5")
+        if has_screen_name:
+            cursor.execute("SELECT url, type, subtype, user_id, screen_name FROM url_tracking LIMIT 5")
+        else:
+            cursor.execute("SELECT url, type, subtype, user_id FROM url_tracking LIMIT 5")
+            
         columns = [column[0] for column in cursor.description]
         sample_data = []
         
         for row in cursor.fetchall():
             sample_data.append(dict(zip(columns, row)))
         
+        # Get screen_name stats if the column exists
+        screen_name_stats = {}
+        if has_screen_name:
+            cursor.execute("SELECT COUNT(*) FROM url_tracking WHERE screen_name IS NOT NULL")
+            screen_name_count = cursor.fetchone()[0]
+            screen_name_stats = {
+                "has_column": True,
+                "populated_count": screen_name_count,
+                "populated_percent": round((screen_name_count / count) * 100, 2) if count > 0 else 0
+            }
+        else:
+            screen_name_stats = {
+                "has_column": False,
+                "populated_count": 0,
+                "populated_percent": 0
+            }
+        
         conn.close()
         
         return {
             "exists": True,
             "count": count,
-            "sample_data": sample_data
+            "sample_data": sample_data,
+            "screen_name_stats": screen_name_stats
         }
     except Exception as e:
         logging.error(f"Error getting url_tracking stats: {e}")
@@ -277,6 +305,7 @@ def get_sqlite_url_tracking_stats(db_path: str = DEFAULT_SQLITE_PATH) -> Dict[st
             "exists": False,
             "count": 0,
             "sample_data": [],
+            "screen_name_stats": {"has_column": False, "populated_count": 0, "populated_percent": 0},
             "error": str(e)
         }
 
