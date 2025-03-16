@@ -135,8 +135,20 @@ def process_excel_first_row(excel_path):
             url_data = dict(url_records[0])
             
             print("\n=== Data in url_tracking table ===")
-            for key, value in url_data.items():
-                print(f"{key}: {value}")
+            # Display basic fields first
+            basic_fields = ['id', 'url', 'user_id', 'description', 'status', 'type', 'subtype', 'screen_name']
+            for field in basic_fields:
+                if field in url_data:
+                    print(f"{field}: {url_data[field]}")
+            
+            # Display profile-related fields
+            print("\n=== Profile Data in url_tracking table ===")
+            profile_fields = ['followers_count', 'following_count', 'tweet_count', 
+                             'profile_image_url', 'profile_banner_url', 'verified', 
+                             'location', 'created_at', 'profile_updated_at']
+            for field in profile_fields:
+                if field in url_data and url_data[field]:
+                    print(f"{field}: {url_data[field]}")
             
             # Get data from kol_character table
             if 'id' in url_data:

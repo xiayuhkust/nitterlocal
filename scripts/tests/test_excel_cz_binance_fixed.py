@@ -150,8 +150,21 @@ def test_excel_processing(excel_path):
         if url_record:
             print("\n=== Data for cz_binance in url_tracking table ===")
             url_data = dict(url_record)
-            for key, value in url_data.items():
-                print(f"{key}: {value}")
+            
+            # Display basic fields first
+            basic_fields = ['id', 'url', 'user_id', 'description', 'status', 'type', 'subtype', 'screen_name']
+            for field in basic_fields:
+                if field in url_data:
+                    print(f"{field}: {url_data[field]}")
+            
+            # Display profile-related fields
+            print("\n=== Profile Data in url_tracking table ===")
+            profile_fields = ['followers_count', 'following_count', 'tweet_count', 
+                             'profile_image_url', 'profile_banner_url', 'verified', 
+                             'location', 'created_at', 'profile_updated_at']
+            for field in profile_fields:
+                if field in url_data and url_data[field]:
+                    print(f"{field}: {url_data[field]}")
             
             # Get data from kol_character table
             if 'id' in url_data:
