@@ -110,25 +110,26 @@ def add_url_to_tracking(conn, url, type_val="kol", subtype="-", user_id=None):
         if cursor.fetchone():
             # Update existing URL
             cursor.execute(
-                "UPDATE url_tracking SET type = ?, subtype = ?, user_id = ? WHERE url = ?",
-                (type_val, subtype, user_id, url)
+                "UPDATE url_tracking SET type = ?, subtype = ?, user_id = ?, screen_name = ? WHERE url = ?",
+                (type_val, subtype, user_id, handle, url)
             )
-            logging.info(f"Updated URL in tracking: {url}")
+            logging.info(f"Updated URL in tracking: {url} with handle: {handle}")
             return True
         
         # Add new URL
         cursor.execute('''
         INSERT INTO url_tracking (
-            url, type, subtype, user_id
-        ) VALUES (?, ?, ?, ?)
+            url, type, subtype, user_id, screen_name
+        ) VALUES (?, ?, ?, ?, ?)
         ''', (
             url,
             type_val,
             subtype,
-            user_id
+            user_id,
+            handle
         ))
         
-        logging.info(f"Added URL to tracking: {url}")
+        logging.info(f"Added URL to tracking: {url} with handle: {handle}")
         return True
     except Exception as e:
         logging.error(f"Error adding URL to tracking: {str(e)}")

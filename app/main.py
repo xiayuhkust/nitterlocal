@@ -176,6 +176,22 @@ async def process_excel(background_tasks: BackgroundTasks, file_id: str = Form(.
         
         # Update the local database (without MySQL synchronization)
         db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'local_database.db')
+        
+        # Ensure screen_name column exists in url_tracking table
+        try:
+            # Import the add_screen_name_to_url_tracking script
+            sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scripts', 'sync'))
+            from add_screen_name_to_url_tracking import add_screen_name_column, get_sqlite_connection
+            
+            # Add screen_name column if it doesn't exist
+            conn = get_sqlite_connection(db_path)
+            add_screen_name_column(conn)
+            conn.close()
+            logging.info("Ensured screen_name column exists in url_tracking table")
+        except Exception as e:
+            logging.error(f"Error ensuring screen_name column exists: {str(e)}")
+        
+        # Process Excel and sync to database
         db_results = process_excel_and_sync(
             excel_path=file_path,
             db_path=db_path,
