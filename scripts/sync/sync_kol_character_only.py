@@ -211,10 +211,31 @@ def sync_kol_character(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                     insert_columns = ['kol_id']
                     insert_values = [kol_id]
                     
-                    # Add kol_screen_name if it exists in MySQL and we have a Twitter handle
-                    if 'kol_screen_name' in mysql_columns and twitter_handle:
-                        insert_columns.append('kol_screen_name')
-                        insert_values.append(twitter_handle)
+                    # 修复：正确处理kol_screen_name字段
+                    if 'kol_screen_name' in mysql_columns:
+                        if not use_url_tracking and 'kol_screen_name' in row_dict and row_dict['kol_screen_name']:
+                            # 直接使用kol_character表中的值
+                            insert_columns.append('kol_screen_name')
+                            insert_values.append(row_dict['kol_screen_name'])
+                            if verbose:
+                                logging.info(f"Using kol_screen_name '{row_dict['kol_screen_name']}' from SQLite kol_character table")
+                        elif use_url_tracking and twitter_handle:
+                            # 从URL中提取的Twitter用户名
+                            insert_columns.append('kol_screen_name')
+                            insert_values.append(twitter_handle)
+                            if verbose:
+                                logging.info(f"Using extracted Twitter handle '{twitter_handle}' for kol_screen_name")
+                        elif use_url_tracking and 'screen_name' in row_dict and row_dict['screen_name']:
+                            # 使用url_tracking表中的screen_name字段
+                            insert_columns.append('kol_screen_name')
+                            insert_values.append(row_dict['screen_name'])
+                            if verbose:
+                                logging.info(f"Using screen_name '{row_dict['screen_name']}' from url_tracking table")
+                        else:
+                            # 使用默认值
+                            logging.warning(f"No kol_screen_name available for kol_id {kol_id}, using default 'unknown_user'")
+                            insert_columns.append('kol_screen_name')
+                            insert_values.append(f"unknown_user_{kol_id}")
                     
                     # Add other common columns
                     for col in common_columns:
