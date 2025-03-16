@@ -220,7 +220,7 @@ To update the crontab configuration:
 
 ## MySQL Synchronization
 
-The system synchronizes data from the local SQLite database to a MySQL database. The synchronization process handles both the `kol_character` and `url_tracking` tables.
+The system synchronizes data from the local SQLite database to a MySQL database. The synchronization process handles the `kol_character`, `url_tracking`, and `tweets` tables.
 
 ### Synchronization Script
 
@@ -229,7 +229,20 @@ The main synchronization script is `scripts/sync/sync_to_mysql_combined.py`. Thi
 1. Connects to both the local SQLite database and the remote MySQL database
 2. Synchronizes the `kol_character` table
 3. Synchronizes the `url_tracking` table to the `kol_info` table in MySQL
-4. Handles column name differences between SQLite and MySQL
+4. Synchronizes the `tweets` table to the `kol_tweet` table in MySQL
+5. Handles column name differences between SQLite and MySQL
+6. Uses a lock mechanism to prevent overlapping executions
+7. Implements dynamic column mapping to handle different table structures
+
+### Lock Mechanism
+
+The synchronization process uses a file-based lock mechanism to prevent multiple synchronization jobs from running simultaneously. This is especially important as data volume grows and synchronization takes longer than the cron interval.
+
+Key features of the lock mechanism:
+- Uses file locking with `fcntl` to prevent overlapping executions
+- Includes timeout functionality to prevent indefinite waiting
+- Stores the process ID (PID) in the lock file for debugging
+- Gracefully handles lock acquisition failures
 
 ### Manual Synchronization
 
@@ -243,6 +256,61 @@ To run in test mode (no actual changes):
 python scripts/sync/sync_to_mysql_combined.py --test
 ```
 
+To only synchronize tweets:
+```bash
+python scripts/sync/sync_to_mysql_combined.py --tweets-only
+```
+
+To synchronize with a specific time window:
+```bash
+python scripts/sync/sync_to_mysql_combined.py --since-days 30
+```
+
+To disable the lock mechanism:
+```bash
+python scripts/sync/sync_to_mysql_combined.py --no-lock
+```
+
+To set a custom lock timeout (in seconds):
+```bash
+python scripts/sync/sync_to_mysql_combined.py --lock-timeout 120
+```
+
+### Error Handling
+
+The synchronization script includes robust error handling:
+- Gracefully handles missing columns in MySQL tables
+- Uses dynamic column mapping to only synchronize compatible columns
+- Falls back to user_id when kol_id lookup fails
+- Provides detailed logging of synchronization operations
+- Handles "Unread result found" errors automatically
+
+### Database Check Tools
+
+The system includes tools to check the status of both the local SQLite database and the remote MySQL database:
+
+To check the latest tweets in the local SQLite database:
+```bash
+python scripts/sync/check_local_tweets.py
+```
+
+To check the latest tweets in the MySQL database:
+```bash
+python scripts/sync/check_mysql_tweets.py
+```
+
+To check the schema of MySQL tables:
+```bash
+python scripts/sync/check_mysql_schema.py kol_tweet
+```
+
+To check the schema of SQLite tables:
+```bash
+python scripts/sync/check_sqlite_tables.py tweets
+```
+
+These tools help diagnose synchronization issues by showing the most recent tweets, total tweet counts, and tweet distribution by date.
+
 ### Troubleshooting
 
 If you encounter synchronization issues:
@@ -250,7 +318,16 @@ If you encounter synchronization issues:
 1. Check the MySQL connection parameters in the `.env` file
 2. Verify that the MySQL server is accessible
 3. Check the column names in both databases
-4. Review the synchronization logs
+4. Review the synchronization logs in `data/sync_cron.log`
+5. Check the detailed logs in `data/logs/sync_details.log`
+6. Check if a lock file exists at `data/sync_lock.pid` and remove it if no synchronization is running
+7. Use the database check tools to compare local and remote data
+8. Verify that the tweets table in SQLite has recent data
+
+Common warnings that can be safely ignored:
+- "Could not find kol_id for screen_name" - The system will use user_id as a fallback
+- "Unread result found" - This is handled automatically by the synchronization script
+- "Error getting numeric ID for handle" - Alternative ID lookup methods are used
 
 ## URL Table Regeneration
 
