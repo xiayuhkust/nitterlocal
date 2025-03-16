@@ -211,10 +211,18 @@ def sync_kol_character(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                     insert_columns = ['kol_id']
                     insert_values = [kol_id]
                     
-                    # Add kol_screen_name if it exists in MySQL and we have a Twitter handle
-                    if 'kol_screen_name' in mysql_columns and twitter_handle:
+                    # Add kol_screen_name - this is required in MySQL
+                    if 'kol_screen_name' in mysql_columns:
                         insert_columns.append('kol_screen_name')
-                        insert_values.append(twitter_handle)
+                        # Use twitter_handle if available, otherwise use screen_name from row_dict or empty string as fallback
+                        screen_name = twitter_handle
+                        if not screen_name:
+                            screen_name = row_dict.get('screen_name', row_dict.get('kol_screen_name', ''))
+                        if not screen_name:
+                            # Generate a placeholder screen_name based on kol_id
+                            screen_name = f"user_{kol_id}"
+                            logging.warning(f"No screen_name found for kol_id {kol_id}, using placeholder: {screen_name}")
+                        insert_values.append(screen_name)
                     
                     # Add other common columns
                     for col in common_columns:
