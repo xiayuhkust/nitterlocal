@@ -367,6 +367,12 @@ def main():
                     # Perform the operation
                     insert_or_update_kol_tweet(mysql_conn, tweet_data)
                     
+                    # Ensure all results are consumed to prevent "Unread result found" errors
+                    while mysql_conn.unread_result:
+                        cursor = mysql_conn.cursor()
+                        cursor.fetchall()
+                        cursor.close()
+                    
                     if is_update:
                         update_count += 1
                     else:

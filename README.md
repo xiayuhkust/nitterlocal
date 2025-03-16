@@ -209,8 +209,8 @@ The system uses crontab to schedule regular tasks:
 # Every 15 minutes, run dynamic updates
 */15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/activity/dynamic_update.py --parallel --threads 3 --performance >> data/dynamic_update.log 2>&1
 
-# Every 15 minutes, synchronize to MySQL
-*/15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/sync/sync_to_mysql_combined.py --since-days 1 >> data/sync_cron.log 2>&1
+# Every 15 minutes, synchronize to MySQL (using 30-day window and lock mechanism)
+*/15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/sync/sync_to_mysql_combined.py --since-days 30 --lock-timeout 60 >> data/sync_cron.log 2>&1
 ```
 
 To update the crontab configuration:
