@@ -175,71 +175,53 @@ def add_kol_character(conn, kol_data, url_tracking_id=None):
     try:
         cursor = conn.cursor()
         
-        # Check if record already exists
+        # Check if KOL character already exists
         cursor.execute("SELECT id FROM kol_character WHERE kol_screen_name = ?", (kol_data['kol_screen_name'],))
-        existing_id = cursor.fetchone()
+        existing = cursor.fetchone()
         
-        if existing_id:
-            # Update existing record
-            update_query = '''
-            UPDATE kol_character SET
-                kol_id = ?,
-                bio = ?,
-                lore = ?,
-                knowledge = ?,
-                postExamples = ?,
-                topics = ?,
-                style_all = ?,
-                style_chat = ?,
-                style_post = ?,
-                adjectives = ?,
-                url_tracking_id = ?
-            WHERE kol_screen_name = ?
-            '''
+        if existing:
+            # Update existing KOL character
+            update_fields = []
+            update_values = []
             
-            cursor.execute(update_query, (
-                kol_data['kol_id'],
-                kol_data.get('bio', ''),
-                kol_data.get('lore', ''),
-                kol_data.get('knowledge', ''),
-                kol_data.get('postExamples', ''),
-                kol_data.get('topics', ''),
-                kol_data.get('style_all', ''),
-                kol_data.get('style_chat', ''),
-                kol_data.get('style_post', ''),
-                kol_data.get('adjectives', ''),
-                url_tracking_id,
-                kol_data['kol_screen_name']
-            ))
+            for key, value in kol_data.items():
+                if key != 'kol_screen_name':  # Don't update the primary key
+                    update_fields.append(f"{key} = ?")
+                    update_values.append(value)
             
-            logging.info(f"Updated KOL character: {kol_data['kol_screen_name']}")
+            # Add url_tracking_id to update if provided
+            if url_tracking_id is not None:
+                update_fields.append("url_tracking_id = ?")
+                update_values.append(url_tracking_id)
+            
+            update_values.append(kol_data['kol_screen_name'])  # For the WHERE clause
+            
+            cursor.execute(f'''
+            UPDATE kol_character SET {', '.join(update_fields)} WHERE kol_screen_name = ?
+            ''', update_values)
+            
+            logging.info(f"Updated KOL character: {kol_data['kol_screen_name']} with url_tracking_id: {url_tracking_id}")
         else:
-            # Insert new record
-            insert_query = '''
-            INSERT INTO kol_character (
-                kol_id, kol_screen_name, bio, lore, knowledge, postExamples,
-                topics, style_all, style_chat, style_post, adjectives, url_tracking_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            '''
+            # Add new KOL character
+            fields = list(kol_data.keys())
+            placeholders = ['?'] * len(fields)
+            values = list(kol_data.values())
             
-            cursor.execute(insert_query, (
-                kol_data['kol_id'],
-                kol_data['kol_screen_name'],
-                kol_data.get('bio', ''),
-                kol_data.get('lore', ''),
-                kol_data.get('knowledge', ''),
-                kol_data.get('postExamples', ''),
-                kol_data.get('topics', ''),
-                kol_data.get('style_all', ''),
-                kol_data.get('style_chat', ''),
-                kol_data.get('style_post', ''),
-                kol_data.get('adjectives', ''),
-                url_tracking_id
-            ))
+            # Add url_tracking_id if provided
+            if url_tracking_id is not None:
+                fields.append('url_tracking_id')
+                placeholders.append('?')
+                values.append(url_tracking_id)
             
-            logging.info(f"Added new KOL character: {kol_data['kol_screen_name']}")
+            cursor.execute(f'''
+            INSERT INTO kol_character ({', '.join(fields)}) VALUES ({', '.join(placeholders)})
+            ''', values)
+            
+            logging.info(f"Added new KOL character: {kol_data['kol_screen_name']} with url_tracking_id: {url_tracking_id}")
         
+        conn.commit()
         return True
+    
     except Exception as e:
         logging.error(f"Error adding KOL character: {str(e)}")
         return False

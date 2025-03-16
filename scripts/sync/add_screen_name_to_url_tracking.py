@@ -54,11 +54,18 @@ def add_screen_name_column(conn):
 
 def extract_handle_from_url(url):
     """Extract Twitter handle from URL"""
-    if not url or 'twitter.com/' not in url:
+    if not url:
         return None
     
     try:
-        parts = url.split('twitter.com/')
+        # Handle both twitter.com and x.com domains
+        if 'twitter.com/' in url:
+            parts = url.split('twitter.com/')
+        elif 'x.com/' in url:
+            parts = url.split('x.com/')
+        else:
+            return None
+        
         if len(parts) > 1:
             handle = parts[1].split('/')[0].split('?')[0]
             # Clean up the handle (remove @ if present)
