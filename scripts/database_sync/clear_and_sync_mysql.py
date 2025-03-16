@@ -2,7 +2,7 @@
 """
 Script to clear MySQL tables and then sync data from SQLite.
 This script:
-1. Clears the specified tables in MySQL (kol_infos, kol_tweets, kol_character)
+1. Clears the specified tables in MySQL (kol_info, kol_tweet, kol_character)
 2. Runs the existing sync scripts to repopulate the tables
 """
 
@@ -116,7 +116,7 @@ def run_sync_script(script_name, args=None):
 def clear_and_sync_tables(tables=None, lock_timeout=60, since_days=30):
     """Clear and sync tables"""
     # Default tables to clear and sync
-    default_tables = ['kol_infos', 'kol_tweets', 'kol_character']
+    default_tables = ['kol_info', 'kol_tweet', 'kol_character']
     
     # Use specified tables or default tables
     tables_to_sync = tables if tables else default_tables
@@ -156,14 +156,14 @@ def clear_and_sync_tables(tables=None, lock_timeout=60, since_days=30):
     
     # Sync tables
     sync_scripts = {
-        'kol_infos': os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sync', 'sync_url_tracking_only.py'),
-        'kol_tweets': os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sync', 'sync_tweets_only.py'),
+        'kol_info': os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sync', 'sync_url_tracking_only.py'),
+        'kol_tweet': os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sync', 'sync_tweets_only.py'),
         'kol_character': os.path.join(os.path.dirname(os.path.dirname(__file__)), 'sync', 'sync_kol_character_only.py')
     }
     
     sync_args = {
-        'kol_infos': ['--lock-timeout', str(lock_timeout)],
-        'kol_tweets': ['--since-days', str(since_days), '--lock-timeout', str(lock_timeout)],
+        'kol_info': ['--lock-timeout', str(lock_timeout)],
+        'kol_tweet': ['--since-days', str(since_days), '--lock-timeout', str(lock_timeout)],
         'kol_character': ['--lock-timeout', str(lock_timeout)]
     }
     
@@ -196,7 +196,7 @@ Examples:
   python clear_and_sync_mysql.py
   
   # Clear and sync specific tables
-  python clear_and_sync_mysql.py --tables kol_infos kol_tweets
+  python clear_and_sync_mysql.py --tables kol_info kol_tweet
   
   # Specify lock timeout and since days
   python clear_and_sync_mysql.py --lock-timeout 120 --since-days 60
@@ -206,7 +206,7 @@ Examples:
     parser.add_argument(
         '--tables',
         nargs='+',
-        choices=['kol_infos', 'kol_tweets', 'kol_character'],
+        choices=['kol_info', 'kol_tweet', 'kol_character'],
         help='Tables to clear and sync (default: all tables)'
     )
     
