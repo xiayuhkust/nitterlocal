@@ -200,22 +200,40 @@ For production use, it's recommended to run the backend service using systemd:
 
 ## Crontab Configuration
 
-The system uses crontab to schedule regular tasks:
+The system uses crontab to schedule regular tasks. If crontab is not installed, you can install it with:
+
+```bash
+sudo apt-get update
+sudo apt-get install cron
+```
+
+The recommended crontab configuration is:
 
 ```
-# Every 6 hours, analyze account activity
+# 每6小时分析账号活跃度
 0 */6 * * * cd /home/ubuntu/nitterlocal && python3 scripts/activity/analyze_activity.py --days 7 >> data/activity_analysis.log 2>&1
 
-# Every 15 minutes, run dynamic updates
+# 每15分钟运行动态更新
 */15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/activity/dynamic_update.py --parallel --threads 3 --performance >> data/dynamic_update.log 2>&1
 
-# Every 15 minutes, synchronize to MySQL (using 30-day window and lock mechanism)
-*/15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/sync/sync_to_mysql_combined.py --since-days 30 --lock-timeout 60 >> data/sync_cron.log 2>&1
+# 每2小时同步kol_character表
+0 */2 * * * cd /home/ubuntu/nitterlocal && python3 scripts/sync/sync_kol_character_only.py --lock-timeout 60 >> data/kol_character_sync.log 2>&1
+
+# 每2小时同步url_tracking表（错开30分钟）
+30 */2 * * * cd /home/ubuntu/nitterlocal && python3 scripts/sync/sync_url_tracking_only.py --lock-timeout 60 >> data/url_tracking_sync.log 2>&1
+
+# 每15分钟同步tweets表（使用30天窗口）
+*/15 * * * * cd /home/ubuntu/nitterlocal && python3 scripts/sync/sync_tweets_only.py --since-days 30 --lock-timeout 60 >> data/tweets_sync.log 2>&1
 ```
 
 To update the crontab configuration:
 ```bash
-./update_crontab.sh
+./scripts/sync/update_crontab.sh
+```
+
+If crontab is not available, you can manually install the configuration from the provided file:
+```bash
+crontab scripts/sync/crontab.txt
 ```
 
 ## MySQL Synchronization
