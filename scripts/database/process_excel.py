@@ -15,18 +15,19 @@ from urllib.parse import urlparse
 
 # Add path to app directory to import Twitter utilities
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'app'))
-try:
-    from twitter_utils import get_user_id_from_twitter_handle
-except ImportError:
-    logging.warning("Could not import twitter_utils, will use fallback method for user IDs")
-    get_user_id_from_twitter_handle = None
 
-# Import the centralized Twitter handle utility
+# Import the new Twitter API utilities
 try:
-    from twitter_handle_utils import extract_twitter_handle
+    from twitter_api_utils import (
+        extract_twitter_handle,
+        get_user_id_from_twitter_api,
+        get_user_id_from_direct_client_call
+    )
+    logging.info("Successfully imported twitter_api_utils")
 except ImportError:
-    logging.warning("Could not import twitter_handle_utils, will use fallback method")
+    logging.warning("Could not import twitter_api_utils, will use fallback methods")
     
+    # Fallback Twitter handle extraction function
     def extract_twitter_handle(url):
         """Fallback Twitter handle extraction function"""
         if not url:
@@ -54,6 +55,31 @@ except ImportError:
         except Exception as e:
             logging.error(f"Error extracting Twitter handle from {url}: {str(e)}")
             return None
+    
+    # Fallback user ID function
+    def get_user_id_from_twitter_api(handle):
+        """Fallback method to generate a user ID from a handle"""
+        if not handle:
+            return None
+        
+        try:
+            import hashlib
+            
+            # Create a numeric ID by hashing the handle
+            hash_object = hashlib.md5(handle.encode())
+            hash_hex = hash_object.hexdigest()
+            numeric_id = int(hash_hex, 16) % (10**15)
+            
+            logging.warning(f"Generated fallback numeric ID for {handle}: {numeric_id}")
+            return str(numeric_id)
+        except Exception as e:
+            logging.error(f"Error generating fallback ID for {handle}: {str(e)}")
+            return None
+    
+    # Fallback direct client call function
+    def get_user_id_from_direct_client_call(handle):
+        """Fallback for direct client call"""
+        return get_user_id_from_twitter_api(handle)
 
 # Configure logging
 logging.basicConfig(
@@ -254,18 +280,23 @@ def process_excel_file(excel_path, db_path):
                     logging.warning(f"Could not extract handle from URL: {url}")
                     continue
                 
-                # Try to get user_id using Twitter utility function
-                user_id = None
-                if get_user_id_from_twitter_handle:
-                    try:
-                        user_id = get_user_id_from_twitter_handle(handle)
-                        logging.info(f"Got user_id {user_id} for handle {handle}")
-                    except Exception as e:
-                        logging.error(f"Error getting user_id for handle {handle}: {str(e)}")
+                # Try to get user_id using Twitter API
+                try:
+                    # First try direct client call (most reliable method)
+                    user_id = get_user_id_from_direct_client_call(handle)
+                    if user_id:
+                        logging.info(f"Got user_id {user_id} for handle {handle} from direct client call")
+                    else:
+                        # Fall back to Twitter API method
+                        user_id = get_user_id_from_twitter_api(handle)
+                        logging.info(f"Got user_id {user_id} for handle {handle} from Twitter API")
+                except Exception as e:
+                    logging.error(f"Error getting user_id for handle {handle}: {str(e)}")
+                    user_id = None
                 
                 # Add URL to tracking with the user_id
-                type_val = row.get('first category') if not pd.isna(row.get('first category')) else "kol"
-                subtype = row.get('second_category') if not pd.isna(row.get('second_category')) else "-"
+                type_val = str(row.get('first category')) if not pd.isna(row.get('first category')) else "kol"
+                subtype = str(row.get('second_category')) if not pd.isna(row.get('second_category')) else "-"
                 add_url_to_tracking(conn, url, type_val, subtype, user_id)
                 
                 # Get url_tracking record ID and user_id
@@ -279,26 +310,23 @@ def process_excel_file(excel_path, db_path):
                     if result[1]:
                         user_id = result[1]
                 
-                # If user_id is not in url_tracking, try to get it from Twitter API
+                # If user_id is still not available, try one more time with direct client call
                 if not user_id:
-                    # Try to get user_id using Twitter utility function
-                    if get_user_id_from_twitter_handle:
-                        try:
-                            numeric_id = get_user_id_from_twitter_handle(handle)
-                            if numeric_id:
-                                user_id = numeric_id
-                                # Update url_tracking with the obtained user_id
-                                cursor.execute(
-                                    "UPDATE url_tracking SET user_id = ? WHERE url = ?",
-                                    (user_id, url)
-                                )
-                                logging.info(f"Updated url_tracking with user_id {user_id} for URL {url}")
-                            else:
-                                user_id = handle
-                        except Exception as e:
-                            logging.error(f"Error getting user_id for handle {handle}: {str(e)}")
+                    try:
+                        # Try direct client call as a last resort
+                        user_id = get_user_id_from_direct_client_call(handle)
+                        if user_id:
+                            # Update url_tracking with the obtained user_id
+                            cursor.execute(
+                                "UPDATE url_tracking SET user_id = ? WHERE url = ?",
+                                (user_id, url)
+                            )
+                            logging.info(f"Updated url_tracking with user_id {user_id} for URL {url}")
+                        else:
+                            # If all methods fail, use handle as user_id
                             user_id = handle
-                    else:
+                    except Exception as e:
+                        logging.error(f"Error getting user_id for handle {handle} (final attempt): {str(e)}")
                         user_id = handle
                 
                 # Prepare KOL character data

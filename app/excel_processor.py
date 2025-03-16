@@ -8,7 +8,18 @@ import logging
 from typing import List, Dict, Any, Optional, Tuple
 import tempfile
 import shutil
-from .twitter_utils import process_twitter_urls, extract_twitter_handle, get_user_id_from_twitter_handle
+
+# Import the new Twitter API utilities
+try:
+    from .twitter_api_utils import (
+        extract_twitter_handle,
+        get_user_id_from_twitter_api,
+        get_user_id_from_direct_client_call
+    )
+    logging.info("Successfully imported twitter_api_utils in excel_processor")
+except ImportError:
+    logging.warning("Could not import twitter_api_utils, falling back to twitter_utils")
+    from .twitter_utils import process_twitter_urls, extract_twitter_handle, get_user_id_from_twitter_handle
 
 # Configure logging
 logging.basicConfig(
