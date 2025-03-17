@@ -112,22 +112,22 @@ def display_joined_record(db_path, screen_name=None, url=None):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    # Build query
+    # Build query - FIXED: Use full table name instead of alias
     query = """
     SELECT 
-        u.*,
+        url_tracking.*,
         k.*
-    FROM url_tracking u
-    LEFT JOIN kol_character k ON u.id = k.url_tracking_id
+    FROM url_tracking
+    LEFT JOIN kol_character k ON url_tracking.id = k.url_tracking_id
     WHERE 
     """
     
     params = []
     if screen_name:
-        query += "u.screen_name = ? COLLATE NOCASE"
+        query += "url_tracking.screen_name = ? COLLATE NOCASE"
         params = [screen_name]
     else:
-        query += "u.url LIKE ? COLLATE NOCASE"
+        query += "url_tracking.url LIKE ? COLLATE NOCASE"
         params = [f"%{url}%"]
     
     # Execute query
