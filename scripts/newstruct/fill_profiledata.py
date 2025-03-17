@@ -105,6 +105,7 @@ class ProfileUpdater:
                 'location': profile.get('location', ''),
                 'description': profile.get('description', ''),
                 'created_at': profile.get('createdAt'),
+                'kol_name': profile.get('name', ''),  # Add the name attribute
                 'profile_updated_at': datetime.now().isoformat()
             }
             
