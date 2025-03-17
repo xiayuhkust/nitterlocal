@@ -215,6 +215,11 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                         set_clauses.append("description = %s")
                         update_params.append(row_dict['description'])
                     
+                    # Add kol_name if it exists in both tables
+                    if 'kol_name' in mysql_columns and 'kol_name' in row_dict and row_dict['kol_name']:
+                        set_clauses.append("kol_name = %s")
+                        update_params.append(row_dict['kol_name'])
+                    
                     # Only proceed if there are columns to update
                     if set_clauses:
                         set_clause = ", ".join(set_clauses)
@@ -266,6 +271,11 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                     if 'description' in mysql_columns and 'description' in row_dict and row_dict['description']:
                         insert_columns.append('description')
                         insert_values.append(row_dict['description'])
+                    
+                    # Add kol_name if it exists in both tables
+                    if 'kol_name' in mysql_columns and 'kol_name' in row_dict and row_dict['kol_name']:
+                        insert_columns.append('kol_name')
+                        insert_values.append(row_dict['kol_name'])
                     
                     # Add created_at if it exists in MySQL
                     if 'created_at' in mysql_columns:
