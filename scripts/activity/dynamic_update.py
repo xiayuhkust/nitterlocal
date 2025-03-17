@@ -20,6 +20,15 @@ from src.database.local_database import LocalDatabase
 from src.database.url_manager import URLManager
 from src.twitter_client.twitter_scraper import TwitterScraper
 
+# Import ProfileUpdater
+try:
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../newstruct')))
+    from fill_profiledata import ProfileUpdater
+    logging.info("Successfully imported ProfileUpdater from fill_profiledata.py")
+except ImportError:
+    logging.warning("Could not import ProfileUpdater directly, will initialize without profile updates")
+    ProfileUpdater = None
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -45,10 +54,23 @@ class DynamicUpdate:
         self.activity_manager = ActivityManager(db_path=db_path)
         self.scraper = TwitterScraper()
         
+        # Initialize profile updater
+        if ProfileUpdater is not None:
+            try:
+                self.profile_updater = ProfileUpdater(db_path)
+                logging.info("Profile updater initialized successfully")
+            except Exception as e:
+                logging.error(f"Error initializing profile updater: {str(e)}")
+                self.profile_updater = None
+        else:
+            logging.warning("ProfileUpdater not available, profile updates will be disabled")
+            self.profile_updater = None
+        
         logging.info("Dynamic update initialization complete")
     
     def run(self, batch_size=10, sleep_between_urls=2, limit=None, 
-            performance_monitoring=False, parallel=False, num_threads=2):
+            performance_monitoring=False, parallel=False, num_threads=2,
+            update_profile=False):
         """Run the dynamic update"""
         logging.info("Starting dynamic update")
         logging.info(f"Time: {datetime.now().isoformat()}")
@@ -66,6 +88,7 @@ class DynamicUpdate:
                 'url_status_update_time': 0,
                 'sleep_time': 0,
                 'stats_generation_time': 0,
+                'profile_update_time': 0,
                 'url_times': []
             }
         
@@ -100,11 +123,11 @@ class DynamicUpdate:
                 if parallel:
                     # Use parallel processing
                     self._process_batch_parallel(batch, performance_monitoring, performance_metrics, 
-                                               sleep_between_urls, num_threads)
+                                               sleep_between_urls, num_threads, update_profile)
                 else:
                     # Use sequential processing
                     self._process_batch_sequential(batch, performance_monitoring, performance_metrics, 
-                                                 sleep_between_urls)
+                                                 sleep_between_urls, update_profile)
                 
                 # Sleep between batches
                 if i + batch_size < len(urls):
@@ -168,7 +191,7 @@ class DynamicUpdate:
             }
     
     def _process_batch_parallel(self, batch, performance_monitoring, performance_metrics, 
-                              sleep_between_urls, num_threads):
+                              sleep_between_urls, num_threads, update_profile=False):
         """Process a batch of URLs in parallel"""
         import concurrent.futures
         
@@ -201,10 +224,50 @@ class DynamicUpdate:
                 # Scrape the URL
                 tweets = self.scraper.scrape_url(url, max_tweets=max_tweets, max_replies=max_replies)
                 
+                # Update profile data if requested and profile updater is available
+                profile_updated = False
+                if update_profile and self.profile_updater:
+                    try:
+                        # Extract handle from URL
+                        handle = url.split('/')[-1]
+                        if handle:
+                            # Get profile data
+                            profile_data = self.profile_updater.get_profile_data(handle)
+                            if profile_data:
+                                # Only update kol_name directly to avoid errors with missing columns
+                                kol_name = profile_data.get('kol_name', '')
+                                if kol_name:
+                                    # Connect to the database directly to update only kol_name
+                                    try:
+                                        import sqlite3
+                                        conn = sqlite3.connect('/home/ubuntu/nitterlocal/data/local_database.db')
+                                        cursor = conn.cursor()
+                                        cursor.execute(
+                                            "UPDATE url_tracking SET kol_name = ? WHERE url = ?",
+                                            (kol_name, url)
+                                        )
+                                        conn.commit()
+                                        conn.close()
+                                        profile_updated = True
+                                        logging.info(f"Updated kol_name to '{kol_name}' for URL: {url}")
+                                    except Exception as e:
+                                        logging.error(f"Error updating kol_name for URL {url}: {str(e)}")
+                                        profile_updated = False
+                                else:
+                                    logging.warning(f"No kol_name found for URL: {url}")
+                                    profile_updated = False
+                                if profile_updated:
+                                    logging.info(f"Updated profile data for URL: {url}")
+                                else:
+                                    logging.warning(f"Failed to update profile data for URL: {url}")
+                    except Exception as e:
+                        logging.error(f"Error updating profile for URL {url}: {str(e)}")
+                
                 return {
                     'url': url,
                     'success': True,
-                    'tweets': tweets
+                    'tweets': tweets,
+                    'profile_updated': profile_updated
                 }
             except Exception as e:
                 logging.error(f"Error processing URL {url}: {str(e)}")
@@ -237,6 +300,10 @@ class DynamicUpdate:
                         
                         # Update the URL status
                         self.url_manager.update_last_scraped(url)
+                        
+                        # Log profile update status
+                        if result.get('profile_updated', False):
+                            logging.info(f"Profile data updated for URL: {url}")
                     else:
                         logging.error(f"Failed to process URL {url}: {result.get('error')}")
                         self.url_manager.update_url_status(url, 'error', result.get('error'))
@@ -244,7 +311,7 @@ class DynamicUpdate:
                     logging.error(f"Exception occurred while processing URL {url}: {str(e)}")
     
     def _process_batch_sequential(self, batch, performance_monitoring, performance_metrics, 
-                                sleep_between_urls):
+                                sleep_between_urls, update_profile=False):
         """Process a batch of URLs sequentially"""
         for url_data in batch:
             url = url_data['url']
@@ -309,6 +376,47 @@ class DynamicUpdate:
                     if url_metrics:
                         url_metrics['update_time'] = f"{update_time:.2f} seconds"
                 
+                # Update profile data if requested and profile updater is available
+                if update_profile and self.profile_updater:
+                    try:
+                        if performance_monitoring:
+                            profile_update_start_time = time.time()
+                            
+                        # Extract handle from URL
+                        handle = url.split('/')[-1]
+                        if handle:
+                            # Get profile data
+                            profile_data = self.profile_updater.get_profile_data(handle)
+                            if profile_data:
+                                # Only update kol_name directly to avoid errors with missing columns
+                                kol_name = profile_data.get('kol_name', '')
+                                if kol_name:
+                                    # Connect to the database directly to update only kol_name
+                                    try:
+                                        import sqlite3
+                                        conn = sqlite3.connect('/home/ubuntu/nitterlocal/data/local_database.db')
+                                        cursor = conn.cursor()
+                                        cursor.execute(
+                                            "UPDATE url_tracking SET kol_name = ? WHERE url = ?",
+                                            (kol_name, url)
+                                        )
+                                        conn.commit()
+                                        conn.close()
+                                        logging.info(f"Updated kol_name to '{kol_name}' for URL: {url}")
+                                    except Exception as e:
+                                        logging.error(f"Error updating kol_name for URL {url}: {str(e)}")
+                                else:
+                                    logging.warning(f"No kol_name found for URL: {url}")
+                        
+                        if performance_monitoring:
+                            profile_update_time = time.time() - profile_update_start_time
+                            performance_metrics['profile_update_time'] += profile_update_time
+                            if url_metrics:
+                                url_metrics['profile_update_time'] = f"{profile_update_time:.2f} seconds"
+                                
+                    except Exception as e:
+                        logging.error(f"Error updating profile for URL {url}: {str(e)}")
+                
                 # Calculate total time for this URL
                 if performance_monitoring:
                     url_total_time = time.time() - url_start_time
@@ -342,6 +450,7 @@ def main():
     parser.add_argument('--parallel', action='store_true', help='Use parallel processing')
     parser.add_argument('--threads', type=int, default=2, help='Number of threads for parallel processing')
     parser.add_argument('--performance', action='store_true', help='Enable performance monitoring')
+    parser.add_argument('--update-profile', action='store_true', help='Update profile data using fill_profiledata.py')
     
     args = parser.parse_args()
     
@@ -353,7 +462,8 @@ def main():
         limit=args.limit,
         performance_monitoring=args.performance,
         parallel=args.parallel,
-        num_threads=args.threads
+        num_threads=args.threads,
+        update_profile=args.update_profile
     )
     
     # Print summary
@@ -377,6 +487,7 @@ def main():
             print(f"Database storage time: {perf.get('db_storage_time', 0):.2f} seconds")
             print(f"URL status update time: {perf.get('url_status_update_time', 0):.2f} seconds")
             print(f"Sleep time: {perf.get('sleep_time', 0):.2f} seconds")
+            print(f"Profile update time: {perf.get('profile_update_time', 0):.2f} seconds")
     
     return 0
 
