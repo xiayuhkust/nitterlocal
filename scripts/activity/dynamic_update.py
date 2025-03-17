@@ -234,27 +234,15 @@ class DynamicUpdate:
                             # Get profile data
                             profile_data = self.profile_updater.get_profile_data(handle)
                             if profile_data:
-                                # Only update kol_name directly to avoid errors with missing columns
-                                kol_name = profile_data.get('kol_name', '')
-                                if kol_name:
-                                    # Connect to the database directly to update only kol_name
-                                    try:
-                                        import sqlite3
-                                        conn = sqlite3.connect('/home/ubuntu/nitterlocal/data/local_database.db')
-                                        cursor = conn.cursor()
-                                        cursor.execute(
-                                            "UPDATE url_tracking SET kol_name = ? WHERE url = ?",
-                                            (kol_name, url)
-                                        )
-                                        conn.commit()
-                                        conn.close()
-                                        profile_updated = True
-                                        logging.info(f"Updated kol_name to '{kol_name}' for URL: {url}")
-                                    except Exception as e:
-                                        logging.error(f"Error updating kol_name for URL {url}: {str(e)}")
-                                        profile_updated = False
-                                else:
-                                    logging.warning(f"No kol_name found for URL: {url}")
+                                # Update all profile fields using ProfileUpdater
+                                try:
+                                    profile_updated = self.profile_updater.update_profile_in_db(url, profile_data)
+                                    if profile_updated:
+                                        logging.info(f"Updated all profile fields for URL: {url}")
+                                    else:
+                                        logging.warning(f"Failed to update profile data for URL: {url}")
+                                except Exception as e:
+                                    logging.error(f"Error updating profile data for URL {url}: {str(e)}")
                                     profile_updated = False
                                 if profile_updated:
                                     logging.info(f"Updated profile data for URL: {url}")
@@ -388,25 +376,15 @@ class DynamicUpdate:
                             # Get profile data
                             profile_data = self.profile_updater.get_profile_data(handle)
                             if profile_data:
-                                # Only update kol_name directly to avoid errors with missing columns
-                                kol_name = profile_data.get('kol_name', '')
-                                if kol_name:
-                                    # Connect to the database directly to update only kol_name
-                                    try:
-                                        import sqlite3
-                                        conn = sqlite3.connect('/home/ubuntu/nitterlocal/data/local_database.db')
-                                        cursor = conn.cursor()
-                                        cursor.execute(
-                                            "UPDATE url_tracking SET kol_name = ? WHERE url = ?",
-                                            (kol_name, url)
-                                        )
-                                        conn.commit()
-                                        conn.close()
-                                        logging.info(f"Updated kol_name to '{kol_name}' for URL: {url}")
-                                    except Exception as e:
-                                        logging.error(f"Error updating kol_name for URL {url}: {str(e)}")
-                                else:
-                                    logging.warning(f"No kol_name found for URL: {url}")
+                                # Update all profile fields using ProfileUpdater
+                                try:
+                                    profile_updated = self.profile_updater.update_profile_in_db(url, profile_data)
+                                    if profile_updated:
+                                        logging.info(f"Updated all profile fields for URL: {url}")
+                                    else:
+                                        logging.warning(f"Failed to update profile data for URL: {url}")
+                                except Exception as e:
+                                    logging.error(f"Error updating profile data for URL {url}: {str(e)}")
                         
                         if performance_monitoring:
                             profile_update_time = time.time() - profile_update_start_time
