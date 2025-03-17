@@ -103,3 +103,10 @@ def extract_twitter_handle(url):
     except Exception as e:
         logging.error(f"Error extracting Twitter handle from {url}: {str(e)}")
         return None
+
+def extract_screen_name_from_url(url):
+    """
+    Extract screen name (handle) from a Twitter URL.
+    This is an alias for extract_twitter_handle for backward compatibility.
+    """
+    return extract_twitter_handle(url)
