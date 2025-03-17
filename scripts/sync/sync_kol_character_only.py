@@ -15,6 +15,10 @@ import pymysql
 from datetime import datetime
 import re
 from urllib.parse import urlparse
+import dotenv
+
+# Load environment variables from .env file
+dotenv.load_dotenv()
 
 # Configure logging
 logging.basicConfig(
@@ -104,15 +108,23 @@ def release_lock(lock_file):
         logging.error(f"Error releasing lock: {str(e)}")
         return False
 
-def get_mysql_connection(host, port, user, password, database):
+def get_mysql_connection():
     """Get a connection to the MySQL database"""
     try:
+        # Get MySQL connection parameters from environment variables
+        mysql_host = os.getenv('MYSQL_HOST', '43.135.26.222')
+        mysql_port = int(os.getenv('MYSQL_PORT', '3306'))
+        mysql_user = os.getenv('MYSQL_USER', 'root')
+        mysql_password = os.getenv('MYSQL_PASSWORD', '')
+        mysql_database = os.getenv('MYSQL_DATABASE', 'kol_info')
+        
+        # Connect to MySQL
         conn = pymysql.connect(
-            host=host,
-            port=port,
-            user=user,
-            password=password,
-            database=database,
+            host=mysql_host,
+            port=mysql_port,
+            user=mysql_user,
+            password=mysql_password,
+            database=mysql_database,
             charset='utf8mb4',
             cursorclass=pymysql.cursors.DictCursor
         )
@@ -333,16 +345,6 @@ def main():
     parser = argparse.ArgumentParser(description='Synchronize kol_character data from SQLite to MySQL')
     parser.add_argument('--sqlite-db', type=str, default='/home/ubuntu/nitterlocal/data/local_database.db',
                         help='Path to SQLite database')
-    parser.add_argument('--mysql-host', type=str, default='localhost',
-                        help='MySQL host')
-    parser.add_argument('--mysql-port', type=int, default=3306,
-                        help='MySQL port')
-    parser.add_argument('--mysql-user', type=str, default='root',
-                        help='MySQL user')
-    parser.add_argument('--mysql-password', type=str, default='',
-                        help='MySQL password')
-    parser.add_argument('--mysql-database', type=str, default='kol_info',
-                        help='MySQL database')
     parser.add_argument('--lock-file', type=str, default='/home/ubuntu/nitterlocal/data/kol_character_sync_lock.pid',
                         help='Lock file path')
     parser.add_argument('--test', action='store_true',
@@ -364,13 +366,7 @@ def main():
             return 1
         
         # Get MySQL connection
-        mysql_conn = get_mysql_connection(
-            args.mysql_host,
-            args.mysql_port,
-            args.mysql_user,
-            args.mysql_password,
-            args.mysql_database
-        )
+        mysql_conn = get_mysql_connection()
         if not mysql_conn:
             sqlite_conn.close()
             release_lock(args.lock_file)
