@@ -26,6 +26,34 @@ try:
         get_user_id_from_direct_client_call
     )
     from scripts.profile.update_profile_data import ProfileUpdater
+    
+    # Import URL normalization function
+    try:
+        from scripts.utils.url_utils import normalize_twitter_url
+    except ImportError:
+        # Fallback implementation if url_utils is not available
+        def normalize_twitter_url(url):
+            """
+            Normalize Twitter URL to ensure it uses twitter.com domain.
+            Converts x.com and nitter.net URLs to twitter.com format.
+            """
+            if not url:
+                return None
+            
+            try:
+                # Check if it's a Twitter, X, or Nitter URL
+                if 'twitter.com' in url:
+                    return url
+                elif 'x.com' in url:
+                    return url.replace('x.com', 'twitter.com')
+                elif 'nitter.net' in url:
+                    return url.replace('nitter.net', 'twitter.com')
+                else:
+                    return url
+            except Exception as e:
+                logging.error(f"Error normalizing Twitter URL {url}: {str(e)}")
+                return url
+    
     logging.info("Successfully imported required modules")
 except ImportError as e:
     logging.error(f"Could not import required modules: {str(e)}")
@@ -110,34 +138,45 @@ def add_url_to_tracking(conn, url, type_val="kol", subtype="-", user_id=None):
     try:
         cursor = conn.cursor()
         
-        # Extract Twitter handle
-        handle = extract_twitter_handle(url)
+        # Normalize the URL to ensure x.com is converted to twitter.com
+        normalized_url = normalize_twitter_url(url)
+        if normalized_url is None:
+            logging.error(f"Failed to normalize URL: {url}")
+            return False
         
-        # Check if URL already exists
-        cursor.execute("SELECT url FROM url_tracking WHERE url = ?", (url,))
-        if cursor.fetchone():
+        # Extract Twitter handle from normalized URL
+        handle = extract_twitter_handle(normalized_url)
+        
+        # Check if URL already exists (either original or normalized)
+        cursor.execute("SELECT url FROM url_tracking WHERE url = ? OR url = ?", (url, normalized_url))
+        existing_url = cursor.fetchone()
+        
+        if existing_url:
             # Update existing URL
             cursor.execute(
-                "UPDATE url_tracking SET type = ?, subtype = ?, user_id = ?, screen_name = ? WHERE url = ?",
-                (type_val, subtype, user_id, handle, url)
+                "UPDATE url_tracking SET url = ?, type = ?, subtype = ?, user_id = ?, screen_name = ? WHERE url = ?",
+                (normalized_url, type_val, subtype, user_id, handle, existing_url[0])
             )
-            logging.info(f"Updated URL in tracking: {url} with handle: {handle}")
+            logging.info(f"Updated URL in tracking: {url} -> {normalized_url} with handle: {handle}")
             return True
         
-        # Add new URL
+        # Add new URL (always use normalized URL)
         cursor.execute('''
         INSERT INTO url_tracking (
             url, type, subtype, user_id, screen_name
         ) VALUES (?, ?, ?, ?, ?)
         ''', (
-            url,
+            normalized_url,
             type_val,
             subtype,
             user_id,
             handle
         ))
         
-        logging.info(f"Added URL to tracking: {url} with handle: {handle}")
+        if url != normalized_url:
+            logging.info(f"Normalized URL for storage: {url} -> {normalized_url}")
+        
+        logging.info(f"Added URL to tracking: {normalized_url} with handle: {handle}")
         return True
     except Exception as e:
         logging.error(f"Error adding URL to tracking: {str(e)}")

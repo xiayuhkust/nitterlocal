@@ -28,13 +28,24 @@ logging.basicConfig(
 )
 
 def extract_twitter_handle(url):
-    """Extract Twitter handle from a nitter URL"""
-    if not url or 'nitter.net/' not in url:
+    """Extract Twitter handle from a URL (works with twitter.com, x.com, and nitter.net)"""
+    if not url:
         return None
     
     try:
-        # Extract the handle from the URL
-        parts = url.split('nitter.net/')
+        # Parse the URL to handle multiple domains
+        if 'twitter.com/' in url:
+            parts = url.split('twitter.com/')
+            domain = 'twitter.com'
+        elif 'x.com/' in url:
+            parts = url.split('x.com/')
+            domain = 'x.com'
+        elif 'nitter.net/' in url:
+            parts = url.split('nitter.net/')
+            domain = 'nitter.net'
+        else:
+            return None
+            
         if len(parts) > 1:
             handle = parts[1].split('?')[0].strip('/')
             if handle:

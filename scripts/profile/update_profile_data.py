@@ -163,6 +163,24 @@ class ProfileUpdater:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
+            # Try to import normalize_twitter_url function
+            try:
+                from scripts.utils.url_utils import normalize_twitter_url
+                # Normalize the URL to ensure x.com is converted to twitter.com
+                normalized_url = normalize_twitter_url(url)
+                if normalized_url is None:
+                    normalized_url = url
+            except ImportError:
+                # Fallback implementation if url_utils is not available
+                def normalize_twitter_url(url):
+                    if not url:
+                        return url
+                    if 'x.com' in url:
+                        return url.replace('x.com', 'twitter.com')
+                    return url
+                
+                normalized_url = normalize_twitter_url(url)
+            
             # Update the profile data
             update_fields = []
             update_values = []
@@ -172,7 +190,8 @@ class ProfileUpdater:
                     update_fields.append(f"{key} = ?")
                     update_values.append(value)
             
-            update_values.append(url)  # For the WHERE clause
+            # Try to update using both original and normalized URL
+            update_values.append(normalized_url)  # For the WHERE clause
             
             update_query = f'''
             UPDATE url_tracking 
@@ -182,10 +201,33 @@ class ProfileUpdater:
             
             cursor.execute(update_query, update_values)
             
+            if cursor.rowcount == 0 and url != normalized_url:
+                # If normalized URL didn't work, try the original URL
+                update_values[-1] = url
+                cursor.execute(update_query, update_values)
+            
             if cursor.rowcount == 0:
-                logging.warning(f"URL {url} not found in database")
-                conn.close()
-                return False
+                # If still no rows affected, try to find by screen_name
+                if 'screen_name' in profile_data:
+                    screen_name = profile_data['screen_name']
+                    update_query = f'''
+                    UPDATE url_tracking 
+                    SET {', '.join(update_fields)}
+                    WHERE screen_name = ?
+                    '''
+                    update_values[-1] = screen_name
+                    cursor.execute(update_query, update_values)
+                    
+                    if cursor.rowcount > 0:
+                        logging.info(f"Updated profile data using screen_name: {screen_name}")
+                    else:
+                        logging.warning(f"URL {url} and screen_name {screen_name} not found in database")
+                        conn.close()
+                        return False
+                else:
+                    logging.warning(f"URL {url} not found in database")
+                    conn.close()
+                    return False
             
             conn.commit()
             conn.close()
