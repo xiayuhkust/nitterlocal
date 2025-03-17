@@ -379,7 +379,7 @@ def display_results(db_path, handle):
             print(f"\n=== Data for {handle} in url_tracking table ===")
             
             # Display basic fields
-            basic_fields = ['id', 'url', 'user_id', 'status', 'type', 'subtype', 'screen_name']
+            basic_fields = ['id', 'url', 'user_id', 'status', 'type', 'subtype', 'screen_name', 'kol_name']  # Add kol_name to basic fields
             for field in basic_fields:
                 if field in url_data:
                     print(f"{field}: {url_data[field]}")
