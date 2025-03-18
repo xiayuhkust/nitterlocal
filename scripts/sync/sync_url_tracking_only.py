@@ -297,12 +297,18 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
         
         # Map SQLite columns to MySQL columns
         column_mapping = {
+            'id': 'id',  # Add id mapping for primary key
+            'url': 'url',  # Keep url mapping
             'user_id': 'kol_id',
             'screen_name': 'kol_screen_name',
             'kol_name': 'kol_name',
             'description': 'description',
             'followers_count': 'followers_count',
-            'following_count': 'following_count'
+            'following_count': 'following_count',
+            'profile_image_url': 'profile_image_url',
+            'profile_banner_url': 'profile_banner_url',
+            'verified': 'verified',
+            'location': 'location'
         }
         
         # Process each record
@@ -312,47 +318,70 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
         error_count = 0
         
         for row in rows:
+            # Convert SQLite row to dict for consistent access
+            row_dict = dict(row)
+            
             # Debug log for each row
-            # SQLite rows still use dictionary-like access
             if verbose:
-                logging.debug(f"Processing row: {row['url'] if 'url' in row.keys() else 'unknown'}")
+                logging.debug(f"Processing row: {row_dict['url'] if 'url' in row_dict else 'unknown'}")
             
             # Skip records that are not active
-            if row['status'] != 'active':
+            if row_dict['status'] != 'active':
                 # Always log skipped records, not just in verbose mode
-                logging.info(f"Skipping inactive record: {row['url']}, status: {row['status']}")
+                logging.info(f"Skipping inactive record: {row_dict['url']}, status: {row_dict['status']}")
                 continue
             
             # Skip records that are not KOLs - case insensitive comparison
-            if row['type'].lower() != 'kol':
+            if row_dict['type'].lower() != 'kol':
                 # Always log skipped records, not just in verbose mode
-                logging.info(f"Skipping non-kol record: {row['url']}, type: {row['type']}")
+                logging.info(f"Skipping non-kol record: {row_dict['url']}, type: {row_dict['type']}")
                 continue
                 
             # Log that we're processing this record
-            logging.info(f"Processing record: {row['url']}, status: {row['status']}, type: {row['type']}")
+            logging.info(f"Processing record: {row_dict['url']}, status: {row_dict['status']}, type: {row_dict['type']}")
             
             # Prepare MySQL data
             mysql_data = {}
             for sqlite_column, mysql_column in column_mapping.items():
-                if sqlite_column in row.keys() and mysql_column in mysql_columns:
-                    mysql_data[mysql_column] = convert_value_for_mysql(row[sqlite_column], mysql_column, mysql_constraints)
+                if sqlite_column in row_dict.keys() and mysql_column in mysql_columns:
+                    mysql_data[mysql_column] = convert_value_for_mysql(row_dict[sqlite_column], mysql_column, mysql_constraints)
             
-            # Check if the record exists in MySQL
-            if 'kol_screen_name' in mysql_data:
+            # Debug log for MySQL data
+            if verbose:
+                logging.debug(f"MySQL data prepared: {mysql_data}")
+            
+            # Check if the record exists in MySQL - try multiple keys in order of preference
+            lookup_found = False
+            
+            # First try by id if available
+            if 'id' in mysql_data:
+                mysql_cursor.execute("SELECT * FROM kol_info WHERE id = %s", (mysql_data['id'],))
+                logging.info(f"Checking if record exists for id: {mysql_data['id']}")
+                lookup_found = True
+            # Then try by kol_screen_name
+            elif 'kol_screen_name' in mysql_data:
                 mysql_cursor.execute("SELECT * FROM kol_info WHERE kol_screen_name = %s", (mysql_data['kol_screen_name'],))
-                if verbose:
-                    logging.debug(f"Checking if record exists for screen_name: {mysql_data['kol_screen_name']}")
+                logging.info(f"Checking if record exists for screen_name: {mysql_data['kol_screen_name']}")
+                lookup_found = True
+            # Then try by kol_id
             elif 'kol_id' in mysql_data:
                 mysql_cursor.execute("SELECT * FROM kol_info WHERE kol_id = %s", (mysql_data['kol_id'],))
-                if verbose:
-                    logging.debug(f"Checking if record exists for kol_id: {mysql_data['kol_id']}")
-            else:
-                if verbose:
-                    logging.debug(f"Skipping record without kol_id or kol_screen_name")
+                logging.info(f"Checking if record exists for kol_id: {mysql_data['kol_id']}")
+                lookup_found = True
+            # Finally try by url
+            elif 'url' in mysql_data:
+                mysql_cursor.execute("SELECT * FROM kol_info WHERE url = %s", (mysql_data['url'],))
+                logging.info(f"Checking if record exists for url: {mysql_data['url']}")
+                lookup_found = True
+            
+            # Skip if no lookup key found
+            if not lookup_found:
+                logging.warning(f"Skipping record without id, kol_id, kol_screen_name, or url")
                 continue
+                
+            # Log lookup key for debugging
+            lookup_key = mysql_data.get('id', mysql_data.get('kol_id', mysql_data.get('kol_screen_name', mysql_data.get('url', 'unknown'))))
             if verbose:
-                lookup_key = mysql_data.get('kol_id', mysql_data.get('kol_screen_name', 'unknown'))
                 logging.debug(f"Checking if record exists for {lookup_key}")
             
             # Get the existing record
@@ -364,17 +393,29 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                 update_values = []
                 
                 for column, value in mysql_data.items():
-                    if column != 'kol_screen_name':  # Skip the primary key
+                    # Skip the column used for WHERE clause
+                    if column not in ['id', 'kol_id', 'kol_screen_name', 'url']:
                         update_columns.append(f"{column} = %s")
                         update_values.append(value)
                 
-                # Add the WHERE clause value
-                if 'kol_id' in mysql_data:
+                # Add the WHERE clause value based on available keys in order of preference
+                if 'id' in mysql_data:
+                    update_values.append(mysql_data['id'])
+                    update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE id = %s"
+                elif 'kol_id' in mysql_data:
                     update_values.append(mysql_data['kol_id'])
                     update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE kol_id = %s"
-                else:
+                elif 'kol_screen_name' in mysql_data:
                     update_values.append(mysql_data['kol_screen_name'])
                     update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE kol_screen_name = %s"
+                else:
+                    update_values.append(mysql_data['url'])
+                    update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE url = %s"
+                
+                # Log the update query for debugging
+                if verbose:
+                    logging.debug(f"Update query: {update_query}")
+                    logging.debug(f"Update values: {update_values}")
                 
                 # Execute the update query
                 if not test_mode:
@@ -386,6 +427,8 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                     except pymysql.Error as e:
                         lookup_key = mysql_data.get('kol_id', mysql_data.get('kol_screen_name', 'unknown'))
                         logging.error(f"MySQL error updating {lookup_key}: {str(e)}")
+                        logging.error(f"Update query: {update_query}")
+                        logging.error(f"Update values: {update_values}")
                         error_count += 1
                 else:
                     update_count += 1
@@ -403,8 +446,12 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                 placeholders = ", ".join(["%s"] * len(insert_columns))
                 insert_query = f"INSERT INTO kol_info ({columns_str}) VALUES ({placeholders})"
                 
+                # Always log insert operations
+                logging.info(f"Inserting new record with {len(insert_columns)} columns")
+                
                 # Execute the insert query
                 if not test_mode:
+                    # Always log the query details, not just in verbose mode
                     if verbose:
                         logging.debug(f"Insert query: {insert_query}")
                         logging.debug(f"Insert values: {insert_values}")
@@ -413,9 +460,12 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                         # Remove unread_result check that was causing errors
                         
                         insert_count += 1
+                        logging.info(f"Successfully inserted record")
                     except pymysql.Error as e:
-                        lookup_key = mysql_data.get('kol_id', mysql_data.get('kol_screen_name', 'unknown'))
+                        lookup_key = mysql_data.get('id', mysql_data.get('kol_id', mysql_data.get('kol_screen_name', mysql_data.get('url', 'unknown'))))
                         logging.error(f"MySQL error inserting {lookup_key}: {str(e)}")
+                        logging.error(f"Insert query: {insert_query}")
+                        logging.error(f"Insert values: {insert_values}")
                         error_count += 1
                 else:
                     insert_count += 1
@@ -430,9 +480,9 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
         mysql_cursor.close()
         sqlite_cursor.close()
         
-        if verbose:
-            logging.info(f"Synchronization completed in {time.time() - start_time:.2f} seconds")
-            logging.info(f"Inserted: {insert_count}, Updated: {update_count}, Errors: {error_count}")
+        # Always log summary, not just in verbose mode
+        logging.info(f"Synchronization completed in {time.time() - start_time:.2f} seconds")
+        logging.info(f"Inserted: {insert_count}, Updated: {update_count}, Errors: {error_count}")
         
         return processed_count
     
