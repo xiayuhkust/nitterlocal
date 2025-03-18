@@ -336,7 +336,7 @@ def process_excel_file(excel_path, db_path):
                     'bio': str(row.get('bio', ''))[:255] if not pd.isna(row.get('bio')) else '',
                     'lore': str(row.get('lore', ''))[:255] if not pd.isna(row.get('lore')) else '',
                     'knowledge': str(row.get('knowledge', ''))[:255] if not pd.isna(row.get('knowledge')) else '',
-                    'postExamples': str(row.get('postExamples', ''))[:255] if not pd.isna(row.get('postExamples')) else '',
+                    'postExamples': str(row.get('postExamples', '')) if not pd.isna(row.get('postExamples')) else '',
                     'topics': str(row.get('topics', ''))[:255] if not pd.isna(row.get('topics')) else '',
                     'style_all': str(row.get('style_all', ''))[:255] if not pd.isna(row.get('style_all')) else '',
                     'style_chat': str(row.get('style_chat', ''))[:255] if not pd.isna(row.get('style_chat')) else '',
