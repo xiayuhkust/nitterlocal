@@ -10,6 +10,7 @@ import logging
 import argparse
 import sqlite3
 import pymysql
+from pymysql import cursors
 import traceback
 from datetime import datetime
 import dotenv
@@ -64,7 +65,7 @@ def get_mysql_connection():
             password=mysql_password,
             database=mysql_database,
             charset='utf8mb4',
-            cursorclass=pymysql.cursors.DictCursor
+            cursorclass=cursors.DictCursor
         )
         
         return conn
@@ -91,7 +92,7 @@ def get_mysql_table_columns(mysql_conn, table_name):
     """Get the column names for a MySQL table"""
     cursor = mysql_conn.cursor()
     cursor.execute(f"DESCRIBE {table_name}")
-    columns = [row['Field'] for row in cursor.fetchall()]
+    columns = [row['Field'] for row in cursor.fetchall()]  # Access by key since we're using DictCursor
     cursor.close()
     return columns
 
@@ -106,7 +107,12 @@ def get_mysql_table_constraints(mysql_conn, table_name):
     
     constraints = {}
     for row in cursor.fetchall():
-        column_name, is_nullable, column_key, data_type = row['COLUMN_NAME'], row['IS_NULLABLE'], row['COLUMN_KEY'], row['DATA_TYPE']
+        # Access by key since we're using DictCursor
+        column_name = row['COLUMN_NAME']
+        is_nullable = row['IS_NULLABLE']
+        column_key = row['COLUMN_KEY']
+        data_type = row['DATA_TYPE']
+        
         constraints[column_name] = {
             'nullable': is_nullable == 'YES',
             'key': column_key,
@@ -197,9 +203,9 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
         
         for row in rows:
             # Debug log for each row
-            row_dict = {key: row[key] for key in row.keys()}
+            # SQLite rows still use dictionary-like access
             if verbose:
-                logging.debug(f"Processing row: {row_dict['screen_name']}")
+                logging.debug(f"Processing row: {row['url'] if 'url' in row.keys() else 'unknown'}")
             
             # Skip records that are not active
             if row['status'] != 'active':
@@ -216,10 +222,23 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                     mysql_data[mysql_column] = convert_value_for_mysql(row[sqlite_column], mysql_column, mysql_constraints)
             
             # Check if the record exists in MySQL
-            mysql_cursor.execute("SELECT * FROM kol_info WHERE kol_screen_name = %s", (mysql_data['kol_screen_name'],))
+            if 'kol_screen_name' in mysql_data:
+                mysql_cursor.execute("SELECT * FROM kol_info WHERE kol_screen_name = %s", (mysql_data['kol_screen_name'],))
+                if verbose:
+                    logging.debug(f"Checking if record exists for screen_name: {mysql_data['kol_screen_name']}")
+            elif 'kol_id' in mysql_data:
+                mysql_cursor.execute("SELECT * FROM kol_info WHERE kol_id = %s", (mysql_data['kol_id'],))
+                if verbose:
+                    logging.debug(f"Checking if record exists for kol_id: {mysql_data['kol_id']}")
+            else:
+                if verbose:
+                    logging.debug(f"Skipping record without kol_id or kol_screen_name")
+                continue
             if verbose:
-                logging.debug(f"Checking if record exists for {mysql_data['kol_screen_name']}")
+                lookup_key = mysql_data.get('kol_id', mysql_data.get('kol_screen_name', 'unknown'))
+                logging.debug(f"Checking if record exists for {lookup_key}")
             
+            # Get the existing record
             existing_record = mysql_cursor.fetchone()
             
             if existing_record:
@@ -233,24 +252,23 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                         update_values.append(value)
                 
                 # Add the WHERE clause value
-                update_values.append(mysql_data['kol_screen_name'])
-                
-                # Build the update query
-                update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE kol_screen_name = %s"
+                if 'kol_id' in mysql_data:
+                    update_values.append(mysql_data['kol_id'])
+                    update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE kol_id = %s"
+                else:
+                    update_values.append(mysql_data['kol_screen_name'])
+                    update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE kol_screen_name = %s"
                 
                 # Execute the update query
                 if not test_mode:
                     try:
                         mysql_cursor.execute(update_query, update_values)
-                        # Ensure all results are consumed
-                        while mysql_conn.unread_result:
-                            cursor = mysql_conn.cursor()
-                            cursor.fetchall()
-                            cursor.close()
+                        # Remove unread_result check that was causing errors
                         
                         update_count += 1
                     except pymysql.Error as e:
-                        logging.error(f"MySQL error updating {mysql_data['kol_screen_name']}: {str(e)}")
+                        lookup_key = mysql_data.get('kol_id', mysql_data.get('kol_screen_name', 'unknown'))
+                        logging.error(f"MySQL error updating {lookup_key}: {str(e)}")
                         error_count += 1
                 else:
                     update_count += 1
@@ -275,15 +293,12 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                         logging.debug(f"Insert values: {insert_values}")
                     try:
                         mysql_cursor.execute(insert_query, insert_values)
-                        # Ensure all results are consumed
-                        while mysql_conn.unread_result:
-                            cursor = mysql_conn.cursor()
-                            cursor.fetchall()
-                            cursor.close()
+                        # Remove unread_result check that was causing errors
                         
                         insert_count += 1
                     except pymysql.Error as e:
-                        logging.error(f"MySQL error inserting {mysql_data['kol_screen_name']}: {str(e)}")
+                        lookup_key = mysql_data.get('kol_id', mysql_data.get('kol_screen_name', 'unknown'))
+                        logging.error(f"MySQL error inserting {lookup_key}: {str(e)}")
                         error_count += 1
                 else:
                     insert_count += 1
@@ -305,11 +320,12 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
         return processed_count
     
     except Exception as e:
-        logging.error(f"Error synchronizing url_tracking: {str(e)}")
-        logging.debug(f"Traceback: {traceback.format_exc()}")
+        error_msg = f"Error synchronizing url_tracking: {str(e)}"
+        logging.error(error_msg)
+        logging.error(f"Traceback: {traceback.format_exc()}")
         if not test_mode:
             mysql_conn.rollback()
-        raise Exception(f"Error synchronizing url_tracking: {str(e)}")
+        raise Exception(error_msg)
 
 def main():
     """Main function"""
