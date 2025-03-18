@@ -13,6 +13,7 @@ import logging
 import argparse
 import sqlite3
 import pymysql
+import traceback
 from datetime import datetime
 import dotenv
 
@@ -469,6 +470,7 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
     
     except Exception as e:
         logging.error(f"Error synchronizing url_tracking: {str(e)}")
+        logging.debug(f"Traceback: {traceback.format_exc()}")
         if not test_mode:
             mysql_conn.rollback()
         raise Exception(f"Error synchronizing url_tracking: {str(e)}")
@@ -526,6 +528,7 @@ def main():
         
         except Exception as e:
             logging.error(f"Error in url_tracking synchronization: {str(e)}")
+            logging.debug(f"Traceback: {traceback.format_exc()}")
             return 1
 
 if __name__ == "__main__":
