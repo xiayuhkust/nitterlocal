@@ -101,19 +101,51 @@ def get_mysql_table_constraints(mysql_conn, table_name):
     """Get the constraints for a MySQL table"""
     cursor = mysql_conn.cursor()
     cursor.execute(f"""
-        SELECT COLUMN_NAME, IS_NULLABLE, COLUMN_KEY
+        SELECT COLUMN_NAME, IS_NULLABLE, COLUMN_KEY, DATA_TYPE
         FROM INFORMATION_SCHEMA.COLUMNS
         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s
     """, (table_name,))
     constraints = {}
     for row in cursor.fetchall():
-        column_name, is_nullable, column_key = row
+        column_name, is_nullable, column_key, data_type = row
         constraints[column_name] = {
             'nullable': is_nullable == 'YES',
-            'key': column_key
+            'key': column_key,
+            'type': data_type
         }
     cursor.close()
     return constraints
+
+def convert_value_for_mysql(value, column_name, constraints):
+    """Convert a value to the appropriate type for MySQL based on column constraints"""
+    if value is None:
+        return None
+    
+    if column_name not in constraints:
+        return value
+    
+    data_type = constraints[column_name].get('type', '').lower()
+    
+    # Convert to string for varchar/text fields
+    if 'varchar' in data_type or 'text' in data_type or 'char' in data_type:
+        return str(value)
+    
+    # Convert to int for integer fields
+    if 'int' in data_type:
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return 0
+    
+    # Convert to float for decimal/float fields
+    if 'decimal' in data_type or 'float' in data_type or 'double' in data_type:
+        try:
+            return float(value)
+        except (ValueError, TypeError):
+            return 0.0
+    
+    # Default: return as is
+    return value
 
 def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
     """Synchronize url_tracking table from SQLite to MySQL (kol_info table)
@@ -210,6 +242,9 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                         set_clauses.append("kol_screen_name = %s")
                         update_params.append(twitter_handle)
                     
+                    # Get MySQL table constraints for type conversion
+                    mysql_constraints = get_mysql_table_constraints(mysql_conn, "kol_info")
+                    
                     # Add description if it exists in both tables
                     if 'description' in mysql_columns and 'description' in row_dict and row_dict['description']:
                         set_clauses.append("description = %s")
@@ -219,6 +254,24 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                     if 'kol_name' in mysql_columns and 'kol_name' in row_dict and row_dict['kol_name']:
                         set_clauses.append("kol_name = %s")
                         update_params.append(row_dict['kol_name'])
+                    
+                    # Add followers_count if it exists in both tables (with type conversion)
+                    if 'followers_count' in mysql_columns and 'followers_count' in row_dict and row_dict['followers_count']:
+                        set_clauses.append("followers_count = %s")
+                        # Convert to appropriate type for MySQL
+                        followers_count_converted = convert_value_for_mysql(row_dict['followers_count'], 'followers_count', mysql_constraints)
+                        update_params.append(followers_count_converted)
+                        if verbose:
+                            logging.info(f"Converting followers_count from {type(row_dict['followers_count']).__name__} to {type(followers_count_converted).__name__}")
+                    
+                    # Add following_count if it exists in both tables (with type conversion)
+                    if 'following_count' in mysql_columns and 'following_count' in row_dict and row_dict['following_count']:
+                        set_clauses.append("following_count = %s")
+                        # Convert to appropriate type for MySQL
+                        following_count_converted = convert_value_for_mysql(row_dict['following_count'], 'following_count', mysql_constraints)
+                        update_params.append(following_count_converted)
+                        if verbose:
+                            logging.info(f"Converting following_count from {type(row_dict['following_count']).__name__} to {type(following_count_converted).__name__}")
                     
                     # Only proceed if there are columns to update
                     if set_clauses:
@@ -282,16 +335,36 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                         insert_columns.append('created_at')
                         insert_values.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
                 
-                # Add profile columns if they exist in MySQL
+                # Get MySQL table constraints for type conversion
+                mysql_constraints = get_mysql_table_constraints(mysql_conn, "kol_info")
+                
+                # Add profile columns if they exist in MySQL with type conversion
                 if 'followers_count' in mysql_columns and 'followers_count' in row_dict and row_dict['followers_count']:
                     insert_columns.append('followers_count')
-                    insert_values.append(row_dict['followers_count'])
+                    # Convert to appropriate type for MySQL (varchar in this case)
+                    followers_count_converted = convert_value_for_mysql(row_dict['followers_count'], 'followers_count', mysql_constraints)
+                    insert_values.append(followers_count_converted)
+                    if verbose:
+                        logging.info(f"Converting followers_count from {type(row_dict['followers_count']).__name__} to {type(followers_count_converted).__name__}")
+                
                 if 'following_count' in mysql_columns and 'following_count' in row_dict and row_dict['following_count']:
                     insert_columns.append('following_count')
-                    insert_values.append(row_dict['following_count'])
+                    # Convert to appropriate type for MySQL (int in this case)
+                    following_count_converted = convert_value_for_mysql(row_dict['following_count'], 'following_count', mysql_constraints)
+                    insert_values.append(following_count_converted)
+                    if verbose:
+                        logging.info(f"Converting following_count from {type(row_dict['following_count']).__name__} to {type(following_count_converted).__name__}")
+                
                 if 'tweet_count' in mysql_columns and 'tweet_count' in row_dict and row_dict['tweet_count']:
                     insert_columns.append('tweet_count')
-                    insert_values.append(row_dict['tweet_count'])
+                    # Convert to appropriate type for MySQL
+                    tweet_count_converted = convert_value_for_mysql(row_dict['tweet_count'], 'tweet_count', mysql_constraints)
+                    insert_values.append(tweet_count_converted)
+                    
+                    # Map to statuses_count if available
+                    if 'statuses_count' in mysql_columns:
+                        insert_columns.append('statuses_count')
+                        insert_values.append(tweet_count_converted)
                 if 'profile_image_url' in mysql_columns and 'profile_image_url' in row_dict and row_dict['profile_image_url']:
                     insert_columns.append('profile_image_url')
                     insert_values.append(row_dict['profile_image_url'])
