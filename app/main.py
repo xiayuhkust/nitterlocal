@@ -162,42 +162,49 @@ async def process_excel(background_tasks: BackgroundTasks, file_id: str = Form(.
                 logging.error(f"File not found: {file_path}")
                 raise HTTPException(status_code=404, detail=f"File {file_id} not found")
         
-        # Initialize the Excel processor
+        # Copy the file to the data directory
+        data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
+        data_file_path = os.path.join(data_dir, os.path.basename(file_path))
+        shutil.copy2(file_path, data_file_path)
+        logging.info(f"Copied file to data directory: {data_file_path}")
+        
+        # Use create_and_process_test_excel.py to process the Excel file
+        script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scripts', 'newstruct', 'create_and_process_test_excel.py')
+        
+        if not os.path.exists(script_path):
+            logging.error(f"Script not found: {script_path}")
+            raise HTTPException(status_code=500, detail=f"Script not found: {script_path}")
+        
+        # Make the script executable
+        os.chmod(script_path, 0o755)
+        
+        # Run the script with the Excel file path
+        cmd = [
+            'python3',
+            script_path,
+            '--excel', data_file_path
+        ]
+        
+        logging.info(f"Running command: {' '.join(cmd)}")
+        
+        # Capture the output for processing
+        import subprocess
+        result = subprocess.run(
+            cmd,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True
+        )
+        
+        # Initialize the Excel processor for backward compatibility
         processor = ExcelProcessor(UPLOAD_DIR, TEMP_DIR)
         
-        # Process the Excel file
+        # Process the Excel file using the existing processor for UI compatibility
         results = processor.process_excel(file_path)
         
-        # Add the IDs to the Excel file
+        # Add the IDs to the Excel file for download
         processed_file_path = processor.add_ids_to_excel(file_path, results["processed_urls"])
-        
-        # Import the database_sync module
-        from app.database_sync import process_excel_and_sync
-        
-        # Update the local database (without MySQL synchronization)
-        db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'local_database.db')
-        
-        # Ensure screen_name column exists in url_tracking table
-        try:
-            # Import the add_screen_name_to_url_tracking script
-            sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scripts', 'sync'))
-            from add_screen_name_to_url_tracking import add_screen_name_column, get_sqlite_connection
-            
-            # Add screen_name column if it doesn't exist
-            conn = get_sqlite_connection(db_path)
-            add_screen_name_column(conn)
-            conn.close()
-            logging.info("Ensured screen_name column exists in url_tracking table")
-        except Exception as e:
-            logging.error(f"Error ensuring screen_name column exists: {str(e)}")
-        
-        # Process Excel and sync to database
-        db_results = process_excel_and_sync(
-            excel_path=file_path,
-            db_path=db_path,
-            sync_to_mysql=False,  # Don't sync to MySQL immediately
-            test_mode=False
-        )
         
         # Schedule the temporary files for deletion after 1 hour
         def cleanup_temp_files():
@@ -211,8 +218,10 @@ async def process_excel(background_tasks: BackgroundTasks, file_id: str = Form(.
                     os.remove(file_path)
                 if os.path.exists(processed_file_path):
                     os.remove(processed_file_path)
+                if os.path.exists(data_file_path):
+                    os.remove(data_file_path)
                     
-                logging.info(f"Cleaned up temporary files: {file_path}, {processed_file_path}")
+                logging.info(f"Cleaned up temporary files: {file_path}, {processed_file_path}, {data_file_path}")
             except Exception as e:
                 logging.error(f"Error cleaning up temporary files: {str(e)}")
         
@@ -223,7 +232,8 @@ async def process_excel(background_tasks: BackgroundTasks, file_id: str = Form(.
             "original_file": file_id,
             "processed_file": os.path.basename(processed_file_path),
             "download_url": f"/api/download/{os.path.basename(processed_file_path)}",
-            "results": results
+            "results": results,
+            "script_output": result.stdout
         }
     
     except Exception as e:

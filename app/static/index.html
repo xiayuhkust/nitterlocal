@@ -128,6 +128,11 @@
                 <button id="downloadBtn">下载处理后的Excel文件</button>
             </div>
             
+            <div id="scriptOutput" style="margin-top: 20px; display: none;">
+                <h3>脚本输出</h3>
+                <pre id="scriptOutputText" style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; max-height: 300px; overflow-y: auto;"></pre>
+            </div>
+            
             <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
                 <div style="margin-bottom: 10px; color: #0c85d0;">
                     <p>注意: Excel文件处理后，数据会自动在15分钟内同步到MySQL数据库。</p>
@@ -247,6 +252,16 @@
                         
                         resultBody.appendChild(row);
                     });
+                    
+                    // Display script output if available
+                    const scriptOutput = document.getElementById('scriptOutput');
+                    const scriptOutputText = document.getElementById('scriptOutputText');
+                    if (processData.script_output) {
+                        scriptOutputText.textContent = processData.script_output;
+                        scriptOutput.style.display = 'block';
+                    } else {
+                        scriptOutput.style.display = 'none';
+                    }
                     
                     // Show results
                     loading.style.display = 'none';
