@@ -342,9 +342,37 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
             
             # Prepare MySQL data
             mysql_data = {}
+            
+            # Extract screen_name from URL if not present
+            if 'screen_name' not in row_dict or not row_dict['screen_name']:
+                url = row_dict.get('url', '')
+                if 'twitter.com/' in url:
+                    screen_name = url.split('twitter.com/')[-1].split('/')[0].split('?')[0]
+                    row_dict['screen_name'] = screen_name
+                    logging.info(f"Extracted screen_name '{screen_name}' from URL: {url}")
+            
+            # Map columns from SQLite to MySQL
             for sqlite_column, mysql_column in column_mapping.items():
                 if sqlite_column in row_dict.keys() and mysql_column in mysql_columns:
                     mysql_data[mysql_column] = convert_value_for_mysql(row_dict[sqlite_column], mysql_column, mysql_constraints)
+            
+            # Ensure kol_screen_name is always set (required field)
+            if 'kol_screen_name' not in mysql_data or not mysql_data['kol_screen_name']:
+                if 'url' in row_dict:
+                    url = row_dict['url']
+                    if 'twitter.com/' in url:
+                        screen_name = url.split('twitter.com/')[-1].split('/')[0].split('?')[0]
+                        mysql_data['kol_screen_name'] = screen_name
+                        logging.info(f"Set kol_screen_name to '{screen_name}' from URL: {url}")
+                elif 'kol_name' in mysql_data:
+                    # Use kol_name as fallback
+                    mysql_data['kol_screen_name'] = mysql_data['kol_name']
+                    logging.info(f"Set kol_screen_name to kol_name: {mysql_data['kol_name']}")
+                else:
+                    # Generate a placeholder screen name
+                    placeholder = f"user_{processed_count}"
+                    mysql_data['kol_screen_name'] = placeholder
+                    logging.info(f"Set kol_screen_name to placeholder: {placeholder}")
             
             # Debug log for MySQL data
             if verbose:
