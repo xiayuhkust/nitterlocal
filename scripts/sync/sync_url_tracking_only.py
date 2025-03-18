@@ -76,7 +76,7 @@ def get_mysql_connection():
     
     except Exception as e:
         logging.error(f"Error connecting to MySQL: {str(e)}")
-        raise
+        raise Exception(f"Error connecting to MySQL: {str(e)}")
 
 def get_sqlite_connection(db_path='/home/ubuntu/nitterlocal/data/local_database.db'):
     """Get a connection to the SQLite database"""
@@ -89,7 +89,7 @@ def get_sqlite_connection(db_path='/home/ubuntu/nitterlocal/data/local_database.
     
     except Exception as e:
         logging.error(f"Error connecting to SQLite: {str(e)}")
-        raise
+        raise Exception(f"Error connecting to SQLite: {str(e)}")
 
 def get_mysql_table_columns(mysql_conn, table_name):
     """Get the column names for a MySQL table"""
@@ -471,7 +471,7 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
         logging.error(f"Error synchronizing url_tracking: {str(e)}")
         if not test_mode:
             mysql_conn.rollback()
-        raise
+        raise Exception(f"Error synchronizing url_tracking: {str(e)}")
 
 def main():
     """Main function"""
