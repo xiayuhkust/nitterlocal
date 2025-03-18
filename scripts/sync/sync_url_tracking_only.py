@@ -278,6 +278,12 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                 row = rows[i]
                 row_dict = {key: row[key] for key in row.keys()}
                 logging.info(f"Record {i+1}: {row_dict}")
+                
+                # Log specific fields that affect filtering
+                status = row.get('status', 'unknown')
+                type_val = row.get('type', 'unknown')
+                screen_name = row.get('screen_name', 'unknown')
+                logging.info(f"Record {i+1} filtering fields - status: '{status}', type: '{type_val}', screen_name: '{screen_name}'")
         else:
             logging.warning("No records found in url_tracking table")
         
@@ -313,11 +319,18 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
             
             # Skip records that are not active
             if row['status'] != 'active':
+                # Always log skipped records, not just in verbose mode
+                logging.info(f"Skipping inactive record: {row['url']}, status: {row['status']}")
                 continue
             
             # Skip records that are not KOLs
             if row['type'] != 'kol':
+                # Always log skipped records, not just in verbose mode
+                logging.info(f"Skipping non-kol record: {row['url']}, type: {row['type']}")
                 continue
+                
+            # Log that we're processing this record
+            logging.info(f"Processing record: {row['url']}, status: {row['status']}, type: {row['type']}")
             
             # Prepare MySQL data
             mysql_data = {}
