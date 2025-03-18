@@ -188,7 +188,7 @@ def add_kol_character(conn, kol_data, url_tracking_id=None):
         cursor = conn.cursor()
         
         # Check if KOL character already exists
-        cursor.execute("SELECT id FROM kol_character WHERE kol_screen_name = ?", (kol_data['kol_screen_name'],))
+        cursor.execute("SELECT rowid FROM kol_character WHERE kol_screen_name = ?", (kol_data['kol_screen_name'],))
         existing = cursor.fetchone()
         
         if existing:
@@ -290,14 +290,29 @@ def process_excel_file(excel_path, db_path):
                 
                 # Get url_tracking record ID and user_id
                 cursor = conn.cursor()
-                cursor.execute("SELECT id, user_id FROM url_tracking WHERE url = ?", (url,))
-                result = cursor.fetchone()
+                
+                # Check if id column exists in url_tracking table
+                cursor.execute("PRAGMA table_info(url_tracking)")
+                columns = [row[1] for row in cursor.fetchall()]
                 
                 url_tracking_id = None
-                if result:
-                    url_tracking_id = result[0]
-                    if result[1]:
-                        user_id = result[1]
+                if 'id' in columns:
+                    cursor.execute("SELECT id, user_id FROM url_tracking WHERE url = ?", (url,))
+                    result = cursor.fetchone()
+                    
+                    if result:
+                        url_tracking_id = result[0]
+                        if result[1]:
+                            user_id = result[1]
+                else:
+                    # If id column doesn't exist, use url as the identifier
+                    cursor.execute("SELECT url, user_id FROM url_tracking WHERE url = ?", (url,))
+                    result = cursor.fetchone()
+                    
+                    if result:
+                        url_tracking_id = result[0]  # Use URL as the ID
+                        if result[1]:
+                            user_id = result[1]
                 
                 # If user_id is still not available, try one more time with direct client call
                 if not user_id:
@@ -374,12 +389,15 @@ def display_results(db_path, handle):
         url_record = cursor.fetchone()
         
         if url_record:
-            url_data = dict(url_record)
+            # Convert SQLite row to dictionary
+            url_data = {}
+            for idx, col in enumerate(cursor.description):
+                url_data[col[0]] = url_record[idx]
             
             print(f"\n=== Data for {handle} in url_tracking table ===")
             
             # Display basic fields
-            basic_fields = ['id', 'url', 'user_id', 'status', 'type', 'subtype', 'screen_name', 'kol_name']  # Add kol_name to basic fields
+            basic_fields = ['url', 'user_id', 'status', 'type', 'subtype', 'screen_name', 'kol_name']
             for field in basic_fields:
                 if field in url_data:
                     print(f"{field}: {url_data[field]}")
@@ -395,18 +413,21 @@ def display_results(db_path, handle):
                 if field in url_data and url_data[field] is not None:
                     print(f"{field}: {url_data[field]}")
             
-            # Get data from kol_character table
-            if 'id' in url_data:
-                cursor.execute("SELECT * FROM kol_character WHERE url_tracking_id = ?", (url_data['id'],))
-                kol_record = cursor.fetchone()
+            # Get data from kol_character table using screen_name
+            cursor.execute("SELECT * FROM kol_character WHERE kol_screen_name = ?", (handle,))
+            kol_record = cursor.fetchone()
+            
+            if kol_record:
+                print(f"\n=== Data for {handle} in kol_character table ===")
+                # Convert SQLite row to dictionary
+                kol_data = {}
+                for idx, col in enumerate(cursor.description):
+                    kol_data[col[0]] = kol_record[idx]
                 
-                if kol_record:
-                    print(f"\n=== Data for {handle} in kol_character table ===")
-                    kol_data = dict(kol_record)
-                    for key, value in kol_data.items():
-                        print(f"{key}: {value}")
-                else:
-                    print("\nNo corresponding record found in kol_character table")
+                for key, value in kol_data.items():
+                    print(f"{key}: {value}")
+            else:
+                print("\nNo corresponding record found in kol_character table")
         else:
             print(f"\nTarget handle not found in url_tracking table: {handle}")
             

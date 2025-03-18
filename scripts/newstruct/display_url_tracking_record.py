@@ -139,14 +139,28 @@ def display_joined_record(db_path, screen_name=None, url=None):
     # Create a dictionary for url_tracking data
     url_tracking_data = {url_tracking_columns[i]: url_tracking_row[i] for i in range(len(url_tracking_columns))}
     
-    # Get the url_tracking_id
+    # Get the url_tracking_id (try 'id' first, then fall back to using the URL)
     url_tracking_id = url_tracking_data.get('id')
+    
+    # If id column doesn't exist, use the URL as the identifier
+    if url_tracking_id is None:
+        url_tracking_id = url_tracking_data.get('url')
+        logging.info(f"No 'id' column found, using URL as identifier: {url_tracking_id}")
     
     # Now get the kol_character record
     kol_character_data = {}
     if url_tracking_id is not None:
+        # Try to find by url_tracking_id first
         cursor.execute("SELECT * FROM kol_character WHERE url_tracking_id = ?", [url_tracking_id])
         kol_character_row = cursor.fetchone()
+        
+        # If not found and we have a screen_name, try to find by screen_name
+        if not kol_character_row and screen_name:
+            cursor.execute("SELECT * FROM kol_character WHERE kol_screen_name = ? COLLATE NOCASE", [screen_name])
+            kol_character_row = cursor.fetchone()
+            if kol_character_row:
+                logging.info(f"Found kol_character record by screen_name: {screen_name}")
+
         
         if kol_character_row:
             # Get kol_character column names

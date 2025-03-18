@@ -13,9 +13,62 @@ import pandas as pd
 import tempfile
 import argparse
 from datetime import datetime
+from urllib.parse import urlparse
 
 # Add the project root directory to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
+# Import Twitter utilities
+try:
+    from app.twitter_utils import extract_twitter_handle, process_twitter_urls
+    logging.info("Successfully imported Twitter utilities")
+except ImportError:
+    logging.warning("Could not import Twitter utilities, using fallback functions")
+    
+    # Fallback Twitter handle extraction function
+    def extract_twitter_handle(url):
+        """Extract Twitter handle from a URL"""
+        if not url:
+            return None
+        
+        try:
+            # Parse the URL
+            parsed_url = urlparse(url)
+            
+            # Extract the handle from the path
+            path_parts = parsed_url.path.strip('/').split('/')
+            if not path_parts:
+                return None
+            
+            handle = path_parts[0]
+            return handle.lower()
+        except Exception as e:
+            logging.error(f"Error extracting Twitter handle from {url}: {str(e)}")
+            return None
+    
+    # Fallback process_twitter_urls function
+    def process_twitter_urls(urls):
+        """Process Twitter URLs to extract handles"""
+        if not urls:
+            return []
+        
+        # Split URLs by comma, newline, or semicolon
+        if isinstance(urls, str):
+            url_list = [u.strip() for u in urls.replace('\n', ',').replace(';', ',').split(',')]
+        else:
+            url_list = urls
+        
+        # Filter out empty strings
+        url_list = [u for u in url_list if u]
+        
+        # Extract handles
+        handles = []
+        for url in url_list:
+            handle = extract_twitter_handle(url)
+            if handle:
+                handles.append(handle)
+        
+        return handles
 
 # Configure logging
 logging.basicConfig(
