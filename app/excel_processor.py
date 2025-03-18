@@ -19,7 +19,7 @@ try:
     logging.info("Successfully imported twitter_api_utils in excel_processor")
 except ImportError:
     logging.warning("Could not import twitter_api_utils, falling back to twitter_utils")
-    from .twitter_utils import process_twitter_urls, extract_twitter_handle, get_user_id_from_twitter_handle
+    from .twitter_utils import process_twitter_urls, extract_twitter_handle
 
 # Configure logging
 logging.basicConfig(

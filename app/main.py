@@ -12,7 +12,7 @@ from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime
 
-from app.twitter_utils import process_twitter_urls, extract_twitter_handle, get_user_id_from_twitter_handle
+from app.twitter_utils import process_twitter_urls, extract_twitter_handle
 from app.excel_processor import ExcelProcessor
 
 # Configure logging
