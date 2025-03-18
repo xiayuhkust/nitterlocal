@@ -57,6 +57,9 @@ def get_mysql_connection():
         mysql_password = os.getenv('MYSQL_PASSWORD', 'z1050493759')
         mysql_database = os.getenv('MYSQL_DATABASE', 'kol_info')
         
+        logging.info(f"Attempting to connect to MySQL database at: {mysql_host}:{mysql_port}")
+        logging.info(f"MySQL database: {mysql_database}, User: {mysql_user}")
+        
         # Connect to MySQL
         conn = pymysql.connect(
             host=mysql_host,
@@ -68,24 +71,113 @@ def get_mysql_connection():
             cursorclass=cursors.DictCursor
         )
         
+        # Verify connection by checking tables
+        cursor = conn.cursor()
+        cursor.execute("SHOW TABLES;")
+        tables = cursor.fetchall()
+        table_names = [list(table.values())[0] for table in tables]
+        logging.info(f"MySQL database tables: {table_names}")
+        
+        # Check if kol_info table exists
+        if 'kol_info' not in table_names:
+            logging.error(f"kol_info table not found in MySQL database")
+        else:
+            # Check record count
+            cursor.execute("SELECT COUNT(*) as count FROM kol_info;")
+            result = cursor.fetchone()
+            count = result['count'] if result else 0
+            logging.info(f"kol_info table contains {count} records")
+        
         return conn
     
     except Exception as e:
         logging.error(f"Error connecting to MySQL: {str(e)}")
-        logging.debug(f"Traceback: {traceback.format_exc()}")
+        logging.error(f"Traceback: {traceback.format_exc()}")
         raise Exception(f"Error connecting to MySQL: {str(e)}")
 
-def get_sqlite_connection(db_path='/home/ubuntu/nitterlocal/data/local_database.db'):
+def get_sqlite_connection(db_path=None):
     """Get a connection to the SQLite database"""
     try:
+        # If no path provided, try to determine it automatically
+        if db_path is None:
+            # Get the script directory
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            # Try different possible paths
+            possible_paths = [
+                os.path.join(os.path.dirname(os.path.dirname(script_dir)), 'data', 'local_database.db'),  # /home/ubuntu/nitterlocal/data/local_database.db
+                os.path.join('/home/ubuntu/nitterlocal/data', 'local_database.db'),  # Hardcoded path
+                os.path.join(os.getcwd(), 'data', 'local_database.db')  # Current working directory
+            ]
+            
+            # Log all possible paths we're checking
+            logging.info(f"Checking possible database paths:")
+            for path in possible_paths:
+                logging.info(f"  - {path} (exists: {os.path.exists(path)})")
+            
+            # Use the first path that exists
+            for path in possible_paths:
+                if os.path.exists(path):
+                    db_path = path
+                    logging.info(f"Using database path: {db_path}")
+                    break
+            
+            # If no path exists, use the default
+            if db_path is None:
+                db_path = possible_paths[0]
+                logging.warning(f"No database found, using default path: {db_path}")
+        
+        logging.info(f"Attempting to connect to SQLite database at: {db_path}")
+        
+        # Check if database file exists
+        if not os.path.exists(db_path):
+            logging.error(f"SQLite database file does not exist: {db_path}")
+            # Try to find database in parent directories
+            parent_dir = os.path.dirname(os.path.dirname(db_path))
+            logging.info(f"Checking parent directory: {parent_dir}")
+            # Limit directory depth to 3 levels
+            for root, dirs, files in os.walk(parent_dir, topdown=True):
+                # Limit depth by modifying dirs in-place
+                if root.count(os.sep) - parent_dir.count(os.sep) >= 3:
+                    dirs[:] = []  # Don't go deeper than 3 levels
+                for file in files:
+                    if file.endswith('.db'):
+                        found_path = os.path.join(root, file)
+                        logging.info(f"Found database file: {found_path}")
+                        # Use the first database file found
+                        db_path = found_path
+                        break
+                if db_path != possible_paths[0]:
+                    break
+        
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
+        
+        # Verify connection by checking tables
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+        tables = cursor.fetchall()
+        table_names = [table[0] for table in tables]
+        logging.info(f"SQLite database tables: {table_names}")
+        
+        # Check if url_tracking table exists
+        if 'url_tracking' not in table_names:
+            logging.error(f"url_tracking table not found in SQLite database")
+        else:
+            # Check record count
+            cursor.execute("SELECT COUNT(*) FROM url_tracking;")
+            count = cursor.fetchone()[0]
+            logging.info(f"url_tracking table contains {count} records")
+            
+            # Check active records
+            cursor.execute("SELECT COUNT(*) FROM url_tracking WHERE status = 'active';")
+            active_count = cursor.fetchone()[0]
+            logging.info(f"url_tracking table contains {active_count} active records")
         
         return conn
     
     except Exception as e:
         logging.error(f"Error connecting to SQLite: {str(e)}")
-        logging.debug(f"Traceback: {traceback.format_exc()}")
+        logging.error(f"Traceback: {traceback.format_exc()}")
         raise Exception(f"Error connecting to SQLite: {str(e)}")
 
 def get_mysql_table_columns(mysql_conn, table_name):
@@ -171,11 +263,23 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
         if limit:
             query += f" LIMIT {limit}"
         
+        logging.info(f"Executing SQLite query: {query}")
         sqlite_cursor.execute(query)
         rows = sqlite_cursor.fetchall()
         
-        if verbose:
-            logging.info(f"Found {len(rows)} url_tracking records in SQLite")
+        # Always log the record count, not just in verbose mode
+        logging.info(f"Found {len(rows)} url_tracking records in SQLite")
+        
+        # Log the first few records for debugging
+        if len(rows) > 0:
+            sample_size = min(3, len(rows))
+            logging.info(f"Sample of first {sample_size} records:")
+            for i in range(sample_size):
+                row = rows[i]
+                row_dict = {key: row[key] for key in row.keys()}
+                logging.info(f"Record {i+1}: {row_dict}")
+        else:
+            logging.warning("No records found in url_tracking table")
         
         # Get MySQL table columns
         mysql_columns = get_mysql_table_columns(mysql_conn, 'kol_info')
