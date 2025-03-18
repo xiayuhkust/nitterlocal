@@ -12,7 +12,7 @@ import time
 import logging
 import argparse
 import sqlite3
-import mysql.connector
+import pymysql
 from datetime import datetime
 import dotenv
 
@@ -62,12 +62,14 @@ def get_mysql_connection():
         mysql_database = os.getenv('MYSQL_DATABASE', 'kol_info')
         
         # Connect to MySQL
-        conn = mysql.connector.connect(
+        conn = pymysql.connect(
             host=mysql_host,
             port=mysql_port,
             user=mysql_user,
             password=mysql_password,
-            database=mysql_database
+            database=mysql_database,
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
         )
         
         return conn
@@ -404,7 +406,7 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                                 logging.info(f"Inserted new kol_info record for kol_id: {row_dict['user_id']}")
                             
                             insert_count += 1
-                        except mysql.connector.Error as e:
+                        except pymysql.Error as e:
                             logging.error(f"MySQL error inserting record for kol_id {row_dict['user_id']}: {str(e)}")
                             error_count += 1
                     else:
@@ -469,7 +471,7 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
         logging.error(f"Error synchronizing url_tracking: {str(e)}")
         if not test_mode:
             mysql_conn.rollback()
-        raise
+        raise Exception(f"Error synchronizing url_tracking: {str(e)}")
 
 def main():
     """Main function"""

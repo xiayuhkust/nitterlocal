@@ -12,7 +12,7 @@ import time
 import logging
 import argparse
 import sqlite3
-import mysql.connector
+import pymysql
 from datetime import datetime, timedelta
 import dotenv
 
@@ -62,19 +62,21 @@ def get_mysql_connection():
         mysql_database = os.getenv('MYSQL_DATABASE', 'kol_info')
         
         # Connect to MySQL
-        conn = mysql.connector.connect(
+        conn = pymysql.connect(
             host=mysql_host,
             port=mysql_port,
             user=mysql_user,
             password=mysql_password,
-            database=mysql_database
+            database=mysql_database,
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
         )
         
         return conn
     
     except Exception as e:
         logging.error(f"Error connecting to MySQL: {str(e)}")
-        raise
+        raise Exception(f"Error connecting to MySQL: {str(e)}")
 
 def get_sqlite_connection(db_path='/home/ubuntu/nitterlocal/data/local_database.db'):
     """Get a connection to the SQLite database"""
@@ -87,7 +89,7 @@ def get_sqlite_connection(db_path='/home/ubuntu/nitterlocal/data/local_database.
     
     except Exception as e:
         logging.error(f"Error connecting to SQLite: {str(e)}")
-        raise
+        raise Exception(f"Error connecting to SQLite: {str(e)}")
 
 def get_mysql_table_columns(mysql_conn, table_name):
     """Get the column names for a MySQL table"""
@@ -287,7 +289,7 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, test_mode=False, batch_s
                                 cursor.close()
                             
                             insert_count += 1
-                        except mysql.connector.Error as e:
+                        except pymysql.Error as e:
                             logging.error(f"MySQL error inserting tweet {mysql_data['tweet_id']}: {str(e)}")
                             error_count += 1
                     else:
@@ -354,7 +356,7 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, test_mode=False, batch_s
         logging.error(f"Error synchronizing tweets: {str(e)}")
         if not test_mode:
             mysql_conn.rollback()
-        return 0
+        raise Exception(f"Error synchronizing tweets: {str(e)}")
 
 def main():
     """Main function"""
