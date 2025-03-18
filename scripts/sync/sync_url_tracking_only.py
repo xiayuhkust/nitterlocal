@@ -12,7 +12,7 @@ import time
 import logging
 import argparse
 import sqlite3
-import mysql.connector
+import pymysql
 from datetime import datetime
 import dotenv
 
@@ -62,12 +62,14 @@ def get_mysql_connection():
         mysql_database = os.getenv('MYSQL_DATABASE', 'kol_info')
         
         # Connect to MySQL
-        conn = mysql.connector.connect(
+        conn = pymysql.connect(
             host=mysql_host,
             port=mysql_port,
             user=mysql_user,
             password=mysql_password,
-            database=mysql_database
+            database=mysql_database,
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
         )
         
         return conn
@@ -383,34 +385,34 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                 if 'profile_updated_at' in mysql_columns and 'profile_updated_at' in row_dict and row_dict['profile_updated_at']:
                     insert_columns.append('profile_updated_at')
                     insert_values.append(row_dict['profile_updated_at'])
-                    
-                    # This section is now handled above in the kol_screen_name section
-                    
-                    # Build the query
-                    columns_str = ", ".join(insert_columns)
-                    placeholders = ", ".join(["%s"] * len(insert_columns))
-                    insert_query = f"INSERT INTO kol_info ({columns_str}) VALUES ({placeholders})"
-                    
-                    if not test_mode:
-                        try:
-                            mysql_cursor.execute(insert_query, insert_values)
-                            # Ensure all results are consumed
-                            while mysql_conn.unread_result:
-                                cursor = mysql_conn.cursor()
-                                cursor.fetchall()
-                                cursor.close()
-                            
-                            if verbose:
-                                logging.info(f"Inserted new kol_info record for kol_id: {row_dict['user_id']}")
-                            
-                            insert_count += 1
-                        except mysql.connector.Error as e:
-                            logging.error(f"MySQL error inserting record for kol_id {row_dict['user_id']}: {str(e)}")
-                            error_count += 1
-                    else:
+                
+                # This section is now handled above in the kol_screen_name section
+                
+                # Build the query
+                columns_str = ", ".join(insert_columns)
+                placeholders = ", ".join(["%s"] * len(insert_columns))
+                insert_query = f"INSERT INTO kol_info ({columns_str}) VALUES ({placeholders})"
+                
+                if not test_mode:
+                    try:
+                        mysql_cursor.execute(insert_query, insert_values)
+                        # Ensure all results are consumed
+                        while mysql_conn.unread_result:
+                            cursor = mysql_conn.cursor()
+                            cursor.fetchall()
+                            cursor.close()
+                        
                         if verbose:
-                            logging.info(f"Would insert new kol_info record for kol_id: {row_dict['user_id']}")
+                            logging.info(f"Inserted new kol_info record for kol_id: {row_dict['user_id']}")
+                        
                         insert_count += 1
+                    except pymysql.Error as e:
+                        logging.error(f"MySQL error inserting record for kol_id {row_dict['user_id']}: {str(e)}")
+                        error_count += 1
+                else:
+                    if verbose:
+                        logging.info(f"Would insert new kol_info record for kol_id: {row_dict['user_id']}")
+                    insert_count += 1
                 
                 processed_count += 1
                 
