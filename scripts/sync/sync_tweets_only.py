@@ -177,12 +177,12 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
             logging.info(f"Found {len(rows)} tweets since {since_date.strftime('%Y-%m-%d')}")
         
         # Get MySQL table columns
-        mysql_columns = get_mysql_table_columns(mysql_conn, 'tweets')
+        mysql_columns = get_mysql_table_columns(mysql_conn, 'kol_tweet')
         if verbose:
             logging.debug(f"MySQL columns: {mysql_columns}")
         
         # Get MySQL table constraints
-        mysql_constraints = get_mysql_table_constraints(mysql_conn, 'tweets')
+        mysql_constraints = get_mysql_table_constraints(mysql_conn, 'kol_tweet')
         
         # Map SQLite columns to MySQL columns
         column_mapping = {
@@ -227,7 +227,7 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
                         mysql_data[mysql_column] = convert_value_for_mysql(row[sqlite_column], mysql_column, mysql_constraints)
                 
                 # Check if the tweet exists in MySQL
-                mysql_cursor.execute("SELECT * FROM tweets WHERE tweet_id = %s", (mysql_data['tweet_id'],))
+                mysql_cursor.execute("SELECT * FROM kol_tweet WHERE tweet_id = %s", (mysql_data['tweet_id'],))
                 existing_record = mysql_cursor.fetchone()
                 
                 if existing_record:
@@ -244,7 +244,7 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
                     update_values.append(mysql_data['tweet_id'])
                     
                     # Build the update query
-                    update_query = f"UPDATE tweets SET {', '.join(update_columns)} WHERE tweet_id = %s"
+                    update_query = f"UPDATE kol_tweet SET {', '.join(update_columns)} WHERE tweet_id = %s"
                     
                     # Execute the update query
                     if not test_mode:
@@ -274,7 +274,7 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
                     # Build the insert query
                     columns_str = ", ".join(insert_columns)
                     placeholders = ", ".join(["%s"] * len(insert_columns))
-                    insert_query = f"INSERT INTO tweets ({columns_str}) VALUES ({placeholders})"
+                    insert_query = f"INSERT INTO kol_tweet ({columns_str}) VALUES ({placeholders})"
                     
                     # Execute the insert query
                     if not test_mode:
@@ -325,7 +325,7 @@ def main():
     )
     
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Synchronize tweets table from SQLite to MySQL')
+    parser = argparse.ArgumentParser(description='Synchronize tweets table from SQLite to MySQL kol_tweet table')
     parser.add_argument('--test', action='store_true', help='Run in test mode (no changes to MySQL)')
     parser.add_argument('--db-path', type=str, default='/home/ubuntu/nitterlocal/data/local_database.db', help='Path to SQLite database')
     parser.add_argument('--since-days', type=int, default=30, help='Synchronize tweets from the last N days')
