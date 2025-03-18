@@ -16,6 +16,34 @@ from datetime import datetime
 import re
 from urllib.parse import urlparse
 import dotenv
+import time
+
+# Import the sync lock
+try:
+    from scripts.sync.sync_lock import SyncLock
+except ImportError:
+    # Define a fallback SyncLock class if the module is not available
+    class SyncLock:
+        def __init__(self, lock_file=None, timeout=None):
+            self.locked = False
+            self.lock_file = lock_file
+            self.timeout = timeout
+        
+        def acquire(self):
+            self.locked = True
+            logging.info(f"Acquired lock: {self.lock_file}")
+            return True
+        
+        def release(self):
+            self.locked = False
+            logging.info(f"Released lock: {self.lock_file}")
+        
+        def __enter__(self):
+            self.acquire()
+            return self
+        
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.release()
 
 # Load environment variables from .env file
 dotenv.load_dotenv()
@@ -347,6 +375,10 @@ def main():
                         help='Path to SQLite database')
     parser.add_argument('--lock-file', type=str, default='/home/ubuntu/nitterlocal/data/kol_character_sync_lock.pid',
                         help='Lock file path')
+    parser.add_argument('--lock-timeout', type=int, default=60,
+                        help='Lock timeout in seconds')
+    parser.add_argument('--no-lock', action='store_true',
+                        help='Disable the lock mechanism')
     parser.add_argument('--test', action='store_true',
                         help='Run in test mode (no actual changes)')
     parser.add_argument('--verbose', action='store_true',
@@ -354,40 +386,45 @@ def main():
     
     args = parser.parse_args()
     
-    # Acquire lock
-    if not acquire_lock(args.lock_file):
-        return 1
+    # Use a lock to prevent overlapping executions
+    lock_file = args.lock_file
     
-    try:
-        # Get SQLite connection
-        sqlite_conn = get_sqlite_connection(args.sqlite_db)
-        if not sqlite_conn:
-            release_lock(args.lock_file)
+    # Skip the lock if requested
+    if args.no_lock:
+        lock = type('DummyLock', (), {'__enter__': lambda x: x, '__exit__': lambda x, *args: None})()
+        logging.info("Lock mechanism disabled")
+    else:
+        lock = SyncLock(lock_file, args.lock_timeout)
+    
+    with lock:
+        # If we couldn't acquire the lock, exit
+        if not getattr(lock, 'locked', True):
+            logging.warning("Could not acquire lock, another synchronization process is running")
             return 1
         
-        # Get MySQL connection
-        mysql_conn = get_mysql_connection()
-        if not mysql_conn:
+        try:
+            # Get SQLite connection
+            sqlite_conn = get_sqlite_connection(args.sqlite_db)
+            if not sqlite_conn:
+                return 1
+            
+            # Get MySQL connection
+            mysql_conn = get_mysql_connection()
+            if not mysql_conn:
+                sqlite_conn.close()
+                return 1
+            
+            # Synchronize kol_character
+            success = sync_kol_character(sqlite_conn, mysql_conn, args.test, args.verbose)
+            
+            # Close connections
+            mysql_conn.close()
             sqlite_conn.close()
-            release_lock(args.lock_file)
-            return 1
-        
-        # Synchronize kol_character
-        success = sync_kol_character(sqlite_conn, mysql_conn, args.test, args.verbose)
-        
-        # Close connections
-        mysql_conn.close()
-        sqlite_conn.close()
-        
-        # Release lock
-        release_lock(args.lock_file)
-        
-        return 0 if success else 1
-    
-    except Exception as e:
-        logging.error(f"Error in main function: {str(e)}")
-        release_lock(args.lock_file)
-        return 1
+            
+            return 0 if success else 1
+        except Exception as e:
+            logging.error(f"Error in main function: {str(e)}")
+            raise Exception(f"Error in kol_character synchronization: {str(e)}")
 
 if __name__ == "__main__":
     sys.exit(main())
