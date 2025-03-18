@@ -39,7 +39,12 @@ app.add_middleware(
 
 # Create uploads directory in nitterlocal to share files between projects
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+try:
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    logging.info(f"Uploads directory created/verified at: {UPLOAD_DIR}")
+except Exception as e:
+    logging.error(f"Failed to create uploads directory: {str(e)}")
+    raise
 
 # Create temporary directory for processed files in nitterlocal
 TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'temp')
@@ -73,6 +78,16 @@ async def upload_excel(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only Excel files (.xlsx, .xls) are allowed")
     
     try:
+        # Verify uploads directory exists
+        if not os.path.exists(UPLOAD_DIR):
+            logging.error(f"Uploads directory missing: {UPLOAD_DIR}")
+            raise HTTPException(status_code=500, detail="Upload directory not available")
+            
+        # Check directory permissions
+        if not os.access(UPLOAD_DIR, os.W_OK):
+            logging.error(f"No write permission for uploads directory: {UPLOAD_DIR}")
+            raise HTTPException(status_code=500, detail="Upload directory not writable")
+            
         # Generate a unique filename
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         unique_id = str(uuid.uuid4())[:8]
@@ -150,17 +165,8 @@ async def process_excel(background_tasks: BackgroundTasks, file_id: str = Form(.
         logging.info(f"Looking for file at path: {file_path}")
         
         if not os.path.exists(file_path):
-            # Try to find the file by partial match if exact match fails
-            dir_files = os.listdir(UPLOAD_DIR)
-            potential_matches = [f for f in dir_files if f.startswith(file_id[:30])]
-            
-            if potential_matches:
-                file_path = os.path.join(UPLOAD_DIR, potential_matches[0])
-                logging.info(f"Found potential match: {file_path}")
-            else:
-                # Log the error for debugging
-                logging.error(f"File not found: {file_path}")
-                raise HTTPException(status_code=404, detail=f"File {file_id} not found")
+            logging.error(f"File not found at path: {file_path}")
+            raise HTTPException(status_code=404, detail=f"File {file_id} not found")
         
         # Copy the file to the data directory
         data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
@@ -294,17 +300,8 @@ async def sync_database(
         logging.info(f"Looking for file at path: {file_path}")
         
         if not os.path.exists(file_path):
-            # Try to find the file by partial match if exact match fails
-            dir_files = os.listdir(UPLOAD_DIR)
-            potential_matches = [f for f in dir_files if f.startswith(file_id[:30])]
-            
-            if potential_matches:
-                file_path = os.path.join(UPLOAD_DIR, potential_matches[0])
-                logging.info(f"Found potential match: {file_path}")
-            else:
-                # Log the error for debugging
-                logging.error(f"File not found: {file_path}")
-                raise HTTPException(status_code=404, detail=f"File {file_id} not found")
+            logging.error(f"File not found at path: {file_path}")
+            raise HTTPException(status_code=404, detail=f"File {file_id} not found")
         
         # Import the database_sync module
         from app.database_sync import process_excel_and_sync, get_sqlite_kol_character_stats, get_sqlite_url_tracking_stats
