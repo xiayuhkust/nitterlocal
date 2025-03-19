@@ -6,6 +6,8 @@
     <title>Twitter URL ID 提取工具</title>
     <!-- UUID Polyfill for browsers without crypto.randomUUID support -->
     <script src="/static/js/uuid-polyfill.js"></script>
+    <!-- Browser compatibility check -->
+    <script src="/static/js/browser-check.js"></script>
     <style>
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
@@ -91,6 +93,7 @@
 </head>
 <body>
     <h1>Twitter URL ID 提取工具</h1>
+    <p style="text-align: center; color: #666;">支持所有主流浏览器</p>
     
     <div class="container">
         <div class="form-group">
@@ -145,38 +148,32 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const uploadBtn = document.getElementById('uploadBtn');
-            const downloadBtn = document.getElementById('downloadBtn');
-            const excelFile = document.getElementById('excelFile');
-            const loading = document.getElementById('loading');
-            const error = document.getElementById('error');
-            const success = document.getElementById('success');
-            const result = document.getElementById('result');
-            const totalUrls = document.getElementById('totalUrls');
-            const successUrls = document.getElementById('successUrls');
-            const failedUrls = document.getElementById('failedUrls');
-            const resultBody = document.getElementById('resultBody');
-            
-            // Database synchronization
-            // Removed sync-related elements as they're no longer needed
-            // Database synchronization happens automatically via crontab
+            var uploadBtn = document.getElementById('uploadBtn');
+            var downloadBtn = document.getElementById('downloadBtn');
+            var excelFile = document.getElementById('excelFile');
+            var loading = document.getElementById('loading');
+            var error = document.getElementById('error');
+            var success = document.getElementById('success');
+            var result = document.getElementById('result');
+            var totalUrls = document.getElementById('totalUrls');
+            var successUrls = document.getElementById('successUrls');
+            var failedUrls = document.getElementById('failedUrls');
+            var resultBody = document.getElementById('resultBody');
             
             // Excel processing status elements
-            const excelProcessingStatus = document.getElementById('excelProcessingStatus');
-            const excelProcessingCount = document.getElementById('excelProcessingCount');
+            var excelProcessingStatus = document.getElementById('excelProcessingStatus');
+            var excelProcessingCount = document.getElementById('excelProcessingCount');
             
-            // Removed database stats elements as they're no longer needed
+            var processedFile = '';
             
-            let processedFile = '';
-            
-            uploadBtn.addEventListener('click', async function() {
+            uploadBtn.addEventListener('click', function() {
                 if (!excelFile.files.length) {
                     error.textContent = '请选择一个Excel文件';
                     error.style.display = 'block';
                     return;
                 }
                 
-                const file = excelFile.files[0];
+                var file = excelFile.files[0];
                 if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
                     error.textContent = '请选择一个Excel文件 (.xlsx 或 .xls)';
                     error.style.display = 'block';
@@ -189,106 +186,130 @@
                 result.style.display = 'none';
                 loading.style.display = 'block';
                 
-                try {
-                    // Upload the file
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    
-                    const uploadResponse = await fetch('/api/upload-excel', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!uploadResponse.ok) {
-                        const errorData = await uploadResponse.json();
-                        throw new Error(errorData.detail || '上传文件失败');
-                    }
-                    
-                    const uploadData = await uploadResponse.json();
-                    
-                    // Process the file
-                    const processFormData = new FormData();
-                    processFormData.append('file_id', uploadData.filename);
-                    
-                    const processResponse = await fetch('/api/process-excel', {
-                        method: 'POST',
-                        body: processFormData
-                    });
-                    
-                    if (!processResponse.ok) {
-                        const errorData = await processResponse.json();
-                        throw new Error(errorData.detail || '处理文件失败');
-                    }
-                    
-                    const processData = await processResponse.json();
-                    
-                    // Update UI with results
-                    processedFile = processData.processed_file;
-                    totalUrls.textContent = processData.results.total_urls;
-                    successUrls.textContent = processData.results.successful;
-                    failedUrls.textContent = processData.results.failed;
-                    
-                    // Clear previous results
-                    resultBody.innerHTML = '';
-                    
-                    // Add results to table
-                    processData.results.processed_urls.forEach(url => {
-                        const row = document.createElement('tr');
+                // Create form data
+                var formData = new FormData();
+                formData.append('file', file);
+                
+                // Upload the file using XMLHttpRequest instead of fetch
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/api/upload-excel', true);
+                
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        var uploadData = JSON.parse(xhr.responseText);
                         
-                        const urlCell = document.createElement('td');
-                        urlCell.textContent = url.url;
-                        row.appendChild(urlCell);
+                        // Process the file
+                        var processFormData = new FormData();
+                        processFormData.append('file_id', uploadData.filename);
                         
-                        const handleCell = document.createElement('td');
-                        handleCell.textContent = url.handle || '-';
-                        row.appendChild(handleCell);
+                        var processXhr = new XMLHttpRequest();
+                        processXhr.open('POST', '/api/process-excel', true);
                         
-                        const idCell = document.createElement('td');
-                        idCell.textContent = url.user_id || '-';
-                        row.appendChild(idCell);
+                        processXhr.onload = function() {
+                            if (processXhr.status === 200) {
+                                var processData = JSON.parse(processXhr.responseText);
+                                
+                                // Update UI with results
+                                processedFile = processData.processed_file;
+                                totalUrls.textContent = processData.results.total_urls;
+                                successUrls.textContent = processData.results.successful;
+                                failedUrls.textContent = processData.results.failed;
+                                
+                                // Clear previous results
+                                resultBody.innerHTML = '';
+                                
+                                // Add results to table
+                                var urls = processData.results.processed_urls;
+                                for (var i = 0; i < urls.length; i++) {
+                                    var url = urls[i];
+                                    var row = document.createElement('tr');
+                                    
+                                    var urlCell = document.createElement('td');
+                                    urlCell.textContent = url.url;
+                                    row.appendChild(urlCell);
+                                    
+                                    var handleCell = document.createElement('td');
+                                    handleCell.textContent = url.handle || '-';
+                                    row.appendChild(handleCell);
+                                    
+                                    var idCell = document.createElement('td');
+                                    idCell.textContent = url.user_id || '-';
+                                    row.appendChild(idCell);
+                                    
+                                    var statusCell = document.createElement('td');
+                                    statusCell.textContent = url.status === 'success' ? '成功' : '失败';
+                                    statusCell.style.color = url.status === 'success' ? '#28a745' : '#dc3545';
+                                    row.appendChild(statusCell);
+                                    
+                                    resultBody.appendChild(row);
+                                }
+                                
+                                // Display script output if available
+                                var scriptOutput = document.getElementById('scriptOutput');
+                                var scriptOutputText = document.getElementById('scriptOutputText');
+                                if (processData.message) {
+                                    scriptOutputText.textContent = "文件已上传成功，正在后台处理中...";
+                                    scriptOutput.style.display = 'block';
+                                } else if (processData.script_output) {
+                                    scriptOutputText.textContent = processData.script_output;
+                                    scriptOutput.style.display = 'block';
+                                } else {
+                                    scriptOutput.style.display = 'none';
+                                }
+                                
+                                // Show results
+                                loading.style.display = 'none';
+                                success.textContent = '文件处理成功！';
+                                success.style.display = 'block';
+                                result.style.display = 'block';
+                            } else {
+                                loading.style.display = 'none';
+                                try {
+                                    var errorData = JSON.parse(processXhr.responseText);
+                                    error.textContent = errorData.detail || '处理文件失败';
+                                } catch (e) {
+                                    error.textContent = '处理文件失败';
+                                }
+                                error.style.display = 'block';
+                            }
+                        };
                         
-                        const statusCell = document.createElement('td');
-                        statusCell.textContent = url.status === 'success' ? '成功' : '失败';
-                        statusCell.style.color = url.status === 'success' ? '#28a745' : '#dc3545';
-                        row.appendChild(statusCell);
+                        processXhr.onerror = function() {
+                            loading.style.display = 'none';
+                            error.textContent = '处理文件失败';
+                            error.style.display = 'block';
+                        };
                         
-                        resultBody.appendChild(row);
-                    });
-                    
-                    // Display script output if available
-                    const scriptOutput = document.getElementById('scriptOutput');
-                    const scriptOutputText = document.getElementById('scriptOutputText');
-                    if (processData.script_output) {
-                        scriptOutputText.textContent = processData.script_output;
-                        scriptOutput.style.display = 'block';
+                        processXhr.send(processFormData);
                     } else {
-                        scriptOutput.style.display = 'none';
+                        loading.style.display = 'none';
+                        try {
+                            var errorData = JSON.parse(xhr.responseText);
+                            error.textContent = errorData.detail || '上传文件失败';
+                        } catch (e) {
+                            error.textContent = '上传文件失败';
+                        }
+                        error.style.display = 'block';
                     }
-                    
-                    // Show results
+                };
+                
+                xhr.onerror = function() {
                     loading.style.display = 'none';
-                    success.textContent = '文件处理成功！';
-                    success.style.display = 'block';
-                    result.style.display = 'block';
-                    
-                } catch (err) {
-                    loading.style.display = 'none';
-                    error.textContent = err.message;
+                    error.textContent = '上传文件失败';
                     error.style.display = 'block';
-                }
+                };
+                
+                xhr.send(formData);
             });
             
             downloadBtn.addEventListener('click', function() {
                 if (processedFile) {
-                    window.location.href = `/api/download/${processedFile}`;
+                    window.location.href = '/api/download/' + processedFile;
                 } else {
                     error.textContent = '没有可下载的文件';
                     error.style.display = 'block';
                 }
             });
-            
-            // Removed sync button event listener as it's no longer needed
-            // Database synchronization happens automatically via crontab
         });
     </script>
 </body>
