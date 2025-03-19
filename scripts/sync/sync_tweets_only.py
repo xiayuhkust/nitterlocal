@@ -184,7 +184,10 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
         rows = sqlite_cursor.fetchall()
         
         if verbose:
-            logging.info(f"Found {len(rows)} tweets since {since_date.strftime('%Y-%m-%d')}")
+            if not all_tweets:
+                logging.info(f"Found {len(rows)} tweets since {since_date.strftime('%Y-%m-%d')}")
+            else:
+                logging.info(f"Found {len(rows)} tweets (all tweets)")
         
         # Get MySQL table columns
         mysql_columns = get_mysql_table_columns(mysql_conn, 'kol_tweet')
