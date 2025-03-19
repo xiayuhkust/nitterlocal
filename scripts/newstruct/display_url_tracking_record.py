@@ -150,25 +150,31 @@ def display_joined_record(db_path, screen_name=None, url=None):
     # Now get the kol_character record
     kol_character_data = {}
     if url_tracking_id is not None:
-        # Try to find by url_tracking_id first
-        cursor.execute("SELECT * FROM kol_character WHERE url_tracking_id = ?", [url_tracking_id])
-        kol_character_row = cursor.fetchone()
+        # Check if kol_character table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='kol_character'")
+        table_exists = cursor.fetchone() is not None
         
-        # If not found and we have a screen_name, try to find by screen_name
-        if not kol_character_row and screen_name:
-            cursor.execute("SELECT * FROM kol_character WHERE kol_screen_name = ? COLLATE NOCASE", [screen_name])
+        if table_exists:
+            # Try to find by url_tracking_id first
+            cursor.execute("SELECT * FROM kol_character WHERE url_tracking_id = ?", [url_tracking_id])
             kol_character_row = cursor.fetchone()
-            if kol_character_row:
-                logging.info(f"Found kol_character record by screen_name: {screen_name}")
-
-        
-        if kol_character_row:
-            # Get kol_character column names
-            cursor.execute("PRAGMA table_info(kol_character)")
-            kol_character_columns = [row[1] for row in cursor.fetchall()]
             
-            # Create a dictionary for kol_character data
-            kol_character_data = {kol_character_columns[i]: kol_character_row[i] for i in range(len(kol_character_columns))}
+            # If not found and we have a screen_name, try to find by screen_name
+            if not kol_character_row and screen_name:
+                cursor.execute("SELECT * FROM kol_character WHERE kol_screen_name = ? COLLATE NOCASE", [screen_name])
+                kol_character_row = cursor.fetchone()
+                if kol_character_row:
+                    logging.info(f"Found kol_character record by screen_name: {screen_name}")
+            
+            if kol_character_row:
+                # Get kol_character column names
+                cursor.execute("PRAGMA table_info(kol_character)")
+                kol_character_columns = [row[1] for row in cursor.fetchall()]
+                
+                # Create a dictionary for kol_character data
+                kol_character_data = {kol_character_columns[i]: kol_character_row[i] for i in range(len(kol_character_columns))}
+        else:
+            logging.warning("kol_character table does not exist in the database")
     
     # Display results
     print(f"\n=== Joined Record for {'@' + screen_name if screen_name else url} ===")

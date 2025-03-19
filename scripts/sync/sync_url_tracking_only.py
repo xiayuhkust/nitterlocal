@@ -249,9 +249,12 @@ def convert_value_for_mysql(value, column_name, constraints):
     # Default return the original value
     return value
 
-def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, limit=None):
+def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, limit=None, specific_url=None):
     """Synchronize url_tracking table from SQLite to MySQL"""
     try:
+        # Track start time for performance measurement
+        start_time = time.time()
+        
         # Get SQLite cursor
         sqlite_cursor = sqlite_conn.cursor()
         
@@ -260,11 +263,18 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
         
         # Get url_tracking records from SQLite
         query = "SELECT * FROM url_tracking"
-        if limit:
+        
+        # Add specific URL filter if provided
+        if specific_url:
+            query += f" WHERE url = ?"
+        elif limit:
             query += f" LIMIT {limit}"
         
         logging.info(f"Executing SQLite query: {query}")
-        sqlite_cursor.execute(query)
+        if specific_url:
+            sqlite_cursor.execute(query, (specific_url,))
+        else:
+            sqlite_cursor.execute(query)
         rows = sqlite_cursor.fetchall()
         
         # Always log the record count, not just in verbose mode
@@ -301,7 +311,7 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
             'url': 'url',  # Keep url mapping
             'user_id': 'kol_id',
             'screen_name': 'kol_screen_name',
-            'kol_name': 'kol_name',
+            'kol_name': 'kol_name',  # Ensure kol_name is properly mapped
             'description': 'description',
             'followers_count': 'followers_count',
             'following_count': 'following_count',
@@ -312,6 +322,10 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
             'type': 'first_category',
             'subtype': 'second_category'
         }
+        
+        # Debug log column mapping
+        logging.info(f"Column mapping: {column_mapping}")
+        logging.info(f"MySQL columns: {mysql_columns}")
         
         # Process each record
         processed_count = 0
@@ -539,6 +553,7 @@ def main():
     parser.add_argument('--no-lock', action='store_true', help='Disable lock mechanism')
     parser.add_argument('--lock-timeout', type=int, default=60, help='Lock timeout in seconds')
     parser.add_argument('--limit', type=int, help='Limit the number of records to process')
+    parser.add_argument('--specific-url', type=str, help='Process only a specific URL')
     args = parser.parse_args()
     
     # Set up lock file
@@ -571,7 +586,7 @@ def main():
         mysql_conn = get_mysql_connection()
         
         # Synchronize url_tracking table
-        result = sync_url_tracking(sqlite_conn, mysql_conn, test_mode=args.test, verbose=args.verbose, limit=args.limit)
+        result = sync_url_tracking(sqlite_conn, mysql_conn, test_mode=args.test, verbose=args.verbose, limit=args.limit, specific_url=args.specific_url)
         
         # Close connections
         sqlite_conn.close()

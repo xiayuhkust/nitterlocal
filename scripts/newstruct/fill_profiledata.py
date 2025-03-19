@@ -98,12 +98,12 @@ class ProfileUpdater:
                 'followers_count': profile.get('followersCount', 0),
                 'following_count': profile.get('followingCount', 0) or profile.get('friendsCount', 0),
                 'tweet_count': profile.get('tweetsCount', 0) or profile.get('statusesCount', 0),
-                'profile_image_url': profile.get('profileImageUrl'),
-                'profile_banner_url': profile.get('profileBannerUrl'),
-                'verified': 1 if profile.get('verified') else 0,
+                'profile_image_url': profile.get('avatar'),
+                'profile_banner_url': profile.get('banner'),
+                'verified': 1 if profile.get('isVerified') else 0,
                 'location': profile.get('location', ''),
-                'description': profile.get('description', ''),
-                'created_at': profile.get('createdAt'),
+                'description': profile.get('biography', ''),
+                'created_at': profile.get('joined'),
                 'kol_name': profile.get('name', ''),  # Add the name attribute
                 'profile_updated_at': datetime.now().isoformat()
             }
@@ -130,7 +130,10 @@ class ProfileUpdater:
             # Based on the schema check, we know the available columns
             valid_columns = ['url', 'user_id', 'description', 'status', 'last_checked', 
                             'error_count', 'tweet_count', 'type', 'added_at', 
-                            'last_scraped', 'last_error', 'subtype']
+                            'last_scraped', 'last_error', 'subtype', 'kol_name',
+                            'screen_name', 'followers_count', 'following_count',
+                            'profile_image_url', 'profile_banner_url', 'verified',
+                            'location', 'created_at', 'profile_updated_at']
             
             update_fields = []
             update_values = []

@@ -63,6 +63,11 @@ def process_excel_file(excel_path, db_path, limit=None):
         # Import the process_excel_with_profile function
         sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
         from process_excel_with_profile import process_excel_file as process_excel
+        from process_excel_with_profile import create_kol_character_table
+        
+        # Create kol_character table if it doesn't exist
+        create_kol_character_table(db_path)
+        logging.info(f"Ensured kol_character table exists in {db_path}")
         
         # Check if url_tracking table exists and create it if needed
         conn = sqlite3.connect(db_path)
