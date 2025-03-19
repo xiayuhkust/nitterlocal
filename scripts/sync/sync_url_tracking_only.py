@@ -308,7 +308,9 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
             'profile_image_url': 'profile_image_url',
             'profile_banner_url': 'profile_banner_url',
             'verified': 'verified',
-            'location': 'location'
+            'location': 'location',
+            'type': 'first_category',
+            'subtype': 'second_category'
         }
         
         # Process each record
