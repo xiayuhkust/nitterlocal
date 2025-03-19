@@ -208,6 +208,7 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
             'favorite_count': 'favorite_count',
             'reply_count': 'reply_count',
             'quote_count': 'quote_count',
+            'views_count': 'views_count',  # Added views_count field
             'lang': 'lang',
             'source': 'source',
             'in_reply_to_status_id': 'in_reply_to_status_id',
