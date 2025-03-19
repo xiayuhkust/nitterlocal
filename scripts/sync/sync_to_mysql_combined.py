@@ -232,6 +232,16 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
                 logging.warning(f"Skipping row with no user_id: {row_dict.get('url', 'unknown')}")
                 continue
             
+            # Skip records that are not active
+            if row_dict.get('status') != 'active':
+                logging.info(f"Skipping inactive record: {row_dict.get('url', 'unknown')}, status: {row_dict.get('status', 'unknown')}")
+                continue
+            
+            # Skip records that are not KOLs - case insensitive comparison
+            if row_dict.get('type', '').lower() != 'kol':
+                logging.info(f"Skipping non-kol record: {row_dict.get('url', 'unknown')}, type: {row_dict.get('type', 'unknown')}")
+                continue
+            
             # Check if record already exists in MySQL
             # Note: MySQL uses kol_id column while SQLite uses user_id
             mysql_cursor.execute(
