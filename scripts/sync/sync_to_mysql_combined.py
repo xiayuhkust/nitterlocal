@@ -194,6 +194,39 @@ def get_mysql_table_columns(mysql_conn, table_name):
     cursor.close()
     return columns
 
+def check_and_preserve_value(mysql_cursor, table, id_column, id_value, field, sqlite_value, mysql_columns):
+    """
+    Check if a field should be updated based on value preservation logic.
+    Only update if SQLite value is not empty and MySQL value is empty,
+    or if both have values but SQLite value is different.
+    
+    Returns a tuple of (should_update, set_clause, param_value)
+    """
+    if field not in mysql_columns or sqlite_value is None or sqlite_value == '':
+        return False, None, None
+    
+    # Get existing MySQL value
+    try:
+        mysql_cursor.execute(
+            f"SELECT {field} FROM {table} WHERE {id_column} = %s",
+            (id_value,)
+        )
+        result = mysql_cursor.fetchone()
+        mysql_value = result[0] if result else None
+        
+        # Only update if SQLite value is not empty and MySQL value is empty
+        # or if both have values but SQLite value is different
+        if sqlite_value and (mysql_value is None or mysql_value == '' or 
+                            (mysql_value and str(sqlite_value) != str(mysql_value))):
+            logging.info(f"Updating {field} from '{mysql_value}' to '{sqlite_value}'")
+            return True, f"{field} = %s", sqlite_value
+        else:
+            logging.info(f"Preserving existing MySQL {field}: '{mysql_value}'")
+            return False, None, None
+    except Exception as e:
+        logging.error(f"Error checking MySQL value for {field}: {str(e)}")
+        return False, None, None
+
 def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
     """Synchronize url_tracking table from SQLite to MySQL (kol_info table)
     
@@ -260,54 +293,55 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
                 set_clauses = []
                 update_params = []
                 
-                # Add kol_screen_name if it exists in MySQL
-                if 'kol_screen_name' in mysql_columns:
-                    set_clauses.append("kol_screen_name = %s")
-                    update_params.append(twitter_handle or '')
+                # Process each field with value preservation logic
+                fields_to_check = [
+                    'kol_screen_name', 'description', 'followers_count', 'following_count',
+                    'first_category', 'second_category', 'kol_name', 'profile_image_url',
+                    'profile_banner_url', 'verified', 'location', 'created_at'
+                ]
                 
-                # For description, we need to check the existing MySQL value
-                if 'description' in mysql_columns:
-                    # Get existing MySQL description
-                    mysql_cursor.execute(
-                        "SELECT description FROM kol_info WHERE kol_id = %s",
-                        (row_dict['user_id'],)
-                    )
-                    mysql_description = mysql_cursor.fetchone()[0]
+                for field in fields_to_check:
+                    sqlite_field = field
+                    mysql_field = field
                     
-                    # Only update if SQLite value is not empty and MySQL value is empty
-                    # or if both have values but SQLite value is different
-                    if row_dict.get('description') and (not mysql_description or 
-                                                       (mysql_description and row_dict['description'] != mysql_description)):
-                        set_clauses.append("description = %s")
-                        update_params.append(row_dict['description'])
-                        logging.info(f"Updating description from '{mysql_description}' to '{row_dict['description']}'")
-                    else:
-                        logging.info(f"Preserving existing MySQL description: '{mysql_description}'")
-                
-                # Add followers_count if it exists in MySQL
-                if 'followers_count' in mysql_columns and 'followers_count' in row_dict:
-                    set_clauses.append("followers_count = %s")
-                    update_params.append(row_dict['followers_count'] or '0')
-                
-                # Add following_count if it exists in MySQL
-                if 'following_count' in mysql_columns and 'following_count' in row_dict:
-                    set_clauses.append("following_count = %s")
-                    update_params.append(int(row_dict['following_count']) if row_dict['following_count'] else 0)
-                
-                # Add type as first_category if it exists in MySQL
-                if 'first_category' in mysql_columns and 'type' in row_dict:
-                    set_clauses.append("first_category = %s")
-                    update_params.append(row_dict['type'] or '')
-                
-                # Add subtype as second_category if it exists in MySQL
-                if 'second_category' in mysql_columns and 'subtype' in row_dict:
-                    set_clauses.append("second_category = %s")
-                    update_params.append(row_dict['subtype'] or '')
-                
-                # Add kol_name if it exists in MySQL
-                if 'kol_name' in mysql_columns and 'kol_name' in row_dict:
-                    set_clauses.append("kol_name = %s")
-                    update_params.append(row_dict['kol_name'] or '')
+                    # Map SQLite field to MySQL field if needed
+                    if field == 'first_category':
+                        sqlite_field = 'type'
+                    elif field == 'second_category':
+                        sqlite_field = 'subtype'
+                    elif field == 'kol_screen_name':
+                        # Use twitter_handle for kol_screen_name
+                        sqlite_value = twitter_handle or ''
+                        should_update, set_clause, param_value = check_and_preserve_value(
+                            mysql_cursor, 'kol_info', 'kol_id', row_dict['user_id'],
+                            mysql_field, sqlite_value, mysql_columns
+                        )
+                        
+                        if should_update:
+                            set_clauses.append(set_clause)
+                            update_params.append(param_value)
+                        
+                        # Skip to next field since we've already handled this one
+                        continue
+                    
+                    # Get value from SQLite
+                    sqlite_value = row_dict.get(sqlite_field)
+                    
+                    # Handle special case for followers_count and following_count
+                    if field == 'followers_count' and sqlite_value:
+                        sqlite_value = sqlite_value or '0'
+                    elif field == 'following_count' and sqlite_value:
+                        sqlite_value = int(sqlite_value) if sqlite_value else 0
+                    
+                    # Check and preserve value
+                    should_update, set_clause, param_value = check_and_preserve_value(
+                        mysql_cursor, 'kol_info', 'kol_id', row_dict['user_id'],
+                        mysql_field, sqlite_value, mysql_columns
+                    )
+                    
+                    if should_update:
+                        set_clauses.append(set_clause)
+                        update_params.append(param_value)
                 
                 # Only proceed if there are columns to update
                 if set_clauses:
@@ -445,7 +479,14 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=1, test_mode=False, batch_si
             'retweets': 'retweet_count',
             'replies': 'reply_count',
             'views': 'view_count',
-            'lang': 'lang'
+            'lang': 'lang',
+            'is_reply': 'is_reply',
+            'is_retweet': 'is_retweet',
+            'is_quote': 'is_quote',
+            'media_urls': 'media_urls',
+            'quoted_tweet_id': 'quoted_tweet_id',
+            'in_reply_to_tweet_id': 'in_reply_to_tweet_id',
+            'in_reply_to_user_id': 'in_reply_to_user_id'
         }
         
         # Process each tweet
@@ -524,29 +565,82 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=1, test_mode=False, batch_si
                 common_columns = [col for col in mysql_data.keys() if col in mysql_columns]
                 
                 if count > 0:
-                    # Update existing record
-                    set_clause = ", ".join([f"{col} = %s" for col in common_columns if col != 'tweet_id'])
-                    update_query = f"UPDATE kol_tweet SET {set_clause} WHERE tweet_id = %s"
+                    # Update existing record with value preservation
+                    set_clauses = []
+                    update_params = []
                     
-                    # Prepare parameters (all values except tweet_id, then tweet_id at the end)
-                    update_params = [mysql_data[col] for col in common_columns if col != 'tweet_id']
-                    update_params.append(mysql_data['tweet_id'])
+                    # Process each field with value preservation logic
+                    for sqlite_field, mysql_field in column_mapping.items():
+                        # Get value from SQLite
+                        sqlite_value = row_dict.get(sqlite_field)
+                        
+                        # Handle date format conversion for created_at
+                        if sqlite_field == 'created_at' and sqlite_value:
+                            # Convert ISO format to MySQL datetime format
+                            if sqlite_value.endswith('Z'):
+                                sqlite_value = sqlite_value[:-1]  # Remove the 'Z' at the end
+                            sqlite_value = sqlite_value.replace('T', ' ')
+                        
+                        # Check if field exists in MySQL
+                        if mysql_field in mysql_columns and mysql_field != 'tweet_id':
+                            # Check and preserve value
+                            should_update, set_clause, param_value = check_and_preserve_value(
+                                mysql_cursor, 'kol_tweet', 'tweet_id', mysql_data['tweet_id'],
+                                mysql_field, sqlite_value, mysql_columns
+                            )
+                            
+                            if should_update:
+                                set_clauses.append(set_clause)
+                                update_params.append(param_value)
                     
-                    if not test_mode:
-                        mysql_cursor.execute(update_query, update_params)
-                    
-                    update_count += 1
+                    # Only proceed if there are columns to update
+                    if set_clauses:
+                        set_clause = ", ".join(set_clauses)
+                        update_query = f"UPDATE kol_tweet SET {set_clause} WHERE tweet_id = %s"
+                        update_params.append(mysql_data['tweet_id'])
+                        
+                        if not test_mode:
+                            mysql_cursor.execute(update_query, update_params)
+                        
+                        update_count += 1
+                    else:
+                        logging.info(f"No columns to update for tweet_id: {mysql_data['tweet_id']}")
                 else:
-                    # Insert new record
-                    columns_str = ", ".join(common_columns)
-                    placeholders = ", ".join(["%s"] * len(common_columns))
+                    # Insert new record - include all mapped fields
+                    insert_fields = []
+                    insert_values = []
+                    
+                    # For new records, include all mapped fields
+                    for sqlite_field, mysql_field in column_mapping.items():
+                        # Skip fields that don't exist in MySQL
+                        if mysql_field not in mysql_columns:
+                            continue
+                        
+                        # Get value from SQLite
+                        value = row_dict.get(sqlite_field)
+                        
+                        # Handle date format conversion for created_at
+                        if sqlite_field == 'created_at' and value:
+                            # Convert ISO format to MySQL datetime format
+                            if value.endswith('Z'):
+                                value = value[:-1]  # Remove the 'Z' at the end
+                            value = value.replace('T', ' ')
+                        
+                        # Skip empty values for optional fields
+                        if value is None and mysql_field != 'tweet_id' and mysql_field != 'kol_id':
+                            continue
+                        
+                        # Add field and value to insert lists
+                        insert_fields.append(mysql_field)
+                        insert_values.append(value)
+                    
+                    # Build the query
+                    columns_str = ", ".join(insert_fields)
+                    placeholders = ", ".join(["%s"] * len(insert_fields))
                     insert_query = f"INSERT INTO kol_tweet ({columns_str}) VALUES ({placeholders})"
                     
-                    # Prepare parameters
-                    insert_params = [mysql_data[col] for col in common_columns]
-                    
                     if not test_mode:
-                        mysql_cursor.execute(insert_query, insert_params)
+                        mysql_cursor.execute(insert_query, insert_values)
                     
                     insert_count += 1
                 
