@@ -98,10 +98,10 @@ def debug_cz_binance_sync(test_mode=True):
                 set_clauses.append("kol_screen_name = %s")
                 update_params.append(twitter_handle or '')
             
-            # Add description
-            if 'description' in mysql_columns and 'description' in row_dict:
+            # Add description only if SQLite value is not empty
+            if 'description' in mysql_columns and 'description' in row_dict and row_dict['description']:
                 set_clauses.append("description = %s")
-                update_params.append(row_dict['description'] or '')
+                update_params.append(row_dict['description'])
             
             # Add followers_count
             if 'followers_count' in mysql_columns and 'followers_count' in row_dict:
