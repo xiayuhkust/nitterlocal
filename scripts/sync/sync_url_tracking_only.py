@@ -250,7 +250,17 @@ def convert_value_for_mysql(value, column_name, constraints):
     return value
 
 def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, limit=None, specific_url=None):
-    """Synchronize url_tracking table from SQLite to MySQL"""
+    """Synchronize url_tracking table from SQLite to MySQL
+    
+    IMPORTANT: This function has been modified to ONLY use the 'kol_id' field for record lookup
+    and updates. This prevents data mix-ups when multiple records share the same kol_screen_name
+    but have different kol_id values. By only using 'kol_id' for both lookup and update operations,
+    we ensure that we always update the correct record.
+    
+    If a record does not have a 'kol_id' field, it will be inserted as a new record rather than
+    attempting to update an existing record based on other fields like kol_screen_name or url.
+    This approach prevents the data mix-up issues that were occurring previously.
+    """
     try:
         # Track start time for performance measurement
         start_time = time.time()
@@ -394,31 +404,20 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
             if verbose:
                 logging.debug(f"MySQL data prepared: {mysql_data}")
             
-            # Check if the record exists in MySQL - try multiple keys in order of preference
-            # IMPORTANT: The order of lookups matters! We prioritize kol_id over kol_screen_name
-            # to ensure we update the correct record when there are multiple records with the same screen name
+            # Check if the record exists in MySQL - ONLY use kol_id for lookup
+            # IMPORTANT: We ONLY use kol_id for lookup to prevent data mix-ups
+            # This ensures we always update the correct record
             lookup_found = False
+            lookup_field = None  # Track which field was used for lookup
             
-            # First try by id if available
-            if 'id' in mysql_data:
-                mysql_cursor.execute("SELECT * FROM kol_info WHERE id = %s", (mysql_data['id'],))
-                logging.info(f"Checking if record exists for id: {mysql_data['id']}")
-                lookup_found = True
-            # Then try by kol_id
-            elif 'kol_id' in mysql_data:
+            # Only use kol_id for lookup if available
+            if 'kol_id' in mysql_data:
                 mysql_cursor.execute("SELECT * FROM kol_info WHERE kol_id = %s", (mysql_data['kol_id'],))
                 logging.info(f"Checking if record exists for kol_id: {mysql_data['kol_id']}")
                 lookup_found = True
-            # Then try by kol_screen_name
-            elif 'kol_screen_name' in mysql_data:
-                mysql_cursor.execute("SELECT * FROM kol_info WHERE kol_screen_name = %s", (mysql_data['kol_screen_name'],))
-                logging.info(f"Checking if record exists for screen_name: {mysql_data['kol_screen_name']}")
-                lookup_found = True
-            # Finally try by url
-            elif 'url' in mysql_data:
-                mysql_cursor.execute("SELECT * FROM kol_info WHERE url = %s", (mysql_data['url'],))
-                logging.info(f"Checking if record exists for url: {mysql_data['url']}")
-                lookup_found = True
+                lookup_field = 'kol_id'
+            # If kol_id is not available, we can't update an existing record
+            # We'll insert a new record instead
             
             # Skip if no lookup key found
             if not lookup_found:
@@ -444,19 +443,17 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                         update_columns.append(f"{column} = %s")
                         update_values.append(value)
                 
-                # Add the WHERE clause value based on available keys in order of preference
-                if 'id' in mysql_data:
-                    update_values.append(mysql_data['id'])
-                    update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE id = %s"
-                elif 'kol_id' in mysql_data:
+                # Add the WHERE clause value based on the field that was used for lookup
+                # We ONLY use kol_id for the WHERE clause to ensure we update the correct record
+                if lookup_field and lookup_field == 'kol_id' and 'kol_id' in mysql_data:
                     update_values.append(mysql_data['kol_id'])
                     update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE kol_id = %s"
-                elif 'kol_screen_name' in mysql_data:
-                    update_values.append(mysql_data['kol_screen_name'])
-                    update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE kol_screen_name = %s"
+                    logging.info(f"Using kol_id for WHERE clause to match lookup field")
                 else:
-                    update_values.append(mysql_data['url'])
-                    update_query = f"UPDATE kol_info SET {', '.join(update_columns)} WHERE url = %s"
+                    # If we didn't find the record by kol_id, we can't update it
+                    # This should not happen since we only lookup by kol_id now
+                    logging.warning(f"Cannot update record - kol_id not available or not used for lookup")
+                    continue
                 
                 # Log the update query for debugging
                 if verbose:
