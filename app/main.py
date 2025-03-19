@@ -12,7 +12,7 @@ from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime
 
-from app.twitter_utils import process_twitter_urls, extract_twitter_handle
+from app.twitter_utils import extract_twitter_handle
 from app.excel_processor import ExcelProcessor
 # Import the simplified Excel processor for background processing
 from app.excel_db_processor import process_excel_file
@@ -125,17 +125,32 @@ async def upload_excel(file: UploadFile = File(...)):
 @app.post("/api/process-twitter-urls")
 async def process_twitter_urls_endpoint(urls: List[str]):
     """
-    Process a list of Twitter URLs and extract their user IDs
+    Process a list of Twitter URLs and extract their handles
     
     Args:
         urls: List of Twitter URLs to process
         
     Returns:
-        List of processed URLs with their user IDs
+        List of processed URLs with their handles
     """
     try:
-        # Process the Twitter URLs
-        results = process_twitter_urls(urls)
+        # Process the Twitter URLs by extracting handles
+        results = []
+        for url in urls:
+            handle = extract_twitter_handle(url)
+            if handle:
+                results.append({
+                    "url": url,
+                    "handle": handle,
+                    "status": "success"
+                })
+            else:
+                results.append({
+                    "url": url,
+                    "handle": None,
+                    "status": "error",
+                    "error": "Could not extract handle"
+                })
         
         return {
             "total": len(urls),

@@ -19,7 +19,7 @@ try:
     logging.info("Successfully imported twitter_api_utils in excel_processor")
 except ImportError:
     logging.warning("Could not import twitter_api_utils, falling back to twitter_utils")
-    from .twitter_utils import process_twitter_urls, extract_twitter_handle
+    from .twitter_utils import extract_twitter_handle
 
 # Configure logging
 logging.basicConfig(
@@ -90,7 +90,24 @@ class ExcelProcessor:
             df, twitter_urls = self.read_excel(file_path)
             
             # Process the Twitter URLs
-            processed_urls = process_twitter_urls(twitter_urls)
+            processed_urls = []
+            for url in twitter_urls:
+                handle = extract_twitter_handle(url)
+                if handle:
+                    processed_urls.append({
+                        "url": url,
+                        "handle": handle,
+                        "user_id": None,
+                        "status": "success"
+                    })
+                else:
+                    processed_urls.append({
+                        "url": url,
+                        "handle": None,
+                        "user_id": None,
+                        "status": "error",
+                        "error": "Could not extract handle"
+                    })
             
             # Create a results summary
             results = {
