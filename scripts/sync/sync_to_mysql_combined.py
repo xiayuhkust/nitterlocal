@@ -13,7 +13,7 @@ import time
 import logging
 import argparse
 import sqlite3
-import mysql.connector
+import pymysql
 import subprocess
 from datetime import datetime, timedelta
 import dotenv
@@ -60,11 +60,11 @@ def get_mysql_connection():
         mysql_host = os.getenv('MYSQL_HOST', '43.135.26.222')
         mysql_port = int(os.getenv('MYSQL_PORT', '3306'))
         mysql_user = os.getenv('MYSQL_USER', 'root')
-        mysql_password = os.getenv('MYSQL_PASSWORD', '')
+        mysql_password = os.getenv('MYSQL_PASSWORD', 'z1050493759')
         mysql_database = os.getenv('MYSQL_DATABASE', 'kol_info')
         
         # Connect to MySQL
-        conn = mysql.connector.connect(
+        conn = pymysql.connect(
             host=mysql_host,
             port=mysql_port,
             user=mysql_user,
@@ -258,6 +258,36 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
                     set_clauses.append("kol_screen_name = %s")
                     update_params.append(twitter_handle or '')
                 
+                # Add description if it exists in MySQL
+                if 'description' in mysql_columns and 'description' in row_dict:
+                    set_clauses.append("description = %s")
+                    update_params.append(row_dict['description'] or '')
+                
+                # Add followers_count if it exists in MySQL
+                if 'followers_count' in mysql_columns and 'followers_count' in row_dict:
+                    set_clauses.append("followers_count = %s")
+                    update_params.append(row_dict['followers_count'] or '0')
+                
+                # Add following_count if it exists in MySQL
+                if 'following_count' in mysql_columns and 'following_count' in row_dict:
+                    set_clauses.append("following_count = %s")
+                    update_params.append(int(row_dict['following_count']) if row_dict['following_count'] else 0)
+                
+                # Add type as first_category if it exists in MySQL
+                if 'first_category' in mysql_columns and 'type' in row_dict:
+                    set_clauses.append("first_category = %s")
+                    update_params.append(row_dict['type'] or '')
+                
+                # Add subtype as second_category if it exists in MySQL
+                if 'second_category' in mysql_columns and 'subtype' in row_dict:
+                    set_clauses.append("second_category = %s")
+                    update_params.append(row_dict['subtype'] or '')
+                
+                # Add kol_name if it exists in MySQL
+                if 'kol_name' in mysql_columns and 'kol_name' in row_dict:
+                    set_clauses.append("kol_name = %s")
+                    update_params.append(row_dict['kol_name'] or '')
+                
                 # Only proceed if there are columns to update
                 if set_clauses:
                     set_clause = ", ".join(set_clauses)
@@ -284,6 +314,36 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
                 if 'created_at' in mysql_columns:
                     insert_columns.append('created_at')
                     insert_values.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                
+                # Add description if it exists in MySQL
+                if 'description' in mysql_columns and 'description' in row_dict:
+                    insert_columns.append('description')
+                    insert_values.append(row_dict['description'] or '')
+                
+                # Add followers_count if it exists in MySQL
+                if 'followers_count' in mysql_columns and 'followers_count' in row_dict:
+                    insert_columns.append('followers_count')
+                    insert_values.append(row_dict['followers_count'] or '0')
+                
+                # Add following_count if it exists in MySQL
+                if 'following_count' in mysql_columns and 'following_count' in row_dict:
+                    insert_columns.append('following_count')
+                    insert_values.append(int(row_dict['following_count']) if row_dict['following_count'] else 0)
+                
+                # Add type as first_category if it exists in MySQL
+                if 'first_category' in mysql_columns and 'type' in row_dict:
+                    insert_columns.append('first_category')
+                    insert_values.append(row_dict['type'] or '')
+                
+                # Add subtype as second_category if it exists in MySQL
+                if 'second_category' in mysql_columns and 'subtype' in row_dict:
+                    insert_columns.append('second_category')
+                    insert_values.append(row_dict['subtype'] or '')
+                
+                # Add kol_name if it exists in MySQL
+                if 'kol_name' in mysql_columns and 'kol_name' in row_dict:
+                    insert_columns.append('kol_name')
+                    insert_values.append(row_dict['kol_name'] or '')
                 
                 # Build the query
                 columns_str = ", ".join(insert_columns)
