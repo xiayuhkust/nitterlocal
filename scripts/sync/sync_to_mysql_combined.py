@@ -265,10 +265,24 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
                     set_clauses.append("kol_screen_name = %s")
                     update_params.append(twitter_handle or '')
                 
-                # Add description only if SQLite value is not empty
-                if 'description' in mysql_columns and 'description' in row_dict and row_dict['description']:
-                    set_clauses.append("description = %s")
-                    update_params.append(row_dict['description'])
+                # For description, we need to check the existing MySQL value
+                if 'description' in mysql_columns:
+                    # Get existing MySQL description
+                    mysql_cursor.execute(
+                        "SELECT description FROM kol_info WHERE kol_id = %s",
+                        (row_dict['user_id'],)
+                    )
+                    mysql_description = mysql_cursor.fetchone()[0]
+                    
+                    # Only update if SQLite value is not empty and MySQL value is empty
+                    # or if both have values but SQLite value is different
+                    if row_dict.get('description') and (not mysql_description or 
+                                                       (mysql_description and row_dict['description'] != mysql_description)):
+                        set_clauses.append("description = %s")
+                        update_params.append(row_dict['description'])
+                        logging.info(f"Updating description from '{mysql_description}' to '{row_dict['description']}'")
+                    else:
+                        logging.info(f"Preserving existing MySQL description: '{mysql_description}'")
                 
                 # Add followers_count if it exists in MySQL
                 if 'followers_count' in mysql_columns and 'followers_count' in row_dict:
