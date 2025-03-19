@@ -48,12 +48,15 @@ class SeparateTweetScraper:
         logging.info("Separate tweet scraper initialization complete")
     
     def run(self, batch_size=10, sleep_between_urls=2, limit=None, 
-            performance_monitoring=False, parallel=False, num_threads=2):
+            performance_monitoring=False, parallel=False, num_threads=2,
+            force_max_tweets=None):
         """Run the separate tweet scraper"""
         logging.info("Starting separate tweet scraper")
         logging.info(f"Time: {datetime.now().isoformat()}")
         logging.info(f"Batch size: {batch_size}, Sleep between URLs: {sleep_between_urls} seconds")
         logging.info(f"Parallel processing: {parallel}, Number of threads: {num_threads}")
+        if force_max_tweets is not None:
+            logging.info(f"Force max tweets: {force_max_tweets}")
         
         # Initialize performance metrics if monitoring is enabled
         performance_metrics = {}
@@ -99,11 +102,11 @@ class SeparateTweetScraper:
                 if parallel:
                     # Use parallel processing
                     batch_results = self._process_batch_parallel(batch, performance_monitoring, performance_metrics, 
-                                               sleep_between_urls, num_threads)
+                                               sleep_between_urls, num_threads, force_max_tweets)
                 else:
                     # Use sequential processing
                     batch_results = self._process_batch_sequential(batch, performance_monitoring, performance_metrics, 
-                                                 sleep_between_urls)
+                                                 sleep_between_urls, force_max_tweets)
                 
                 # Store the results
                 for result in batch_results:
@@ -162,7 +165,7 @@ class SeparateTweetScraper:
             }
     
     def _process_batch_parallel(self, batch, performance_monitoring, performance_metrics, 
-                              sleep_between_urls, num_threads):
+                              sleep_between_urls, num_threads, force_max_tweets=None):
         """Process a batch of URLs in parallel"""
         import concurrent.futures
         
@@ -173,7 +176,7 @@ class SeparateTweetScraper:
         batch_results = []
         
         # Define a worker function for each thread
-        def process_url(url):
+        def process_url(url, force_max_tweets=force_max_tweets):
             try:
                 # Get activity level for the URL
                 activity_data = self.activity_manager.get_activity_level(url)
@@ -190,6 +193,11 @@ class SeparateTweetScraper:
                 # Get dynamic tweet quantities
                 max_tweets = activity_data.get('max_tweets', 1)
                 max_replies = activity_data.get('max_replies', 1)
+                
+                # Override max_tweets if force_max_tweets is provided
+                if force_max_tweets is not None:
+                    max_tweets = force_max_tweets
+                    logging.info(f"Overriding max_tweets with forced value: {max_tweets}")
                 
                 logging.info(f"Dynamic quantities for {url}: max_tweets={max_tweets}, max_replies={max_replies}")
                 
@@ -250,7 +258,7 @@ class SeparateTweetScraper:
         return batch_results
     
     def _process_batch_sequential(self, batch, performance_monitoring, performance_metrics, 
-                                sleep_between_urls):
+                                sleep_between_urls, force_max_tweets=None):
         """Process a batch of URLs sequentially"""
         batch_results = []
         
@@ -279,6 +287,11 @@ class SeparateTweetScraper:
                 # Get dynamic tweet quantities
                 max_tweets = activity_data.get('max_tweets', 1)
                 max_replies = activity_data.get('max_replies', 1)
+                
+                # Override max_tweets if force_max_tweets is provided
+                if force_max_tweets is not None:
+                    max_tweets = force_max_tweets
+                    logging.info(f"Overriding max_tweets with forced value: {max_tweets}")
                 
                 logging.info(f"Dynamic quantities for {url}: max_tweets={max_tweets}, max_replies={max_replies}")
                 
@@ -367,6 +380,7 @@ def main():
     parser.add_argument('--parallel', action='store_true', help='Use parallel processing')
     parser.add_argument('--threads', type=int, default=2, help='Number of threads for parallel processing')
     parser.add_argument('--performance', action='store_true', help='Enable performance monitoring')
+    parser.add_argument('--force-max-tweets', type=int, help='Force a specific number of tweets to retrieve per URL')
     
     args = parser.parse_args()
     
@@ -378,7 +392,8 @@ def main():
         limit=args.limit,
         performance_monitoring=args.performance,
         parallel=args.parallel,
-        num_threads=args.threads
+        num_threads=args.threads,
+        force_max_tweets=args.force_max_tweets
     )
     
     # Print summary

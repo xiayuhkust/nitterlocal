@@ -21,7 +21,7 @@ logging.basicConfig(
     ]
 )
 
-def run_pipeline(batch_size=10, sleep=2, limit=None, parallel=False, threads=2, performance=False):
+def run_pipeline(batch_size=10, sleep=2, limit=None, parallel=False, threads=2, performance=False, force_max_tweets=None):
     """Run the tweet extraction pipeline"""
     logging.info("Starting tweet extraction pipeline")
     logging.info(f"Time: {datetime.now().isoformat()}")
@@ -45,6 +45,9 @@ def run_pipeline(batch_size=10, sleep=2, limit=None, parallel=False, threads=2, 
         
         if performance:
             scraper_cmd.append("--performance")
+        
+        if force_max_tweets is not None:
+            scraper_cmd.extend(["--force-max-tweets", str(force_max_tweets)])
         
         logging.info(f"Running command: {' '.join(scraper_cmd)}")
         scraper_process = subprocess.run(scraper_cmd, check=True, capture_output=True, text=True)
@@ -104,6 +107,7 @@ def main():
     parser.add_argument('--parallel', action='store_true', help='Use parallel processing')
     parser.add_argument('--threads', type=int, default=2, help='Number of threads for parallel processing')
     parser.add_argument('--performance', action='store_true', help='Enable performance monitoring')
+    parser.add_argument('--force-max-tweets', type=int, help='Force a specific number of tweets to retrieve per URL')
     
     args = parser.parse_args()
     
@@ -114,7 +118,8 @@ def main():
         limit=args.limit,
         parallel=args.parallel,
         threads=args.threads,
-        performance=args.performance
+        performance=args.performance,
+        force_max_tweets=args.force_max_tweets
     )
     
     # Print summary

@@ -47,6 +47,7 @@ async function extractTweets(username, maxTweets = 50, maxReplies = 0) {
         isRetweet: tweet.isRetweet,
         isQuoted: tweet.isQuoted,
         replyToId: tweet.replyToId,
+        lang: tweet.lang || null,
         media: {
           photos: tweet.photos,
           videos: tweet.videos
@@ -96,6 +97,7 @@ async function extractTweets(username, maxTweets = 50, maxReplies = 0) {
                 isRetweet: reply.isRetweet,
                 isQuoted: reply.isQuoted,
                 replyToId: reply.replyToId,
+                lang: reply.lang || null,
                 media: {
                   photos: reply.photos,
                   videos: reply.videos

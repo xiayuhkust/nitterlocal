@@ -57,7 +57,7 @@ class TweetStorer:
                         cursor.execute('''
                         UPDATE tweets 
                         SET likes = ?, retweets = ?, replies = ?, views = ?, user_id = ?,
-                            is_reply = ?, reply_to = ?, conversation_id = ?
+                            is_reply = ?, reply_to = ?, conversation_id = ?, lang = ?
                         WHERE tweet_id = ?
                         ''', (
                             tweet['likes'],
@@ -68,6 +68,7 @@ class TweetStorer:
                             tweet.get('is_reply', 0),  # Include is_reply in the update
                             tweet.get('reply_to'),  # Include reply_to in the update
                             tweet.get('conversation_id'),  # Include conversation_id in the update
+                            tweet.get('lang'),  # Include lang in the update
                             tweet['tweet_id']
                         ))
                         
@@ -80,8 +81,8 @@ class TweetStorer:
                         cursor.execute('''
                         INSERT INTO tweets (
                             tweet_id, source_url, content, created_at, author, likes, retweets, replies, views, user_id,
-                            is_reply, reply_to, conversation_id
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            is_reply, reply_to, conversation_id, lang
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ''', (
                             tweet['tweet_id'],
                             source_url,
@@ -95,7 +96,8 @@ class TweetStorer:
                             tweet.get('user_id'),  # Include user_id in the insert
                             tweet.get('is_reply', 0),  # Include is_reply in the insert
                             tweet.get('reply_to'),  # Include reply_to in the insert
-                            tweet.get('conversation_id')  # Include conversation_id in the insert
+                            tweet.get('conversation_id'),  # Include conversation_id in the insert
+                            tweet.get('lang')  # Include lang in the insert
                         ))
                         
                         stored_count += 1
