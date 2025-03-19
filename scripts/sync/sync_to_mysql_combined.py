@@ -311,22 +311,31 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
             mysql_conn.rollback()
         raise
 
-def sync_tweets(sqlite_conn, mysql_conn, since_days=1, test_mode=False, batch_size=100):
+def sync_tweets(sqlite_conn, mysql_conn, since_days=1, test_mode=False, batch_size=100, all_tweets=False):
     """Synchronize tweets from SQLite to MySQL with dynamic column mapping"""
     try:
         start_time = time.time()
         
-        # Calculate the date threshold
-        threshold_date = (datetime.now() - timedelta(days=since_days)).strftime('%Y-%m-%d')
+        # Calculate the date threshold if not syncing all tweets
+        threshold_date = None if all_tweets else (datetime.now() - timedelta(days=since_days)).strftime('%Y-%m-%d')
         
         # Get tweets from SQLite
         sqlite_cursor = sqlite_conn.cursor()
-        sqlite_cursor.execute("""
-            SELECT t.* 
-            FROM tweets t
-            WHERE t.created_at >= ?
-            ORDER BY t.created_at DESC
-        """, (threshold_date,))
+        if threshold_date:
+            # Filter by date if not syncing all tweets
+            sqlite_cursor.execute("""
+                SELECT t.* 
+                FROM tweets t
+                WHERE t.created_at >= ?
+                ORDER BY t.created_at DESC
+            """, (threshold_date,))
+        else:
+            # Get all tweets
+            sqlite_cursor.execute("""
+                SELECT t.* 
+                FROM tweets t
+                ORDER BY t.created_at DESC
+            """)
         
         rows = sqlite_cursor.fetchall()
         
@@ -529,6 +538,7 @@ def main():
                         help='Path to SQLite database')
     parser.add_argument('--since-days', type=int, default=1, help='Synchronize data from the last N days')
     parser.add_argument('--tweets-only', action='store_true', help='Only synchronize tweets')
+    parser.add_argument('--all-tweets', action='store_true', help='Synchronize all tweets, not just recent ones')
     parser.add_argument('--no-lock', action='store_true', help='Disable the lock mechanism')
     parser.add_argument('--lock-timeout', type=int, default=30, help='Lock timeout in seconds')
     args = parser.parse_args()
@@ -589,7 +599,11 @@ def main():
             
             # Synchronize tweets (always do this)
             try:
-                tweets_synced = sync_tweets(sqlite_conn, mysql_conn, args.since_days, args.test, batch_size=100)
+                if args.all_tweets:
+                    logging.info("Synchronizing ALL tweets (no date filter)")
+                else:
+                    logging.info(f"Synchronizing tweets from the last {args.since_days} days")
+                tweets_synced = sync_tweets(sqlite_conn, mysql_conn, args.since_days, args.test, batch_size=100, all_tweets=args.all_tweets)
             except Exception as e:
                 logging.error(f"Error synchronizing tweets: {str(e)}")
                 tweets_synced = False
