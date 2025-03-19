@@ -105,22 +105,31 @@ def get_numeric_id_for_handle(mysql_conn, handle):
         logging.error(f"Error getting numeric ID for handle {handle}: {str(e)}")
         return None
 
-def sync_tweets(sqlite_conn, mysql_conn, since_days=1, test_mode=False, batch_size=100):
+def sync_tweets(sqlite_conn, mysql_conn, since_days=1, test_mode=False, batch_size=100, all_tweets=False):
     """Synchronize tweets from SQLite to MySQL with dynamic column mapping"""
     try:
         start_time = time.time()
         
-        # Calculate the date threshold
-        threshold_date = (datetime.now() - timedelta(days=since_days)).strftime('%Y-%m-%d')
+        # Calculate the date threshold if not syncing all tweets
+        threshold_date = None if all_tweets else (datetime.now() - timedelta(days=since_days)).strftime('%Y-%m-%d')
         
         # Get tweets from SQLite
         sqlite_cursor = sqlite_conn.cursor()
-        sqlite_cursor.execute("""
-            SELECT t.* 
-            FROM tweets t
-            WHERE t.created_at >= ?
-            ORDER BY t.created_at DESC
-        """, (threshold_date,))
+        if threshold_date:
+            # Filter by date if not syncing all tweets
+            sqlite_cursor.execute("""
+                SELECT t.* 
+                FROM tweets t
+                WHERE t.created_at >= ?
+                ORDER BY t.created_at DESC
+            """, (threshold_date,))
+        else:
+            # Get all tweets
+            sqlite_cursor.execute("""
+                SELECT t.* 
+                FROM tweets t
+                ORDER BY t.created_at DESC
+            """)
         
         rows = sqlite_cursor.fetchall()
         
@@ -303,12 +312,16 @@ def main():
     parser.add_argument('--db-path', type=str, default='/home/ubuntu/nitterlocal/data/local_database.db',
                         help='Path to SQLite database')
     parser.add_argument('--since-days', type=int, default=1, help='Synchronize data from the last N days')
+    parser.add_argument('--all-tweets', action='store_true', help='Synchronize all tweets, not just recent ones')
     parser.add_argument('--batch-size', type=int, default=100, help='Commit batch size')
     args = parser.parse_args()
     
     try:
         logging.info(f"Starting tweet synchronization at {datetime.now().isoformat()}")
-        logging.info(f"Synchronizing tweets from the last {args.since_days} days")
+        if args.all_tweets:
+            logging.info("Synchronizing ALL tweets (no date filter)")
+        else:
+            logging.info(f"Synchronizing tweets from the last {args.since_days} days")
         
         # Connect to databases
         sqlite_conn = get_sqlite_connection(args.db_path)
@@ -320,7 +333,8 @@ def main():
             mysql_conn, 
             args.since_days, 
             args.test,
-            args.batch_size
+            args.batch_size,
+            args.all_tweets
         )
         
         # Close connections
