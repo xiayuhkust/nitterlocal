@@ -239,9 +239,8 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
                     if sqlite_column in row.keys() and mysql_column in mysql_columns:
                         mysql_data[mysql_column] = convert_value_for_mysql(row[sqlite_column], mysql_column, mysql_constraints)
                 
-                # Add default values for fields that don't exist in SQLite
-                if 'lang' in mysql_columns and 'lang' not in mysql_data:
-                    mysql_data['lang'] = 'en'  # Default to English if not available
+                # Use lang field from SQLite if it exists, otherwise set default
+                # Note: The lang field has been added to the SQLite database schema
                 
                 # Check if the tweet exists in MySQL
                 mysql_cursor.execute("SELECT * FROM kol_tweet WHERE tweet_id = %s", (mysql_data['tweet_id'],))
