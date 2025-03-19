@@ -200,9 +200,9 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
         # Map SQLite columns to MySQL columns
         column_mapping = {
             'tweet_id': 'tweet_id',
-            'user_id': 'user_id',
+            'user_id': 'kol_id',
             'author': 'screen_name',
-            'content': 'text',
+            'content': 'tweet_text',
             'created_at': 'created_at',
             'retweets': 'retweet_count',
             'likes': 'favorite_count',
@@ -238,6 +238,10 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
                 for sqlite_column, mysql_column in column_mapping.items():
                     if sqlite_column in row.keys() and mysql_column in mysql_columns:
                         mysql_data[mysql_column] = convert_value_for_mysql(row[sqlite_column], mysql_column, mysql_constraints)
+                
+                # Add default values for fields that don't exist in SQLite
+                if 'lang' in mysql_columns and 'lang' not in mysql_data:
+                    mysql_data['lang'] = 'en'  # Default to English if not available
                 
                 # Check if the tweet exists in MySQL
                 mysql_cursor.execute("SELECT * FROM kol_tweet WHERE tweet_id = %s", (mysql_data['tweet_id'],))
