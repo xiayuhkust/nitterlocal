@@ -263,12 +263,6 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
                     if not test_mode:
                         try:
                             mysql_cursor.execute(update_query, update_values)
-                            # Ensure all results are consumed
-                            while mysql_conn.unread_result:
-                                cursor = mysql_conn.cursor()
-                                cursor.fetchall()
-                                cursor.close()
-                            
                             update_count += 1
                         except pymysql.Error as e:
                             logging.error(f"MySQL error updating tweet {mysql_data['tweet_id']}: {str(e)}")
@@ -293,12 +287,6 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=30, batch_size=100, test_mod
                     if not test_mode:
                         try:
                             mysql_cursor.execute(insert_query, insert_values)
-                            # Ensure all results are consumed
-                            while mysql_conn.unread_result:
-                                cursor = mysql_conn.cursor()
-                                cursor.fetchall()
-                                cursor.close()
-                            
                             insert_count += 1
                         except pymysql.Error as e:
                             logging.error(f"MySQL error inserting tweet {mysql_data['tweet_id']}: {str(e)}")
