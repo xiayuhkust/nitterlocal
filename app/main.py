@@ -14,6 +14,8 @@ from datetime import datetime
 
 from app.twitter_utils import process_twitter_urls, extract_twitter_handle
 from app.excel_processor import ExcelProcessor
+# Import the simplified Excel processor for background processing
+from app.excel_db_processor import process_excel_file
 
 # Configure logging
 logging.basicConfig(
@@ -174,34 +176,19 @@ async def process_excel(background_tasks: BackgroundTasks, file_id: str = Form(.
         shutil.copy2(file_path, data_file_path)
         logging.info(f"Copied file to data directory: {data_file_path}")
         
-        # Use create_and_process_test_excel.py to process the Excel file
-        script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'scripts', 'newstruct', 'create_and_process_test_excel.py')
+        # Start background processing without waiting for completion
+        def process_excel_in_background():
+            try:
+                # Process the Excel file in the background
+                db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'local_database.db')
+                process_excel_file(data_file_path, db_path)
+                
+                logging.info(f"Background processing completed for file: {data_file_path}")
+            except Exception as e:
+                logging.error(f"Error in background processing: {str(e)}")
         
-        if not os.path.exists(script_path):
-            logging.error(f"Script not found: {script_path}")
-            raise HTTPException(status_code=500, detail=f"Script not found: {script_path}")
-        
-        # Make the script executable
-        os.chmod(script_path, 0o755)
-        
-        # Run the script with the Excel file path
-        cmd = [
-            'python3',
-            script_path,
-            '--excel', data_file_path
-        ]
-        
-        logging.info(f"Running command: {' '.join(cmd)}")
-        
-        # Capture the output for processing
-        import subprocess
-        result = subprocess.run(
-            cmd,
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True
-        )
+        # Start background processing
+        background_tasks.add_task(process_excel_in_background)
         
         # Initialize the Excel processor for backward compatibility
         processor = ExcelProcessor(UPLOAD_DIR, TEMP_DIR)
@@ -233,13 +220,13 @@ async def process_excel(background_tasks: BackgroundTasks, file_id: str = Form(.
         
         background_tasks.add_task(cleanup_temp_files)
         
-        # Return the results
+        # Return the results immediately without waiting for background processing
         return {
             "original_file": file_id,
             "processed_file": os.path.basename(processed_file_path),
             "download_url": f"/api/download/{os.path.basename(processed_file_path)}",
             "results": results,
-            "script_output": result.stdout
+            "message": "File uploaded successfully and is being processed in the background"
         }
     
     except Exception as e:
