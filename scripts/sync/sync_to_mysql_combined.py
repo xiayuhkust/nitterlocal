@@ -232,15 +232,12 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False):
                 logging.warning(f"Skipping row with no user_id: {row_dict.get('url', 'unknown')}")
                 continue
             
-            # Skip records that are not active
+            # Log record status and type but don't skip
             if row_dict.get('status') != 'active':
-                logging.info(f"Skipping inactive record: {row_dict.get('url', 'unknown')}, status: {row_dict.get('status', 'unknown')}")
-                continue
+                logging.info(f"Processing inactive record: {row_dict.get('url', 'unknown')}, status: {row_dict.get('status', 'unknown')}")
             
-            # Skip records that are not KOLs - case insensitive comparison
             if row_dict.get('type', '').lower() != 'kol':
-                logging.info(f"Skipping non-kol record: {row_dict.get('url', 'unknown')}, type: {row_dict.get('type', 'unknown')}")
-                continue
+                logging.info(f"Processing non-kol record: {row_dict.get('url', 'unknown')}, type: {row_dict.get('type', 'unknown')}")
             
             # Check if record already exists in MySQL
             # Note: MySQL uses kol_id column while SQLite uses user_id
@@ -426,12 +423,15 @@ def sync_tweets(sqlite_conn, mysql_conn, since_days=1, test_mode=False, batch_si
         # Map SQLite columns to MySQL columns
         column_mapping = {
             'tweet_id': 'tweet_id',
+            'user_id': 'kol_id',
+            'author': 'kol_screen_name',
             'content': 'tweet_text',
             'created_at': 'created_at',
             'likes': 'favorite_count',
             'retweets': 'retweet_count',
             'replies': 'reply_count',
-            'views': 'view_count'
+            'views': 'view_count',
+            'lang': 'lang'
         }
         
         # Process each tweet
