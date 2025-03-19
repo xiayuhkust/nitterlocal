@@ -13,8 +13,6 @@ import subprocess
 import tempfile
 from datetime import datetime
 from urllib.parse import urlparse
-from langdetect import detect, LangDetectException
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -113,13 +111,8 @@ class TwitterScraper:
             # Convert the tweets to our format
             formatted_tweets = []
             for tweet in tweets:
-                # Detect language of the tweet text
-                lang = None
-                try:
-                    if tweet.get('text'):
-                        lang = detect(tweet.get('text', ''))
-                except LangDetectException:
-                    logging.warning(f"Could not detect language for tweet {tweet.get('id', '')}")
+                # Get language directly from API
+                lang = tweet.get('lang')
                 
                 formatted_tweet = {
                     'tweet_id': tweet.get('id', ''),
@@ -136,7 +129,7 @@ class TwitterScraper:
                     'is_reply': 1 if tweet.get('isReply', False) else 0,  # Add is_reply field
                     'reply_to': tweet.get('replyToId', None),  # Add reply_to field
                     'conversation_id': tweet.get('conversationId', None),  # Add conversation_id field
-                    'lang': lang  # Add detected language
+                    'lang': lang  # Language from Twitter API
                 }
                 formatted_tweets.append(formatted_tweet)
             
