@@ -395,6 +395,8 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                 logging.debug(f"MySQL data prepared: {mysql_data}")
             
             # Check if the record exists in MySQL - try multiple keys in order of preference
+            # IMPORTANT: The order of lookups matters! We prioritize kol_id over kol_screen_name
+            # to ensure we update the correct record when there are multiple records with the same screen name
             lookup_found = False
             
             # First try by id if available
@@ -402,15 +404,15 @@ def sync_url_tracking(sqlite_conn, mysql_conn, test_mode=False, verbose=False, l
                 mysql_cursor.execute("SELECT * FROM kol_info WHERE id = %s", (mysql_data['id'],))
                 logging.info(f"Checking if record exists for id: {mysql_data['id']}")
                 lookup_found = True
-            # Then try by kol_screen_name
-            elif 'kol_screen_name' in mysql_data:
-                mysql_cursor.execute("SELECT * FROM kol_info WHERE kol_screen_name = %s", (mysql_data['kol_screen_name'],))
-                logging.info(f"Checking if record exists for screen_name: {mysql_data['kol_screen_name']}")
-                lookup_found = True
             # Then try by kol_id
             elif 'kol_id' in mysql_data:
                 mysql_cursor.execute("SELECT * FROM kol_info WHERE kol_id = %s", (mysql_data['kol_id'],))
                 logging.info(f"Checking if record exists for kol_id: {mysql_data['kol_id']}")
+                lookup_found = True
+            # Then try by kol_screen_name
+            elif 'kol_screen_name' in mysql_data:
+                mysql_cursor.execute("SELECT * FROM kol_info WHERE kol_screen_name = %s", (mysql_data['kol_screen_name'],))
+                logging.info(f"Checking if record exists for screen_name: {mysql_data['kol_screen_name']}")
                 lookup_found = True
             # Finally try by url
             elif 'url' in mysql_data:
