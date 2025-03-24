@@ -51,7 +51,8 @@ def create_tables(conn):
     # Create url_tracking table
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS url_tracking (
-        url TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT,
         user_id TEXT,
         description TEXT,
         status TEXT DEFAULT 'active',
@@ -62,7 +63,17 @@ def create_tables(conn):
         added_at TEXT DEFAULT CURRENT_TIMESTAMP,
         last_scraped TEXT,
         last_error TEXT,
-        subtype TEXT
+        subtype TEXT DEFAULT '-',
+        screen_name TEXT,
+        followers_count INTEGER DEFAULT 0,
+        following_count INTEGER DEFAULT 0,
+        profile_image_url TEXT,
+        profile_banner_url TEXT,
+        verified INTEGER DEFAULT 0,
+        location TEXT,
+        created_at TEXT,
+        profile_updated_at TEXT,
+        kol_name TEXT
     )
     ''')
     
@@ -83,6 +94,7 @@ def create_tables(conn):
         is_reply INTEGER DEFAULT 0,
         reply_to TEXT,
         conversation_id TEXT,
+        lang TEXT,
         FOREIGN KEY (source_url) REFERENCES url_tracking (url)
     )
     ''')
@@ -170,18 +182,18 @@ def add_sample_data(conn):
     
     sample_tweets = [
         ('1234567890', 'https://twitter.com/sample_user1', 'This is a sample tweet from user 1', 
-         one_day_ago, 'sample_user1', 100, 20, 5, 1000, current_time, '123456789', 0, None, 'conv1'),
+         one_day_ago, 'sample_user1', 100, 20, 5, 1000, current_time, '123456789', 0, None, 'conv1', 'en'),
         ('2345678901', 'https://twitter.com/sample_user2', 'This is a sample tweet from user 2', 
-         two_days_ago, 'sample_user2', 200, 30, 10, 2000, current_time, '987654321', 0, None, 'conv2'),
+         two_days_ago, 'sample_user2', 200, 30, 10, 2000, current_time, '987654321', 0, None, 'conv2', 'en'),
         ('3456789012', 'https://twitter.com/sample_user3', 'This is a sample tweet from user 3', 
-         current_time, 'sample_user3', 300, 40, 15, 3000, current_time, '456789123', 0, None, 'conv3')
+         current_time, 'sample_user3', 300, 40, 15, 3000, current_time, '456789123', 0, None, 'conv3', 'en')
     ]
     
     cursor.executemany('''
     INSERT OR IGNORE INTO tweets 
     (tweet_id, source_url, content, created_at, author, likes, retweets, replies, views, 
-     stored_at, user_id, is_reply, reply_to, conversation_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     stored_at, user_id, is_reply, reply_to, conversation_id, lang)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', sample_tweets)
     
     # Add sample KOL character data
