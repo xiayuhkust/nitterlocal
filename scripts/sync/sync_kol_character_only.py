@@ -12,6 +12,7 @@ import logging
 import sqlite3
 import argparse
 import pymysql
+import pymysql.cursors
 from datetime import datetime
 import re
 from urllib.parse import urlparse
@@ -288,12 +289,16 @@ def sync_kol_character(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                 # Convert SQLite row to dict
                 record_dict = dict(record)
                 
-                # Get kol_id
+                # Get kol_id and normalize it
                 kol_id = record_dict.get('kol_id')
                 
                 if not kol_id:
                     logging.warning(f"Skipping record with no kol_id: {record_dict}")
                     continue
+                    
+                # Normalize kol_id to prevent case sensitivity issues
+                kol_id = kol_id.strip()
+                record_dict['kol_id'] = kol_id
                 
                 # Get kol_screen_name using the hierarchical approach
                 kol_screen_name = get_kol_screen_name(
@@ -307,10 +312,23 @@ def sync_kol_character(sqlite_conn, mysql_conn, test_mode=False, verbose=False):
                 record_dict['kol_screen_name'] = kol_screen_name
                 
                 # Check if the record exists in MySQL
-                mysql_cursor.execute("SELECT id FROM kol_character WHERE kol_id = %s", (kol_id,))
-                existing_record = mysql_cursor.fetchone()
+                mysql_cursor.execute("SELECT id, kol_screen_name FROM kol_character WHERE kol_id = %s", (kol_id,))
+                existing_records = mysql_cursor.fetchall()
+                
+                # Check for duplicates
+                if len(existing_records) > 1:
+                    logging.warning(f"Found {len(existing_records)} duplicate records for kol_id {kol_id}")
+                    for rec in existing_records:
+                        logging.warning(f"  Duplicate record: id={rec['id']}, kol_id={kol_id}, kol_screen_name={rec['kol_screen_name']}")
+                
+                existing_record = existing_records[0] if existing_records else None
                 
                 if existing_record:
+                    # Check if the kol_screen_name is the same to avoid creating duplicates
+                    if existing_record['kol_screen_name'] == kol_screen_name:
+                        if verbose:
+                            logging.info(f"Record for kol_id {kol_id} with kol_screen_name {kol_screen_name} already exists, no update needed")
+                        continue
                     # Update existing record
                     if not test_mode:
                         # Build the update query
